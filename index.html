@@ -96,7 +96,7 @@
       transform: translateY(-1px);
     }
 
-    /* Sidebar Transitions & Animations */
+    /* Sidebar Transitions & Tooltip */
     #mainSidebar {
       transition: width 0.32s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -110,7 +110,7 @@
       opacity: 1;
     }
 
-    /* Modal Styling */
+    /* Modal Dashboard Styling */
     .modal-glass-card {
       background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(20px);
@@ -128,28 +128,26 @@
 </head>
 <body class="min-h-screen py-6 px-3 md:px-6 flex justify-center pb-24">
 
-  <!-- Outer Flex Wrapper (Sidebar + Main Content Canvas) -->
+  <!-- Wrapper Flex Utama (Sidebar + Konten Dashboard) -->
   <div class="w-full max-w-7xl flex items-start gap-5">
 
-    <!-- ==================== SIDEBAR COMPONENT (Persis Gambar Referensi) ==================== -->
+    <!-- ==================== SIDEBAR COMPONENT (HALAL LAB STYLE) ==================== -->
     <aside id="mainSidebar" class="hidden md:flex flex-col bg-white rounded-[32px] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-gray-200/70 sticky top-6 self-start z-30 w-64">
       
-      <!-- Window Controls (Traffic Lights khas Mac) -->
+      <!-- Traffic Light Dots Khas macOS -->
       <div class="flex items-center justify-between mb-5">
         <div class="flex items-center space-x-2">
           <span class="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]"></span>
           <span class="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]"></span>
           <span class="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]"></span>
         </div>
-        <!-- Toggle Collapse/Expand Button -->
         <button onclick="toggleSidebarCollapse()" class="text-gray-400 hover:text-gray-700 p-1 rounded-lg transition" title="Toggle Sidebar">
           <svg id="sidebarToggleIcon" class="w-4 h-4 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
         </button>
       </div>
 
-      <!-- Brand Logo / Header (Persis Halal Lab style) -->
+      <!-- Brand Logo Strip Diagonal -->
       <div class="flex items-center space-x-2.5 mb-6 pb-2 border-b border-gray-100/80">
-        <!-- Icon 3 Strip Miring Hitam -->
         <div class="flex space-x-1 items-center">
           <div class="w-1.5 h-5 bg-black rounded-sm transform -skew-x-12"></div>
           <div class="w-1.5 h-5 bg-black rounded-sm transform -skew-x-12"></div>
@@ -158,18 +156,16 @@
         <span class="sidebar-text font-black text-sm tracking-wider text-black">AGENCY LAB</span>
       </div>
 
-      <!-- Section: MAIN MENU -->
+      <!-- Bagian: MAIN MENU -->
       <div class="mb-5 space-y-1">
         <div class="sidebar-text text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-2">Main Menu</div>
 
-        <!-- Menu: Home -->
         <button onclick="switchTabNav('home')" class="w-full flex items-center space-x-3 px-3 py-2 rounded-2xl text-xs font-semibold text-gray-700 hover:bg-gray-100/80 transition relative has-tooltip">
           <svg class="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
           <span class="sidebar-text">Home</span>
           <span class="sidebar-tooltip absolute left-14 bg-black text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg pointer-events-none whitespace-nowrap z-40">Home</span>
         </button>
 
-        <!-- Menu: Settings (Dropdown Accordion) -->
         <div>
           <button onclick="toggleSidebarSubmenu()" class="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-bold text-gray-900 bg-gray-100/90 shadow-sm transition relative has-tooltip">
             <div class="flex items-center space-x-3 truncate">
@@ -180,7 +176,6 @@
             <span class="sidebar-tooltip absolute left-14 bg-black text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg pointer-events-none whitespace-nowrap z-40">Settings</span>
           </button>
 
-          <!-- Sub-menu Items (Persis Referensi: Data source, Targets, Members, Upgrade) -->
           <div id="sidebarSettingsSub" class="sidebar-text pl-7 pt-1.5 space-y-1">
             <a href="javascript:void(0)" onclick="showToast('Data source: Terhubung ke LocalStorage')" class="flex items-center space-x-2.5 px-3 py-1.5 rounded-xl text-xs font-medium text-gray-500 hover:text-gray-900 transition">
               <svg class="w-3.5 h-3.5 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7M4 7c0-2 1.5-3 3.5-3h9c2 0 3.5 1 3.5 3M4 7c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3"/></svg>
@@ -190,7 +185,6 @@
               <svg class="w-3.5 h-3.5 stroke-current" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke-width="2"/></svg>
               <span>Targets (KPI)</span>
             </a>
-            <!-- Members (Highlighted khas referensi) -->
             <a href="javascript:void(0)" onclick="openUserProfileModal(currentActiveUserKey)" class="flex items-center space-x-2.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-900 bg-gray-100/90 transition">
               <svg class="w-3.5 h-3.5 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
               <span>Members</span>
@@ -202,7 +196,6 @@
           </div>
         </div>
 
-        <!-- Menu: Help center -->
         <button onclick="showToast('Pusat Bantuan WhatsApp: +62 812-3456-7890')" class="w-full flex items-center space-x-3 px-3 py-2 rounded-2xl text-xs font-semibold text-gray-700 hover:bg-gray-100/80 transition relative has-tooltip">
           <svg class="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01"/></svg>
           <span class="sidebar-text">Help center</span>
@@ -210,18 +203,16 @@
         </button>
       </div>
 
-      <!-- Section: TEAMS (Departemen & Filter Khas Referensi) -->
+      <!-- Bagian: TEAMS -->
       <div class="pt-4 border-t border-gray-100/80 space-y-1">
         <div class="sidebar-text text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-2">Teams</div>
 
-        <!-- All teams -->
         <button onclick="filterDept('ALL')" class="w-full flex items-center space-x-3 px-3 py-1.5 rounded-2xl text-xs font-semibold text-gray-700 hover:bg-gray-100/80 transition relative has-tooltip">
           <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
           <span class="sidebar-text">All teams</span>
           <span class="sidebar-tooltip absolute left-14 bg-black text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg pointer-events-none whitespace-nowrap z-40">All teams</span>
         </button>
 
-        <!-- Finance (Icon Kotak Biru Huruf F + Gembok) -->
         <button onclick="filterDept('Management')" class="w-full flex items-center justify-between px-3 py-1.5 rounded-2xl text-xs font-semibold text-gray-700 hover:bg-gray-100/80 transition relative has-tooltip">
           <div class="flex items-center space-x-3 truncate">
             <span class="w-4 h-4 rounded-md bg-blue-600 text-white font-extrabold text-[9px] flex items-center justify-center flex-shrink-0">F</span>
@@ -231,7 +222,6 @@
           <span class="sidebar-tooltip absolute left-14 bg-black text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg pointer-events-none whitespace-nowrap z-40">Finance</span>
         </button>
 
-        <!-- Product (Icon Kotak Oranye Huruf P + Gembok) -->
         <button onclick="filterDept('Production')" class="w-full flex items-center justify-between px-3 py-1.5 rounded-2xl text-xs font-semibold text-gray-700 hover:bg-gray-100/80 transition relative has-tooltip">
           <div class="flex items-center space-x-3 truncate">
             <span class="w-4 h-4 rounded-md bg-amber-600 text-white font-extrabold text-[9px] flex items-center justify-center flex-shrink-0">P</span>
@@ -244,15 +234,13 @@
 
     </aside>
 
-    <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+    <!-- ==================== CONTAINER KONTEN UTAMA ==================== -->
     <div class="flex-1 w-full max-w-5xl flex flex-col">
 
       <!-- Top Bar Navigation -->
       <header class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200/70">
         
-        <!-- Mobile Sidebar Toggle + Brand Title -->
         <div class="flex items-center space-x-3">
-          <!-- Tombol hamburger mobile -->
           <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 hover:text-black p-1.5 rounded-xl bg-white border border-gray-200 shadow-sm">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
@@ -266,10 +254,8 @@
           </div>
         </div>
 
-        <!-- Controls, View Switcher, Role & Profile Trigger -->
         <div class="flex flex-wrap items-center gap-2.5">
-          
-          <!-- View Toggle (Desktop Only) -->
+          <!-- View Toggle Desktop -->
           <div class="hidden md:flex bg-gray-200/80 p-1 rounded-full text-xs font-semibold">
             <button onclick="setViewMode('capsules')" id="btnViewCapsules" class="px-3.5 py-1.5 rounded-full bg-white text-gray-900 shadow-sm transition">
               Capsules View
@@ -290,12 +276,12 @@
             Share WA
           </button>
 
-          <button onclick="handleNewTaskClick()" id="btnNewTask" class="bg-[#0071e3] hover:bg-[#0062c4] text-white font-semibold text-xs md:text-sm px-4 py-2 rounded-full shadow-sm flex items-center space-x-1.5 active:scale-95 transition">
+          <button onclick="handleNewTaskClick()" id="btnNewTask" class="bg-[#0071e3] hover:bg-[#0062c4] text-white font-semibold text-xs md:text-sm px-4 md:px-5 py-2 rounded-full shadow-sm flex items-center space-x-1.5 active:scale-95 transition">
             <span class="text-base font-bold leading-none">+</span>
             <span>Task Baru</span>
           </button>
 
-          <!-- User Profile Quick Access Button (Kanan Atas) -->
+          <!-- Quick Access Profil Pengguna (Kanan Atas) -->
           <button onclick="openUserProfileModal(currentActiveUserKey)" title="Buka User Profile & KPI Dashboard" class="flex items-center space-x-2 bg-white hover:bg-gray-50 border border-gray-200/90 pl-1.5 pr-3.5 py-1 rounded-full shadow-sm transition active:scale-95 ml-1">
             <img id="navAvatarImg" src="" alt="Avatar" class="w-7 h-7 rounded-full object-cover ring-2 ring-blue-500/30">
             <div class="text-left">
@@ -331,7 +317,7 @@
 
       <!-- VIEW 1: CAPSULES VIEW -->
       <main id="capsulesView" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        <!-- Injected by JavaScript -->
+        <!-- Terinjeksi via JavaScript -->
       </main>
 
       <!-- VIEW 2: GANTT CHART TIMELINE -->
@@ -344,12 +330,12 @@
             <p class="text-xs text-gray-500 mt-0.5">Semua sub-task yang berstatus Done otomatis tersambung ke timeline bar ini secara real-time</p>
           </div>
           <div id="teamCapacitySummary" class="flex items-center space-x-2 text-xs">
-            <!-- Populated by JS -->
+            <!-- Kapasitas Beban Tim -->
           </div>
         </div>
 
         <div id="ganttTimelineContent">
-          <!-- Rendered dynamically via JavaScript -->
+          <!-- Rendered via JavaScript -->
         </div>
       </div>
 
@@ -357,7 +343,7 @@
 
   </div>
 
-  <!-- Toast Notification -->
+  <!-- Toast Notifikasi -->
   <div id="toast" class="fixed top-8 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-md text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50">
     Laporan standup disalin ke clipboard!
   </div>
@@ -450,7 +436,7 @@
               <span id="picAutoSuggestBadge" class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md"></span>
             </div>
             <select id="inpPic" class="w-full mt-1.5 px-3 py-2.5 bg-gray-100 rounded-xl text-xs font-semibold focus:outline-none">
-              <!-- Populated via JS -->
+              <!-- Rendered via JS -->
             </select>
           </div>
           <div>
@@ -490,7 +476,7 @@
   <div id="userProfileModal" class="fixed inset-0 bg-black/45 backdrop-blur-md hidden flex items-center justify-center p-4 md:p-6 z-50">
     <div class="w-full max-w-5xl bg-[#f1f5f9] rounded-[36px] p-6 md:p-8 shadow-2xl border border-white/80 max-h-[92vh] overflow-y-auto">
       
-      <!-- Top Navigation Sub-Bar (Profil) -->
+      <!-- Sub-Bar Navigasi Modal Profil -->
       <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div class="flex items-center space-x-3">
           <nav class="flex items-center bg-gray-200/70 p-1 rounded-full text-xs font-bold text-gray-600">
@@ -530,7 +516,6 @@
       <!-- SECTION 1: DASHBOARD UTAMA -->
       <div id="pSecDashboard" class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         
-        <!-- Left 3 Columns -->
         <div class="lg:col-span-3 space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
@@ -628,7 +613,6 @@
               </div>
             </div>
 
-            <!-- Task Table Panel -->
             <div class="modal-glass-card p-5 md:col-span-2">
               <div class="flex justify-between items-center mb-3">
                 <div>
@@ -642,7 +626,7 @@
           </div>
         </div>
 
-        <!-- Right Side Dark Panel -->
+        <!-- Kolom Kanan Panel Gelap -->
         <div class="space-y-6">
           <div class="modal-dark-glass p-5 text-white">
             <div class="flex justify-between items-center mb-3">
@@ -1017,7 +1001,6 @@
       renderAllViews();
     }
 
-    // Sidebar Controller (Collapse / Expand Sesuai Referensi Gambar)
     function toggleSidebarCollapse() {
       isSidebarCollapsed = !isSidebarCollapsed;
       const sidebar = document.getElementById('mainSidebar');
@@ -1145,7 +1128,6 @@
       return { assigned, completed, blockers, crRate, kpiScore, userSubtasks, improvement };
     }
 
-    // Modal SOP Handover Gate
     function openHandoverModal(taskId) {
       activeHandoverTaskId = taskId;
       const data = getData();
@@ -1203,40 +1185,27 @@
       const pct = Math.round((done / total) * 100);
       const health = calculateClientHealth(task);
 
-      let report = `*EXECUTIVE CLIENT WEEKLY PROGRESS REPORT*
-`;
-      report += `Brand / Project: *${task.title}*
-`;
-      report += `Departemen: ${task.dept} | Lead PIC: ${task.pic}
-`;
-      report += `Overall Progress: *${pct}%* (${done}/${total} Milestone Done)
-`;
-      report += `Client Health Index: *${health.score}/100* (${health.label})
-
-`;
+      let report = `*EXECUTIVE CLIENT WEEKLY PROGRESS REPORT*\n`;
+      report += `Brand / Project: *${task.title}*\n`;
+      report += `Departemen: ${task.dept} | Lead PIC: ${task.pic}\n`;
+      report += `Overall Progress: *${pct}%* (${done}/${total} Milestone Done)\n`;
+      report += `Client Health Index: *${health.score}/100* (${health.label})\n\n`;
       
-      report += `*Completed Milestones:*
-`;
+      report += `*Completed Milestones:*\n`;
       task.actions.filter(a => a.done).forEach((a) => {
-        report += `✓ ${a.text} (PIC: ${a.pic || task.pic})
-`;
+        report += `✓ ${a.text} (PIC: ${a.pic || task.pic})\n`;
       });
 
       const pendings = task.actions.filter(a => !a.done);
       if (pendings.length > 0) {
-        report += `
-*Next In Progress Milestones:*
-`;
+        report += `\n*Next In Progress Milestones:*\n`;
         pendings.forEach(a => {
-          report += `• ${a.text} (Estimasi: ${a.duration || 3} hari)
-`;
+          report += `• ${a.text} (Estimasi: ${a.duration || 3} hari)\n`;
         });
       }
 
       if (task.hasBlocker) {
-        report += `
-🚨 *Action Required / Blocker:* ${task.blockerDesc}
-`;
+        report += `\n🚨 *Action Required / Blocker:* ${task.blockerDesc}\n`;
       }
 
       navigator.clipboard.writeText(report).then(() => {
@@ -1254,15 +1223,8 @@
       window.open(url, '_blank');
     }
 
-    // Sistem Autentikasi PIN
     function promptUserPinLogin() {
-      const selectedKey = prompt("Pilih Akun Pengguna:
-1. Budi (ABD)
-2. Siti (Management)
-3. Andi (DM)
-4. Dewi (HRGA)
-
-Ketik nama (Budi/Siti/Andi/Dewi):", currentActiveUserKey);
+      const selectedKey = prompt("Pilih Akun Pengguna:\n1. Budi (ABD)\n2. Siti (Management)\n3. Andi (DM)\n4. Dewi (HRGA)\n\nKetik nama (Budi/Siti/Andi/Dewi):", currentActiveUserKey);
       if (!selectedKey) return;
       
       const cleanKey = selectedKey.trim().charAt(0).toUpperCase() + selectedKey.trim().slice(1).toLowerCase();
@@ -1546,7 +1508,7 @@ Ketik nama (Budi/Siti/Andi/Dewi):", currentActiveUserKey);
               ${item.actions.map((act, idx) => `
                 <div class="flex items-center justify-between p-2.5 rounded-2xl border ${act.done ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-200/70'}">
                   <label class="flex items-center space-x-3 flex-1 cursor-pointer">
-                    <input type="checkbox" ${act.done ? 'checked' : ''} onchange="toggleStep('${item.id}', ${idx}, this.checked)" class="apple-check">
+                    <input type="checkbox" ${act.done ? 'checked' : ''} onchange="toggleStep('${item.id}',${idx}, this.checked)" class="apple-check">
                     <span class="text-xs transition-all duration-200 ${act.done ? 'line-through text-gray-400 font-normal' : 'text-gray-800 font-semibold'}">${act.text}</span>
                   </label>
                   <button onclick="openUserProfileModal('${act.pic || item.pic}')" class="text-[9px] font-bold px-2.5 py-0.5 rounded-full ${act.done ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'} hover:scale-105 transition">
