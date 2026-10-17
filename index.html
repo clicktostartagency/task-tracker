@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Operations & Progress Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { --ios-spring: cubic-bezier(0.32, 0.72, 0, 1); }
+    body { background-color: #f2f2f7; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    .ios-press { transition: transform 0.2s var(--ios-spring), opacity 0.2s ease; }
+    .ios-press:active { transform: scale(0.96); opacity: 0.85; }
+    .progress-capsule { border-radius: 26px; min-height: 110px; transition: transform 0.3s var(--ios-spring), box-shadow 0.3s; }
+    .progress-capsule:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+    .accordion-drawer { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.4s var(--ios-spring), opacity 0.3s; }
+    .accordion-drawer.open { max-height: 5000px; opacity: 1; margin-top: 12px; }
+    .apple-check { appearance: none; width: 20px; height: 20px; border: 2px solid #cbd5e1; border-radius: 50%; outline: none; cursor: pointer; transition: all 0.2s; position: relative; }
+    .apple-check:checked { background-color: #34c759; border-color: #34c759; }
+    .apple-check:checked::after { content: ''; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+    
+    .gantt-col-cell { min-width: 44px; max-width: 44px; width: 44px; text-align: center; border-right: 1px solid #f1f5f9; }
+    .gantt-weekend { background-color: #f8fafc; }
+    .gantt-cell-container { position: relative; overflow: visible !important; }
+    .gantt-cell-container:hover { z-index: 99999 !important; }
+    
+    .gantt-popover {
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      bottom: calc(100% + 12px);
+      left: 50%;
+      width: 290px;
+      max-height: 280px;
+      overflow-y: auto;
+      transform: translateX(-50%) translateY(8px) scale(0.95);
+      transition: opacity 0.2s var(--ios-spring), transform 0.2s var(--ios-spring), visibility 0.2s;
+      z-index: 999999 !important;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    .gantt-popover::-webkit-scrollbar { width: 4px; }
+    .gantt-popover::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); border-radius: 9999px; }
+    
+    .gantt-cell-container:hover .gantt-popover {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+  </style>
+</head>
+<body class="min-h-screen py-6 px-3 md:px-6 flex justify-center pb-28">
+
+  <div class="w-full max-w-7xl flex items-start gap-5">
+    
+    <!-- SIDEBAR -->
+    <aside id="mainSidebar" class="hidden md:flex flex-col bg-white rounded-3xl p-5 shadow-xs border border-gray-200/80 sticky top-6 w-60 max-h-[92vh]">
+      <div class="flex items-center space-x-2 mb-6">
+        <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+        <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+      </div>
+      <div class="space-y-1 mb-6 text-xs font-semibold">
+        <button onclick="setViewMode('capsules')" id="mBtn-capsules" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-2xl bg-gray-100 text-gray-900 font-bold transition ios-press">
+          <span>📁</span><span>Projects</span>
+        </button>
+        <button onclick="setViewMode('gantt')" id="mBtn-gantt" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-2xl text-gray-600 hover:bg-gray-50 transition ios-press">
+          <span>📊</span><span>Timeline Gantt</span>
+        </button>
+        <button onclick="setViewMode('overview')" id="mBtn-overview" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-2xl text-gray-600 hover:bg-gray-50 transition ios-press">
+          <span>📈</span><span>Dept Overview</span>
+        </button>
+        <button onclick="openKpiScorecardModal()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-2xl text-blue-600 hover:bg-blue-50 transition ios-press">
+          <span>🎯</span><span>Live KPI Sheet</span>
+        </button>
+      </div>
+      <div class="pt-4 border-t border-gray-100 text-xs flex-1 overflow-y-auto">
+        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Team Weekly Hours</span>
+        <div id="sidebarUserList" class="space-y-2"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 w-full max-w-5xl flex flex-col">
+      <header class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <h1 class="text-2xl font-black text-gray-900 tracking-tight">Agency Operations</h1>
+          <button onclick="openCommandPalette()" class="bg-white border border-gray-200 px-3 py-1 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-50 transition ios-press">
+            🔍 <kbd class="font-mono text-[10px] ml-1 bg-gray-100 px-1 py-0.5 rounded">⌘K</kbd>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openGeminiModal()" class="flex items-center space-x-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3.5 py-1.5 rounded-full text-xs font-bold shadow-xs hover:opacity-95 transition ios-press">
+            <span>✦</span>
+            <span>AI Copilot</span>
+          </button>
+
+          <div id="myWeeklyHoursBadge" class="bg-blue-50 border border-blue-200 px-3 py-1 rounded-full text-xs font-extrabold text-blue-800">
+            0.0h this week
+          </div>
+
+          <button onclick="toggleAudioMute()" id="btnAudioToggle" class="p-2 bg-white border border-gray-200 rounded-full text-xs shadow-xs ios-press">🔊</button>
+          <button onclick="copyWAStandup()" class="bg-white border border-gray-200 hover:text-emerald-600 px-3.5 py-1.5 rounded-full text-xs font-bold transition ios-press">Share WA</button>
+          <button onclick="openNewTaskModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-full text-xs font-bold transition shadow-xs ios-press">+ Task</button>
+          <button onclick="openUserProfileModal(AppState.activeUserKey)" class="flex items-center space-x-2 bg-white border border-gray-200 px-3 py-1 rounded-full shadow-xs ios-press">
+            <span id="navAvatarSpan"></span>
+            <span id="navUserName" class="text-xs font-bold text-gray-800"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- FILTER CONTROLS -->
+      <section class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div id="deptFilterRow" class="flex items-center space-x-1.5 overflow-x-auto text-xs font-semibold">
+          <button onclick="setDeptFilter('ALL')" class="df-btn px-3.5 py-1 rounded-full bg-black text-white ios-press" data-val="ALL">Semua</button>
+          <button onclick="setDeptFilter('DM')" class="df-btn px-3.5 py-1 rounded-full bg-white text-gray-700 border border-gray-200 ios-press" data-val="DM">DM</button>
+          <button onclick="setDeptFilter('Production')" class="df-btn px-3.5 py-1 rounded-full bg-white text-gray-700 border border-gray-200 ios-press" data-val="Production">Production</button>
+          <button onclick="setDeptFilter('HRGA')" class="df-btn px-3.5 py-1 rounded-full bg-white text-gray-700 border border-gray-200 ios-press" data-val="HRGA">HRGA</button>
+          <button onclick="setDeptFilter('ABD')" class="df-btn px-3.5 py-1 rounded-full bg-white text-gray-700 border border-gray-200 ios-press" data-val="ABD">ABD</button>
+        </div>
+        <div id="statusFilterRow" class="flex items-center bg-gray-200/80 p-0.5 rounded-full text-xs font-semibold">
+          <button onclick="setStatusFilter('ALL')" class="sf-btn px-3 py-1 rounded-full bg-white text-gray-900 shadow-xs ios-press font-bold" data-val="ALL">Semua</button>
+          <button onclick="setStatusFilter('ACTIVE')" class="sf-btn px-3 py-1 rounded-full text-gray-600 ios-press" data-val="ACTIVE">In-Progress</button>
+          <button onclick="setStatusFilter('COMPLETED')" class="sf-btn px-3 py-1 rounded-full text-gray-600 ios-press" data-val="COMPLETED">Selesai</button>
+          <button onclick="setStatusFilter('BLOCKED')" class="sf-btn px-3 py-1 rounded-full text-rose-600 ios-press" data-val="BLOCKED">Blocked</button>
+        </div>
+      </section>
+
+      <!-- VIEW 1: CAPSULES -->
+      <section id="capsulesView" class="space-y-4"></section>
+
+      <!-- VIEW 2: GANTT CHART BESAR DENGAN SELECTOR BULAN -->
+      <section id="ganttView" class="hidden bg-white rounded-3xl p-6 border border-gray-200 shadow-xs pb-32">
+        <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-100 gap-3">
+          <div>
+            <h3 class="font-extrabold text-base text-gray-900">Work Pace &amp; Workload Timeline</h3>
+            <p class="text-xs text-gray-500 mt-0.5">Arahkan kursor pada angka jam untuk rincian instan subtasks &amp; PIC</p>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button onclick="changeGanttMonth(-1)" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700 ios-press">&lsaquo;</button>
+            <div id="ganttCurrentMonthLabel" class="text-xs font-black text-gray-900 px-3 py-1.5 bg-gray-100/80 rounded-xl min-w-[130px] text-center">October 2026</div>
+            <button onclick="changeGanttMonth(1)" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700 ios-press">&rsaquo;</button>
+          </div>
+
+          <div id="ganttCapacityPills" class="flex flex-wrap items-center gap-1.5 text-xs"></div>
+        </div>
+
+        <div class="overflow-x-auto w-full pt-2" style="overflow-y: visible !important;">
+          <div id="ganttContent" class="min-w-max pb-8" style="overflow: visible !important;"></div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: DEPT OVERVIEW, ACHIEVEMENTS & TALENT WEEKLY DOSSIER -->
+      <section id="overviewView" class="hidden space-y-6">
+        
+        <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs flex flex-wrap justify-between items-center gap-4">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">
+              📊
+            </div>
+            <div>
+              <h2 class="text-xl font-black text-gray-900 tracking-tight">Department Performance Tracker</h2>
+              <p class="text-xs text-gray-500 font-medium">Monitoring velocity, kapasitas tim, dan rekap pengerjaan sprint.</p>
+            </div>
+          </div>
+          <select id="ovDeptSelector" onchange="renderOverview()" class="bg-gray-50 border border-gray-200 px-3.5 py-2 rounded-xl text-xs font-bold text-gray-800 shadow-xs focus:outline-none">
+            <option value="ALL">Semua Departemen</option>
+            <option value="DM">Digital Marketing (DM)</option>
+            <option value="Production">Creative Production</option>
+            <option value="HRGA">HRGA</option>
+            <option value="ABD">ABD</option>
+          </select>
+        </div>
+
+        <!-- 4 Metrik Ringkasan Utama -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs">
+            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Subtasks</span>
+            <div id="ovTotal" class="text-3xl font-black text-gray-900 my-1">0</div>
+            <span class="text-[11px] text-gray-500 font-medium">Deliverables sprint aktif</span>
+          </div>
+          <div class="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs">
+            <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider block">Completed</span>
+            <div id="ovDone" class="text-3xl font-black text-emerald-600 my-1">0</div>
+            <span id="ovDoneSubtext" class="text-[11px] text-emerald-700 font-medium">0% dari target</span>
+          </div>
+          <div class="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs">
+            <span class="text-[10px] text-rose-600 font-bold uppercase tracking-wider block">Active Blockers</span>
+            <div id="ovBlockers" class="text-3xl font-black text-rose-600 my-1">0</div>
+            <span class="text-[11px] text-rose-700 font-medium">Kendala perlu eskalasi</span>
+          </div>
+          <div class="bg-white rounded-3xl p-5 border border-gray-100 shadow-xs">
+            <span class="text-[10px] text-blue-600 font-bold uppercase tracking-wider block">Completion Velocity</span>
+            <div id="ovScore" class="text-3xl font-black text-blue-600 my-1">0%</div>
+            <div class="w-full bg-gray-100 rounded-full h-1.5 mt-2 overflow-hidden">
+              <div id="ovScoreBar" class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODUL BARU: REKAP JAM KERJA & RINCIAN AKTIVITAS TALENT MINGGU BERJALAN -->
+        <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs space-y-5">
+          <div class="flex flex-wrap justify-between items-center pb-3 border-b border-gray-100 gap-3">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base">
+                ⏱️
+              </div>
+              <div>
+                <h3 class="font-extrabold text-sm text-gray-900 uppercase tracking-wider text-[11px]">Weekly Talent Workload &amp; Task Dossier</h3>
+                <p class="text-[11px] text-gray-500 font-medium">Rekap jam kerja terverifikasi dan item pengerjaan sejak awal minggu berjalan.</p>
+              </div>
+            </div>
+
+            <!-- Talent Selector -->
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-gray-500 font-bold">Pilih Talent:</span>
+              <select id="ovTalentSelect" onchange="renderTalentWeeklyDossier(this.value)" class="bg-gray-100 border border-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-bold text-gray-900 outline-none"></select>
+            </div>
+          </div>
+
+          <!-- Summary Bar Talent Terpilih -->
+          <div id="talentDossierSummaryBar" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center"></div>
+
+          <!-- Rincian Pekerjaan: Done vs In-Progress -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 space-y-3">
+              <div class="flex justify-between items-center pb-2 border-b border-emerald-100">
+                <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider">Tugas Selesai Minggu Ini</span>
+                <span id="talentDoneCountBadge" class="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">0 Task</span>
+              </div>
+              <div id="talentDoneTasksList" class="space-y-2 max-h-56 overflow-y-auto pr-1 text-xs"></div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-3">
+              <div class="flex justify-between items-center pb-2 border-b border-blue-100">
+                <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">Tugas Sedang Berjalan (In-Progress)</span>
+                <span id="talentProgressCountBadge" class="text-[10px] font-extrabold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">0 Task</span>
+              </div>
+              <div id="talentProgressTasksList" class="space-y-2 max-h-56 overflow-y-auto pr-1 text-xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FUN ACHIEVEMENT & PROGRESS RINGS -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs flex flex-col items-center justify-between text-center relative overflow-hidden">
+            <div class="w-full flex justify-between items-center mb-2">
+              <span class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Sprint Health Wheels</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">Sprint Gamified</span>
+            </div>
+
+            <div class="relative w-44 h-44 flex items-center justify-center my-3">
+              <svg class="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="68" stroke="#E0E7FF" stroke-width="10" fill="none" />
+                <circle id="ringExecution" cx="80" cy="80" r="68" stroke="#4F46E5" stroke-width="10" stroke-linecap="round" stroke-dasharray="427.26" stroke-dashoffset="427.26" fill="none" class="transition-all duration-1000" />
+                <circle cx="80" cy="80" r="52" stroke="#DCFCE7" stroke-width="10" fill="none" />
+                <circle id="ringQuality" cx="80" cy="80" r="52" stroke="#16A34A" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73" fill="none" class="transition-all duration-1000" />
+                <circle cx="80" cy="80" r="36" stroke="#FCE7F3" stroke-width="10" fill="none" />
+                <circle id="ringHours" cx="80" cy="80" r="36" stroke="#DB2777" stroke-width="10" stroke-linecap="round" stroke-dasharray="226.19" stroke-dashoffset="226.19" fill="none" class="transition-all duration-1000" />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span id="ringOverallScoreText" class="text-2xl font-black text-gray-900 leading-none">0%</span>
+                <span class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">Pace</span>
+              </div>
+            </div>
+
+            <div class="w-full grid grid-cols-3 gap-2 pt-2 border-t border-gray-100 text-[10px] font-bold text-gray-600">
+              <div class="flex items-center space-x-1 justify-center"><span class="w-2 h-2 rounded-full bg-indigo-600"></span><span id="legExec">Exec 0%</span></div>
+              <div class="flex items-center space-x-1 justify-center"><span class="w-2 h-2 rounded-full bg-emerald-600"></span><span id="legQual">OTD 0%</span></div>
+              <div class="flex items-center space-x-1 justify-center"><span class="w-2 h-2 rounded-full bg-pink-600"></span><span id="legHours">Hours 0%</span></div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Team Trophy Showcase</span>
+              <span id="unlockedBadgesText" class="text-[10px] font-extrabold text-amber-600">0/3 Unlocked</span>
+            </div>
+
+            <div class="space-y-3">
+              <div id="badgeSprintFinisher" class="p-3 rounded-2xl border transition-all flex items-center space-x-3 bg-gray-50 border-gray-200/70 opacity-50">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-xl flex-shrink-0">🏆</div>
+                <div class="flex-1 min-w-0">
+                  <span class="font-extrabold text-xs text-gray-900 block truncate">Sprint Crusher</span>
+                  <span class="text-[10px] text-gray-500 block truncate">Selesaikan &ge; 70% deliverable sprint</span>
+                </div>
+              </div>
+
+              <div id="badgeZeroBlocker" class="p-3 rounded-2xl border transition-all flex items-center space-x-3 bg-gray-50 border-gray-200/70 opacity-50">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-xl flex-shrink-0">🛡️</div>
+                <div class="flex-1 min-w-0">
+                  <span class="font-extrabold text-xs text-gray-900 block truncate">Zero-Blocker Shield</span>
+                  <span class="text-[10px] text-gray-500 block truncate">Pertahankan 0 blocker operasional</span>
+                </div>
+              </div>
+
+              <div id="badgeDeepWork" class="p-3 rounded-2xl border transition-all flex items-center space-x-3 bg-gray-50 border-gray-200/70 opacity-50">
+                <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-xl flex-shrink-0">⚡</div>
+                <div class="flex-1 min-w-0">
+                  <span class="font-extrabold text-xs text-gray-900 block truncate">Deep Work Master</span>
+                  <span class="text-[10px] text-gray-500 block truncate">Akumulasi &ge; 20 jam kerja tervalidasi</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Top Achievers of the Week</span>
+              <span class="text-[10px] font-bold text-gray-400">By Tasks Done</span>
+            </div>
+            <div id="mvpLeaderboardList" class="space-y-2.5 max-h-56 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+        <!-- Matrix Progres per Departemen -->
+        <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs space-y-4">
+          <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+            <h3 class="font-extrabold text-sm text-gray-900 uppercase tracking-wider text-[11px]">Division Health &amp; Execution Pace</h3>
+            <span class="text-xs text-gray-400 font-medium">Status Sprint Mingguan</span>
+          </div>
+          <div id="ovDeptCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        </div>
+
+        <!-- 2 Kolom Bawah: Workload Capacity & Blocker Board -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+              <h3 class="font-extrabold text-sm text-gray-900 uppercase tracking-wider text-[11px]">Workload Distribution (Active PIC)</h3>
+              <span class="text-[10px] font-bold text-gray-400">Target &le; 6 Hari/Sprint</span>
+            </div>
+            <div id="ovTeamWorkloadList" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+              <h3 class="font-extrabold text-sm text-gray-900 uppercase tracking-wider text-[11px]">Critical Blockers &amp; Escalations</h3>
+              <span id="ovBlockerCountBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">0 Isu</span>
+            </div>
+            <div id="ovBlockersList" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: GEMINI AI COPILOT -->
+  <div id="geminiAiModal" class="fixed inset-0 bg-black/45 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl w-full max-w-xl p-6 shadow-2xl border border-gray-100 flex flex-col max-h-[88vh] ios-modal-sheet">
+      <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-500 flex items-center justify-center text-white font-black text-sm shadow-xs">
+            ✦
+          </div>
+          <div>
+            <h3 class="font-black text-sm text-gray-900 leading-tight">Gemini Operations Copilot</h3>
+            <span class="text-[10px] text-gray-400 font-semibold">Asisten Cerdas Sprint &amp; Eksekusi Agensi</span>
+          </div>
+        </div>
+        <button onclick="closeGeminiModal()" class="text-gray-400 text-2xl font-light leading-none ios-press">&times;</button>
+      </div>
+
+      <div class="flex items-center space-x-2 py-3 border-b border-gray-50 overflow-x-auto text-[11px] font-bold">
+        <button onclick="setAiPromptPreset('breakdown')" class="px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition whitespace-nowrap ios-press">
+          ⚡ Auto-Breakdown Project
+        </button>
+        <button onclick="setAiPromptPreset('blocker')" class="px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 hover:bg-rose-100 transition whitespace-nowrap ios-press">
+          🚨 Analisis Solusi Blocker
+        </button>
+        <button onclick="setAiPromptPreset('angles')" class="px-3 py-1.5 rounded-full bg-purple-50 text-purple-700 hover:bg-purple-100 transition whitespace-nowrap ios-press">
+          🎯 Ide Hook &amp; Angle Iklan
+        </button>
+      </div>
+
+      <div id="geminiResponseBox" class="flex-1 overflow-y-auto py-3 space-y-3 text-xs leading-relaxed text-gray-700">
+        <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100 text-gray-500 italic text-[11px]">
+          Halo! Masukkan instruksi, brief klien, atau klik salah satu tombol pintasan di atas untuk mulai menganalisis operasional.
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-gray-100 space-y-2">
+        <div class="flex items-center space-x-2">
+          <input type="text" id="geminiUserInput" placeholder="Tulis instruksi atau tempel brief klien..." onkeydown="if(event.key === 'Enter') submitGeminiQuery()" class="flex-1 p-3 bg-gray-100 rounded-2xl text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500">
+          <button id="btnSendGemini" onclick="submitGeminiQuery()" class="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs transition shadow-xs ios-press">
+            Kirim ↵
+          </button>
+        </div>
+        <div class="flex justify-between items-center text-[10px] text-gray-400 px-1">
+          <span>Model: Gemini 1.5 Flash</span>
+          <button onclick="configureGeminiKey()" class="text-blue-600 hover:underline font-bold">Atur Gemini API Key</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMAND PALETTE (CMD+K) -->
+  <div id="cmdPaletteModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden flex items-start justify-center pt-24 p-4 z-50">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="p-3 border-b border-gray-100 flex items-center space-x-2">
+        <span class="text-gray-400 text-sm">🔍</span>
+        <input type="text" id="cmdInput" placeholder="Cari project, ubah view, atau panggil AI Copilot..." oninput="renderCommandResults(this.value)" class="w-full text-xs font-semibold outline-none text-gray-800">
+        <kbd class="text-[9px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">ESC</kbd>
+      </div>
+      <div id="cmdResults" class="max-h-72 overflow-y-auto p-2 space-y-1 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: TASK BARU -->
+  <div id="newTaskModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100 space-y-4">
+      <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+        <h3 class="font-extrabold text-sm text-gray-900">Buat Project / Task Baru</h3>
+        <button onclick="closeNewTaskModal()" class="text-gray-400 hover:text-gray-600 text-xl font-light">&times;</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-gray-500 block mb-1">Departemen</label>
+          <select id="npDept" class="w-full p-2.5 bg-gray-100 rounded-xl font-semibold outline-none">
+            <option value="DM">Digital Marketing (DM)</option>
+            <option value="Production">Production</option>
+            <option value="HRGA">HRGA</option>
+            <option value="ABD">ABD</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold text-gray-500 block mb-1">Nama Project</label>
+          <input type="text" id="npTitle" placeholder="Misal: Launching Kampanye Q4" class="w-full p-2.5 bg-gray-100 rounded-xl font-semibold outline-none">
+        </div>
+        <div>
+          <label class="font-bold text-gray-500 block mb-1">Lead PIC</label>
+          <select id="npPic" class="w-full p-2.5 bg-gray-100 rounded-xl font-semibold outline-none"></select>
+        </div>
+      </div>
+      <div class="flex space-x-2 pt-2">
+        <button onclick="closeNewTaskModal()" class="w-1/2 py-2 bg-gray-100 text-gray-700 font-bold rounded-xl text-xs ios-press">Batal</button>
+        <button onclick="submitNewTask()" class="w-1/2 py-2 bg-blue-600 text-white font-bold rounded-xl text-xs shadow-xs ios-press">Simpan Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: USER SCORECARD & TIMESHEET -->
+  <div id="userModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl w-full max-w-4xl p-6 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto space-y-4">
+      <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+        <div class="flex items-center space-x-3">
+          <div id="uModalAvatar"></div>
+          <div>
+            <h3 id="uModalName" class="font-black text-base text-gray-900 leading-tight"></h3>
+            <span id="uModalRole" class="text-xs text-blue-600 font-bold"></span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span id="uModalWeeklyHoursPill" class="px-3 py-1 bg-emerald-50 text-emerald-800 font-extrabold text-xs rounded-xl">0h this week</span>
+          <button onclick="promptUserPinLogin()" class="px-3 py-1 bg-gray-100 text-blue-700 font-bold text-xs rounded-xl ios-press">🔒 Switch User (PIN)</button>
+          <button onclick="closeUserModal()" class="text-gray-400 text-2xl font-light leading-none">&times;</button>
+        </div>
+      </div>
+      
+      <div class="border-b border-gray-100 pb-3">
+        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Live KPI Google Sheet (<span id="kpiRoleBadge"></span>)</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="text-gray-400 border-b border-gray-100 text-[10px] uppercase">
+                <th class="py-2">Indikator</th><th class="py-2">Bobot</th><th class="py-2">Target</th><th class="py-2">Actual</th><th class="py-2">Capaian</th>
+              </tr>
+            </thead>
+            <tbody id="kpiTableBody" class="divide-y divide-gray-50"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Subtasks Assigned &amp; Hours</h4>
+        <div id="uSubtaskList" class="space-y-1.5 max-h-48 overflow-y-auto text-xs"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-gray-900/90 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl transition-all duration-300 opacity-0 pointer-events-none z-50"></div>
+
+  <script>
+    const KPI_SHEET_URL = "https://docs.google.com/spreadsheets/d/1J7qOn6NbqfFPd2WaWNUyj1HET6ykuF9E_STu7I8cTpw";
+    const TEAM_DB_URL = "https://docs.google.com/spreadsheets/d/1Qv23qUxzUOiqiGiSeHiGnodBfTUkEC0HIUI38LHujbg";
+
+    const USER_ROLE_SHEET_MAP = {
+      Mike: "PROJECT MANAGER", Selin: "PROJECT MANAGER", Anggun: "HRGA", Razaan: "DM", Nicho: "DM",
+      Jireh: "CREATIVE DIRECTOR", Arif: "GRAPHIC DESIGN", Giza: "VIDEO EDITOR", Dzaky: "FINANCE"
+    };
+
+    let teamNicknames = ["Mike", "Selin", "Jireh", "Anggun", "Razaan", "Nicho", "Arif", "Giza", "Dzaky"];
+
+    const DEPARTMENTS = {
+      DM: { tint: '#FFD6DF', fill: '#E11D48', text: '#5C021E' },
+      Production: { tint: '#8EE4E2', fill: '#0B7A75', text: '#032F2E' },
+      HRGA: { tint: '#C3C1FF', fill: '#4743C9', text: '#1A185A' },
+      ABD: { tint: '#8AD5FF', fill: '#0284C7', text: '#082F49' }
+    };
+
+    const initialTasks = [
+      {
+        id: "tsk-1", dept: "ABD", title: "Cherry Oaks", pic: "Mike", launchDate: "2026-09-28", handoverSla: "2026-10-20",
+        assets: { drive: "https://drive.google.com", figma: "https://figma.com", ads: "" },
+        feedbackLogs: [{ text: "Wireframe layout disetujui, naikkan kontras tombol.", sentiment: "Positive", date: "15 Oct" }],
+        approval: { copy: true, visual: true, tech: false },
+        actions: [
+          { text: "Design wireframe", pic: "Arif", dueDate: "2026-10-09", duration: 3, done: true, isFlagged: false, revisions: 1, running: false, link: "https://figma.com", workSessions: [{ start: 1791850000000, end: 1791864400000, durationSeconds: 14400 }] },
+          { text: "Development & CAPI", pic: "Razaan", dueDate: "2026-10-15", duration: 4, done: true, isFlagged: false, revisions: 0, running: false, link: "", workSessions: [{ start: 1791850000000, end: 1791857200000, durationSeconds: 7200 }] },
+          { text: "QA & Client handover", pic: "Selin", dueDate: "2026-10-20", duration: 2, done: false, isFlagged: true, blocker: "Menunggu sign-off", revisions: 3, running: false, link: "", workSessions: [{ start: 1791850000000, end: 1791851800000, durationSeconds: 1800 }] }
+        ]
+      },
+      {
+        id: "tsk-2", dept: "DM", title: "Social Media Campaigns", pic: "Razaan", launchDate: "2026-10-10", handoverSla: "2026-10-22",
+        assets: { drive: "", figma: "", ads: "https://adsmanager.facebook.com" },
+        feedbackLogs: [{ text: "Copywriting disetujui.", sentiment: "Positive", date: "16 Oct" }],
+        approval: { copy: true, visual: false, tech: false },
+        actions: [
+          { text: "Meta CTWA ads setup", pic: "Nicho", dueDate: "2026-10-08", duration: 2, done: true, isFlagged: false, revisions: 0, running: false, link: "", workSessions: [{ start: 1791850000000, end: 1791855600000, durationSeconds: 5600 }] },
+          { text: "Budget scaling analysis", pic: "Mike", dueDate: "2026-10-28", duration: 3, done: false, isFlagged: false, revisions: 1, running: false, link: "", workSessions: [{ start: 1791850000000, end: 1791853600000, durationSeconds: 3600 }] }
+        ]
+      }
+    ];
+
+    let ganttTargetDate = new Date(2026, 9, 1);
+
+    let AppState = {
+      activeUserKey: "Mike",
+      deptFilter: "ALL",
+      statusFilter: "ALL",
+      viewMode: "capsules",
+      expandedCardIds: new Set(["tsk-1"]),
+      tasks: JSON.parse(localStorage.getItem('agency_hub_full_dossier_v1')) || initialTasks
+    };
+
+    function commitState() {
+      localStorage.setItem('agency_hub_full_dossier_v1', JSON.stringify(AppState.tasks));
+      renderActiveView();
+    }
+
+    // --- INTEGRASI GEMINI AI COPILOT ---
+    let GEMINI_API_KEY = localStorage.getItem('agency_gemini_api_key') || '';
+
+    function configureGeminiKey() {
+      const key = prompt("Masukkan Google Gemini API Key Anda (tersimpan aman di browser lokal):", GEMINI_API_KEY);
+      if (key !== null) {
+        GEMINI_API_KEY = key.trim();
+        localStorage.setItem('agency_gemini_api_key', GEMINI_API_KEY);
+        showToast("Gemini API Key tersimpan.");
+      }
+    }
+
+    function openGeminiModal() {
+      playSound('tick');
+      document.getElementById('geminiAiModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('geminiUserInput').focus(), 50);
+    }
+
+    function closeGeminiModal() {
+      playSound('tick');
+      document.getElementById('geminiAiModal').classList.add('hidden');
+    }
+
+    function setAiPromptPreset(type) {
+      const input = document.getElementById('geminiUserInput');
+      if (type === 'breakdown') {
+        input.value = "Tolong breakdown proyek: 'Scale Campaign Meta Ads & UGC Video' menjadi 4 subtask teknis lengkap dengan PIC dan durasi estimasi.";
+      } else if (type === 'blocker') {
+        input.value = "Berikan solusi teknis untuk blocker: Akun Meta Ads terkena pembatasan payment gateway dan event CAPI Purchase belum ter-verifikasi.";
+      } else if (type === 'angles') {
+        input.value = "Buatkan 3 angle copywriting Direct-to-Chat (CTWA) untuk brand fashion pria dengan fokus CTA ke WhatsApp CS.";
+      }
+      input.focus();
+    }
+
+    async function submitGeminiQuery() {
+      const input = document.getElementById('geminiUserInput');
+      const query = input.value.trim();
+      if (!query) return;
+
+      if (!GEMINI_API_KEY) {
+        configureGeminiKey();
+        if (!GEMINI_API_KEY) return alert("Gemini API Key dibutuhkan untuk menggunakan fitur ini.");
+      }
+
+      const box = document.getElementById('geminiResponseBox');
+      const btn = document.getElementById('btnSendGemini');
+
+      box.innerHTML += `
+        <div class="flex justify-end">
+          <div class="max-w-[85%] p-3 bg-blue-600 text-white rounded-2xl rounded-tr-none text-xs font-medium">
+            ${query}
+          </div>
+        </div>
+      `;
+
+      input.value = '';
+      btn.disabled = true;
+      btn.innerText = "Berpikir...";
+      box.scrollTop = box.scrollHeight;
+
+      const loadingId = 'loading-' + Date.now();
+      box.innerHTML += `
+        <div id="${loadingId}" class="flex justify-start">
+          <div class="p-3 bg-gray-100 text-gray-500 rounded-2xl rounded-tl-none text-xs italic animate-pulse">
+            ✦ Gemini sedang menganalisis alur kerja...
+          </div>
+        </div>
+      `;
+      box.scrollTop = box.scrollHeight;
+
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Anda adalah Operations AI Consultant untuk Digital Marketing & Creative Agency. Berikan respon yang sangat ringkas, terstruktur (bullet points), actionable, dan profesional dalam Bahasa Indonesia.\n\nPermintaan: ${query}`
+              }]
+            }]
+          })
+        });
+
+        const data = await response.json();
+        document.getElementById(loadingId)?.remove();
+
+        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+          let aiText = data.candidates[0].content.parts[0].text;
+          aiText = aiText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+
+          box.innerHTML += `
+            <div class="flex justify-start">
+              <div class="max-w-[90%] p-3.5 bg-gray-50 border border-gray-200/80 text-gray-800 rounded-2xl rounded-tl-none text-xs leading-relaxed shadow-xs">
+                ${aiText}
+              </div>
+            </div>
+          `;
+          playSound('done');
+        } else {
+          throw new Error(data.error?.message || "Format respon tidak sesuai");
+        }
+      } catch (err) {
+        document.getElementById(loadingId)?.remove();
+        box.innerHTML += `
+          <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs">
+            Gagal memproses permintaan: ${err.message}. Pastikan API Key valid.
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Kirim ↵";
+        box.scrollTop = box.scrollHeight;
+      }
+    }
+
+    // --- LOGIKA GANTT MULTI-BULAN ---
+    function changeGanttMonth(delta) {
+      ganttTargetDate.setMonth(ganttTargetDate.getMonth() + delta);
+      playSound('tick');
+      renderGantt();
+    }
+
+    function getDaysInSelectedMonth(year, month) {
+      const days = [];
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+      for (let d = 1; d <= totalDays; d++) {
+        const cur = new Date(year, month, d);
+        const dayIdx = cur.getDay();
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        days.push({
+          dateNum: String(d).padStart(2, '0'),
+          dayName: dayNames[dayIdx],
+          isWeekend: (dayIdx === 0 || dayIdx === 6),
+          dateStr
+        });
+      }
+      return days;
+    }
+
+    function renderGantt() {
+      const container = document.getElementById('ganttContent');
+      const pillBox = document.getElementById('ganttCapacityPills');
+      const monthLabel = document.getElementById('ganttCurrentMonthLabel');
+
+      const year = ganttTargetDate.getFullYear();
+      const month = ganttTargetDate.getMonth();
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      monthLabel.innerText = `${monthNames[month]} ${year}`;
+
+      const load = {};
+      teamNicknames.forEach(n => load[n] = 0);
+      AppState.tasks.forEach(t => t.actions.forEach(a => { if (!a.done) load[a.pic] = (load[a.pic] || 0) + (a.duration || 2); }));
+
+      pillBox.innerHTML = Object.keys(load).filter(n => load[n] > 0).map(n => `
+        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${load[n] >= 7 ? 'bg-rose-100 text-rose-800 animate-pulse' : 'bg-emerald-50 text-emerald-800'}">
+          ${n}: ${load[n]}d ${load[n] >= 7 ? '⚠️ Overload' : ''}
+        </span>
+      `).join('');
+
+      const daysInMonth = getDaysInSelectedMonth(year, month);
+      let filteredTasks = AppState.tasks;
+      if (AppState.deptFilter !== 'ALL') filteredTasks = filteredTasks.filter(t => t.dept === AppState.deptFilter);
+
+      let html = `<div class="text-xs">
+        <div class="flex border-b border-gray-200 pb-2.5 font-bold text-gray-400">
+          <div class="w-60 min-w-[240px] pl-3 sticky left-0 bg-white z-20 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">PROJECT</div>
+          <div class="flex">
+            ${daysInMonth.map(d => `
+              <div class="gantt-col-cell ${d.isWeekend ? 'gantt-weekend' : ''}">
+                <span class="block text-[9px] text-gray-400 font-medium">${d.dayName}</span>
+                <span class="font-bold text-gray-800 text-[11px]">${d.dateNum}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+
+      filteredTasks.forEach(t => {
+        const totalActs = t.actions.length;
+        const doneActs = t.actions.filter(a => a.done).length;
+        const pct = totalActs ? Math.round((doneActs / totalActs) * 100) : 0;
+
+        html += `
+          <div class="flex items-center py-3.5 border-b border-gray-100 hover:bg-gray-50/70 transition-colors">
+            <div class="w-60 min-w-[240px] pl-3 pr-2 sticky left-0 bg-white z-20 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
+              <span class="font-extrabold text-gray-900 block truncate text-xs">${t.title}</span>
+              <span class="text-[10px] text-gray-400 font-semibold">[${t.dept}] • ${doneActs}/${totalActs} Selesai</span>
+            </div>
+
+            <div class="flex items-center">
+              ${daysInMonth.map(d => {
+                const matchingActions = t.actions.filter(a => a.dueDate === d.dateStr);
+                const hasTask = matchingActions.length > 0;
+                const totalHours = matchingActions.reduce((sum, a) => sum + (a.duration || 2), 0);
+
+                return `
+                  <div class="gantt-col-cell gantt-cell-container py-1 ${d.isWeekend ? 'gantt-weekend' : ''}">
+                    <span class="inline-block px-1.5 py-0.5 rounded-lg font-bold text-[10px] transition-transform ${hasTask ? 'bg-emerald-100 text-emerald-900 border border-emerald-200 cursor-pointer hover:scale-110 shadow-xs' : 'text-gray-200'}">
+                      ${hasTask ? `${totalHours}h` : '·'}
+                    </span>
+
+                    ${hasTask ? `
+                      <div class="gantt-popover bg-gray-900/95 backdrop-blur-xl text-white rounded-2xl p-4 text-left border border-white/10">
+                        <div class="flex items-center justify-between pb-2 border-b border-white/10 mb-2">
+                          <span class="text-[10px] font-extrabold uppercase text-emerald-400">${t.dept} • ${d.dateNum} ${monthNames[month].slice(0,3)}</span>
+                          <span class="text-[10px] font-mono bg-white/20 px-2 py-0.5 rounded-full text-white font-bold">${totalHours}h Load</span>
+                        </div>
+                        
+                        <div class="font-extrabold text-xs text-white mb-0.5 truncate">${t.title}</div>
+                        <div class="text-[10px] text-gray-300 mb-2.5">Progres: <b class="text-white">${pct}%</b> (${doneActs}/${totalActs} Selesai)</div>
+
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Subtasks Jatuh Tempo:</div>
+                        <div class="space-y-1">
+                          ${matchingActions.map(act => `
+                            <div class="p-1.5 rounded-lg ${act.done ? 'bg-white/5 line-through text-gray-400' : 'bg-white/10 text-gray-100'} text-[10px] flex justify-between items-center gap-2">
+                              <span class="truncate flex-1 font-medium">${act.text}</span>
+                              <span class="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[8px] whitespace-nowrap">${act.pic}</span>
+                            </div>
+                          `).join('')}
+                        </div>
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    // --- REKAP PEKERJAAN & JAM KERJA TALENT MINGGU BERJALAN ---
+    function getMondayCurrentWeek() {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      const mon = new Date(d.setDate(diff));
+      mon.setHours(0, 0, 0, 0);
+      return mon.getTime();
+    }
+
+    function renderTalentWeeklyDossier(talentNick) {
+      if (!talentNick) talentNick = AppState.activeUserKey;
+      const startOfWeek = getMondayCurrentWeek();
+
+      let totalWeeklySeconds = 0;
+      let doneCount = 0;
+      let progressCount = 0;
+      const doneItems = [];
+      const progressItems = [];
+
+      AppState.tasks.forEach(t => {
+        t.actions.forEach(a => {
+          if (a.pic === talentNick) {
+            let taskSeconds = 0;
+            if (Array.isArray(a.workSessions)) {
+              a.workSessions.forEach(s => {
+                if (s.start >= startOfWeek) {
+                  const dur = s.durationSeconds || (s.end ? Math.round((s.end - s.start) / 1000) : 0);
+                  taskSeconds += Math.min(dur, 7200);
+                }
+              });
+            }
+            totalWeeklySeconds += taskSeconds;
+
+            const itemObj = {
+              project: t.title,
+              dept: t.dept,
+              actionText: a.text,
+              dueDate: a.dueDate || '-',
+              hoursText: (taskSeconds / 3600).toFixed(1) + ' jam',
+              isFlagged: a.isFlagged,
+              blocker: a.blocker || ''
+            };
+
+            if (a.done) {
+              doneCount++;
+              doneItems.push(itemObj);
+            } else {
+              progressCount++;
+              progressItems.push(itemObj);
+            }
+          }
+        });
+      });
+
+      const weeklyHours = (totalWeeklySeconds / 3600).toFixed(1);
+
+      // Render Summary Bar
+      document.getElementById('talentDossierSummaryBar').innerHTML = `
+        <div class="p-4 bg-gray-50 border border-gray-100 rounded-2xl">
+          <span class="text-[10px] text-gray-400 font-bold uppercase block">Total Jam Kerja Minggu Ini</span>
+          <div class="text-2xl font-black text-blue-600 my-0.5">${weeklyHours} Jam</div>
+          <span class="text-[10px] font-semibold ${weeklyHours >= 40 ? 'text-rose-600' : 'text-emerald-600'}">${weeklyHours >= 40 ? '⚠️ Over-Cap (Audit Needed)' : 'Status Kapasitas Normal'}</span>
+        </div>
+        <div class="p-4 bg-gray-50 border border-gray-100 rounded-2xl">
+          <span class="text-[10px] text-gray-400 font-bold uppercase block">Tugas Selesai</span>
+          <div class="text-2xl font-black text-emerald-600 my-0.5">${doneCount} Task</div>
+          <span class="text-[10px] font-semibold text-gray-500">Output tuntas minggu ini</span>
+        </div>
+        <div class="p-4 bg-gray-50 border border-gray-100 rounded-2xl">
+          <span class="text-[10px] text-gray-400 font-bold uppercase block">Sedang Dikerjakan</span>
+          <div class="text-2xl font-black text-amber-600 my-0.5">${progressCount} Task</div>
+          <span class="text-[10px] font-semibold text-gray-500">Dalam proses sprint berjalan</span>
+        </div>
+      `;
+
+      // Render Done Tasks
+      document.getElementById('talentDoneCountBadge').innerText = `${doneCount} Task`;
+      document.getElementById('talentDoneTasksList').innerHTML = doneItems.length ? doneItems.map(item => `
+        <div class="p-2.5 bg-white rounded-xl border border-emerald-100 flex items-start justify-between gap-2 shadow-xs">
+          <div>
+            <span class="font-bold text-gray-800 block text-xs">[${item.dept}] ${item.actionText}</span>
+            <span class="text-[10px] text-gray-400 block">${item.project} • Due: ${item.dueDate}</span>
+          </div>
+          <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-emerald-50 text-emerald-700 flex-shrink-0">${item.hoursText}</span>
+        </div>
+      `).join('') : `<div class="p-3 text-center text-gray-400 italic">Belum ada tugas selesai minggu ini.</div>`;
+
+      // Render In-Progress Tasks
+      document.getElementById('talentProgressCountBadge').innerText = `${progressCount} Task`;
+      document.getElementById('talentProgressTasksList').innerHTML = progressItems.length ? progressItems.map(item => `
+        <div class="p-2.5 bg-white rounded-xl border ${item.isFlagged ? 'border-rose-200 bg-rose-50/40' : 'border-blue-100'} flex items-start justify-between gap-2 shadow-xs">
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="font-bold text-gray-800 block text-xs">[${item.dept}] ${item.actionText}</span>
+              ${item.isFlagged ? '<span class="text-[9px] bg-rose-600 text-white font-black px-1.5 py-0.2 rounded">BLOCKER</span>' : ''}
+            </div>
+            <span class="text-[10px] text-gray-400 block">${item.project} • Due: ${item.dueDate}</span>
+            ${item.isFlagged ? `<span class="text-[10px] text-rose-700 font-medium block mt-0.5">⚠️ ${item.blocker}</span>` : ''}
+          </div>
+          <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-blue-50 text-blue-700 flex-shrink-0">${item.hoursText}</span>
+        </div>
+      `).join('') : `<div class="p-3 text-center text-gray-400 italic">Tidak ada tugas aktif berjalan.</div>`;
+    }
+
+    // --- OVERVIEW & FUN GAMIFICATION RINGS ---
+    function renderOverview() {
+      const selectedDept = document.getElementById('ovDeptSelector')?.value || 'ALL';
+      let tasks = AppState.tasks;
+
+      if (selectedDept !== 'ALL') tasks = tasks.filter(t => t.dept === selectedDept);
+
+      let total = 0, done = 0, blockers = 0;
+      const deptStats = {
+        DM: { total: 0, done: 0, blockers: 0 },
+        Production: { total: 0, done: 0, blockers: 0 },
+        HRGA: { total: 0, done: 0, blockers: 0 },
+        ABD: { total: 0, done: 0, blockers: 0 }
+      };
+
+      const picWorkload = {};
+      const activeBlockerItems = [];
+
+      tasks.forEach(t => {
+        t.actions.forEach(a => {
+          total++;
+          if (deptStats[t.dept]) deptStats[t.dept].total++;
+
+          if (a.done) {
+            done++;
+            if (deptStats[t.dept]) deptStats[t.dept].done++;
+          } else {
+            picWorkload[a.pic] = (picWorkload[a.pic] || 0) + (a.duration || 2);
+          }
+
+          if (a.isFlagged) {
+            blockers++;
+            if (deptStats[t.dept]) deptStats[t.dept].blockers++;
+            activeBlockerItems.push({
+              project: t.title, dept: t.dept, actionText: a.text, pic: a.pic,
+              note: a.blocker || 'Membutuhkan penanganan Lead'
+            });
+          }
+        });
+      });
+
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById('ovTotal').innerText = total;
+      document.getElementById('ovDone').innerText = done;
+      document.getElementById('ovDoneSubtext').innerText = `${pct}% dari target`;
+      document.getElementById('ovBlockers').innerText = blockers;
+      document.getElementById('ovScore').innerText = `${pct}%`;
+      document.getElementById('ovScoreBar').style.width = `${pct}%`;
+
+      // Cincin Gamifikasi SVG
+      const execPct = total ? Math.min(100, Math.round((done / total) * 100)) : 0;
+      const c1 = 427.26;
+      document.getElementById('ringExecution').style.strokeDashoffset = c1 - (execPct / 100) * c1;
+      document.getElementById('legExec').innerText = `Exec ${execPct}%`;
+
+      const qualPct = total ? Math.min(100, Math.round(((total - blockers) / total) * 100)) : 100;
+      const c2 = 326.73;
+      document.getElementById('ringQuality').style.strokeDashoffset = c2 - (qualPct / 100) * c2;
+      document.getElementById('legQual').innerText = `OTD ${qualPct}%`;
+
+      let totalSprintSeconds = 0;
+      AppState.tasks.forEach(t => t.actions.forEach(a => {
+        if (Array.isArray(a.workSessions)) a.workSessions.forEach(s => totalSprintSeconds += (s.durationSeconds || 0));
+      }));
+      const totalSprintHours = totalSprintSeconds / 3600;
+      const hoursPct = Math.min(100, Math.round((totalSprintHours / 25) * 100));
+      const c3 = 226.19;
+      document.getElementById('ringHours').style.strokeDashoffset = c3 - (hoursPct / 100) * c3;
+      document.getElementById('legHours').innerText = `Hours ${hoursPct}%`;
+
+      const healthScore = Math.round((execPct + qualPct + hoursPct) / 3);
+      document.getElementById('ringOverallScoreText').innerText = `${healthScore}%`;
+
+      // Badge Trophies
+      let unlockedCount = 0;
+      const updateBadge = (id, condition) => {
+        const el = document.getElementById(id);
+        if (condition) {
+          el.className = "p-3 rounded-2xl border transition-all flex items-center space-x-3 bg-amber-50/70 border-amber-300 shadow-xs opacity-100 scale-[1.02]";
+          unlockedCount++;
+        } else {
+          el.className = "p-3 rounded-2xl border transition-all flex items-center space-x-3 bg-gray-50 border-gray-200/70 opacity-50";
+        }
+      };
+
+      updateBadge('badgeSprintFinisher', execPct >= 70);
+      updateBadge('badgeZeroBlocker', blockers === 0 && done > 0);
+      updateBadge('badgeDeepWork', totalSprintHours >= 20);
+      document.getElementById('unlockedBadgesText').innerText = `${unlockedCount}/3 Unlocked`;
+
+      // MVP Leaderboard
+      const mvpStats = {};
+      teamNicknames.forEach(n => mvpStats[n] = { done: 0, hours: 0 });
+      AppState.tasks.forEach(t => t.actions.forEach(a => {
+        if (!mvpStats[a.pic]) mvpStats[a.pic] = { done: 0, hours: 0 };
+        if (a.done) mvpStats[a.pic].done++;
+        if (Array.isArray(a.workSessions)) a.workSessions.forEach(s => mvpStats[a.pic].hours += ((s.durationSeconds || 0) / 3600));
+      }));
+
+      const sortedMvp = Object.keys(mvpStats).map(n => ({ name: n, ...mvpStats[n] })).sort((a, b) => b.done - a.done || b.hours - a.hours).slice(0, 3);
+      const rankBadges = ['🥇', '🥈', '🥉'];
+      document.getElementById('mvpLeaderboardList').innerHTML = sortedMvp.map((m, idx) => `
+        <div class="flex items-center justify-between p-2 rounded-xl bg-gray-50 border border-gray-100 text-xs">
+          <div class="flex items-center space-x-2.5">
+            <span class="text-base">${rankBadges[idx]}</span>
+            <div>
+              <span class="font-extrabold text-gray-900 block leading-tight">${m.name}</span>
+              <span class="text-[10px] text-gray-400 font-semibold">${m.hours.toFixed(1)} jam kerja</span>
+            </div>
+          </div>
+          <span class="font-black text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">${m.done} Selesai</span>
+        </div>
+      `).join('');
+
+      // Render Cards Per Departemen
+      document.getElementById('ovDeptCardsGrid').innerHTML = Object.keys(deptStats).map(d => {
+        const s = deptStats[d];
+        const dPct = s.total ? Math.round((s.done / s.total) * 100) : 0;
+        const theme = DEPARTMENTS[d] || DEPARTMENTS.DM;
+
+        return `
+          <div class="p-4 rounded-2xl border border-gray-100 bg-gray-50/60 flex flex-col justify-between space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="font-extrabold text-xs text-gray-800">${d}</span>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${s.blockers > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">
+                ${s.blockers > 0 ? `${s.blockers} Blocker` : 'On-Track'}
+              </span>
+            </div>
+            <div>
+              <div class="flex justify-between text-[11px] font-semibold text-gray-500 mb-1">
+                <span>Progres: ${s.done}/${s.total}</span>
+                <span class="font-bold text-gray-800">${dPct}%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500" style="width: ${dPct}%; background-color: ${theme.fill}"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Workload PIC List
+      const wlContainer = document.getElementById('ovTeamWorkloadList');
+      const picKeys = Object.keys(picWorkload);
+      wlContainer.innerHTML = picKeys.length ? picKeys.map(n => {
+        const days = picWorkload[n];
+        const isOver = days >= 7;
+        return `
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between items-center font-bold">
+              <span class="text-gray-800">${n}</span>
+              <span class="${isOver ? 'text-rose-600 font-extrabold' : 'text-gray-500'}">${days} hari load ${isOver ? '⚠️ Overload' : ''}</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+              <div class="h-full rounded-full ${isOver ? 'bg-rose-500 animate-pulse' : 'bg-blue-600'}" style="width: ${Math.min(100, (days/10)*100)}%;"></div>
+            </div>
+          </div>
+        `;
+      }).join('') : `<div class="p-4 text-center text-gray-400 text-xs italic">Semua tugas sprint telah selesai.</div>`;
+
+      // Blockers Board
+      document.getElementById('ovBlockerCountBadge').innerText = `${activeBlockerItems.length} Isu`;
+      document.getElementById('ovBlockersList').innerHTML = activeBlockerItems.length ? activeBlockerItems.map(b => `
+        <div class="p-3 bg-rose-50/60 rounded-2xl border border-rose-100 text-xs space-y-1">
+          <div class="flex justify-between items-center">
+            <span class="font-extrabold text-rose-900 truncate">[${b.dept}] ${b.project}</span>
+            <span class="px-2 py-0.5 rounded-full bg-rose-200 text-rose-800 font-bold text-[9px]">${b.pic}</span>
+          </div>
+          <p class="text-rose-800 text-[11px] font-medium leading-relaxed">${b.note}</p>
+        </div>
+      `).join('') : `
+        <div class="p-6 text-center text-emerald-600 bg-emerald-50/50 rounded-2xl border border-emerald-100 text-xs font-semibold">
+          ✨ Tidak ada hambatan aktif. Seluruh divisi beroperasi normal.
+        </div>
+      `;
+
+      // Inisialisasi dropdown talent dossier jika belum ada pilihan
+      const tSelect = document.getElementById('ovTalentSelect');
+      if (tSelect) {
+        const curVal = tSelect.value || AppState.activeUserKey;
+        tSelect.innerHTML = teamNicknames.map(n => `<option value="${n}" ${n === curVal ? 'selected' : ''}>${n}</option>`).join('');
+        renderTalentWeeklyDossier(curVal);
+      }
+    }
+
+    // --- AUDIO TAPTIC (WEB AUDIO API) ---
+    let audioCtx = null, soundMuted = false;
+    function playSound(type) {
+      if (soundMuted) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if (type === 'tick') {
+          osc.frequency.setValueAtTime(600, now);
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+          osc.start(now); osc.stop(now + 0.03);
+        } else if (type === 'done') {
+          [523.25, 659.25, 783.99].forEach((f, i) => {
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.setValueAtTime(f, now + i * 0.05);
+            g.gain.setValueAtTime(0.06, now + i * 0.05);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.2);
+            o.start(now + i * 0.05); o.stop(now + i * 0.05 + 0.2);
+          });
+        }
+      } catch (e) {}
+    }
+
+    function toggleAudioMute() {
+      soundMuted = !soundMuted;
+      document.getElementById('btnAudioToggle').innerText = soundMuted ? '🔇' : '🔊';
+      showToast(soundMuted ? 'Suara dinonaktifkan' : 'Suara aktif');
+    }
+
+    function calculateWeeklyHours(nick) {
+      let totalSeconds = 0;
+      AppState.tasks.forEach(t => t.actions.forEach(a => {
+        if (a.pic === nick && Array.isArray(a.workSessions)) a.workSessions.forEach(s => totalSeconds += (s.durationSeconds || 0));
+      }));
+      const hours = (totalSeconds / 3600).toFixed(1);
+      return { hours: parseFloat(hours), isOverCap: hours > 40, status: hours > 40 ? "Over-Cap" : "Normal" };
+    }
+
+    function getAvatarBadge(name, size = "w-7 h-7 text-xs") {
+      const emojis = ['😀', '😎', '🥳', '🤓', '🤩', '😄', '🤠', '😊'];
+      const colors = ['#E0F2FE', '#FEF3C7', '#DCFCE7', '#FCE7F3', '#EDE9FE'];
+      let h = 0; for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+      return `<div class="${size} rounded-full flex items-center justify-center font-bold select-none" style="background:${colors[Math.abs(h) % colors.length]}">${emojis[Math.abs(h) % emojis.length]}</div>`;
+    }
+
+    function createProgressRingSvg(pct, color) {
+      const r = 24, c = 2 * Math.PI * r;
+      const offset = c - (pct / 100) * c;
+      return `
+        <div class="relative w-14 h-14 flex items-center justify-center flex-shrink-0">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="${r}" stroke="rgba(255,255,255,0.3)" stroke-width="5" fill="none" />
+            <circle cx="30" cy="30" r="${r}" stroke="${color}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}" fill="none" class="transition-all duration-500" />
+          </svg>
+          <span class="absolute font-black text-[11px] text-white">${pct}%</span>
+        </div>
+      `;
+    }
+
+    function renderActiveView() {
+      renderNavAndSidebar();
+      if (AppState.viewMode === 'capsules') renderCapsules();
+      if (AppState.viewMode === 'gantt') renderGantt();
+      if (AppState.viewMode === 'overview') renderOverview();
+    }
+
+    function renderNavAndSidebar() {
+      document.getElementById('navAvatarSpan').innerHTML = getAvatarBadge(AppState.activeUserKey, "w-6 h-6 text-xs");
+      document.getElementById('navUserName').innerText = AppState.activeUserKey;
+
+      const myHours = calculateWeeklyHours(AppState.activeUserKey);
+      const myBadge = document.getElementById('myWeeklyHoursBadge');
+      if (myBadge) {
+        myBadge.innerText = `${myHours.hours}h this week`;
+        myBadge.className = myHours.isOverCap 
+          ? "bg-rose-100 border border-rose-300 px-3 py-1 rounded-full text-xs font-black text-rose-800 animate-pulse"
+          : "bg-blue-50 border border-blue-200 px-3 py-1 rounded-full text-xs font-extrabold text-blue-800";
+      }
+
+      document.getElementById('sidebarUserList').innerHTML = teamNicknames.slice(0, 8).map(n => {
+        const wh = calculateWeeklyHours(n);
+        return `
+          <div onclick="openUserProfileModal('${n}')" class="flex items-center justify-between p-1 rounded-xl hover:bg-gray-100 cursor-pointer ios-press">
+            <div class="flex items-center space-x-2 min-w-0">
+              ${getAvatarBadge(n, "w-6 h-6 text-xs")}
+              <span class="font-bold text-gray-800 truncate text-[11px] ${n === AppState.activeUserKey ? 'text-blue-600' : ''}">${n}</span>
+            </div>
+            <span class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${wh.isOverCap ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-600'}">${wh.hours}h</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderCapsules() {
+      const container = document.getElementById('capsulesView');
+      let tasks = AppState.tasks;
+
+      if (AppState.deptFilter !== 'ALL') tasks = tasks.filter(t => t.dept === AppState.deptFilter);
+      if (AppState.statusFilter !== 'ALL') {
+        tasks = tasks.filter(t => {
+          const done = t.actions.filter(a => a.done).length === t.actions.length;
+          if (AppState.statusFilter === 'COMPLETED') return done;
+          if (AppState.statusFilter === 'ACTIVE') return !done && !t.actions.some(a => a.isFlagged);
+          if (AppState.statusFilter === 'BLOCKED') return t.actions.some(a => a.isFlagged);
+          return true;
+        });
+      }
+
+      if (!tasks.length) {
+        container.innerHTML = `<div class="p-8 text-center text-gray-400 bg-white rounded-3xl border border-gray-100 text-xs italic">Tidak ada proyek yang cocok.</div>`;
+        return;
+      }
+
+      container.innerHTML = tasks.map(t => {
+        const theme = DEPARTMENTS[t.dept] || DEPARTMENTS.DM;
+        const done = t.actions.filter(a => a.done).length;
+        const total = t.actions.length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const isOpen = AppState.expandedCardIds.has(t.id);
+        const hasBlocker = t.actions.some(a => a.isFlagged);
+
+        return `
+          <div class="w-full flex flex-col">
+            <div onclick="toggleCapsule('${t.id}')" class="progress-capsule cursor-pointer relative overflow-hidden flex items-center justify-between px-6 py-4" style="background-color:${theme.tint};">
+              <div class="absolute inset-y-0 left-0 transition-all duration-500" style="width:${pct}%; background-color:${theme.fill};"></div>
+              <div class="relative z-10 flex-1 min-w-0 pr-3" style="color:${pct > 40 ? '#fff' : theme.text}">
+                <div class="flex items-center space-x-2">
+                  <h4 class="font-black text-base truncate">${t.title}</h4>
+                  <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/30 backdrop-blur-xs">${t.dept}</span>
+                  ${hasBlocker ? `<span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-600 text-white animate-pulse">BLOCKER</span>` : ''}
+                </div>
+                <div class="text-xs font-semibold opacity-90 mt-0.5">${done}/${total} Selesai</div>
+              </div>
+              <div class="relative z-10 flex items-center space-x-3">
+                ${createProgressRingSvg(pct, pct > 40 ? '#fff' : theme.fill)}
+                <span class="text-xs font-bold transition-transform ${isOpen ? 'rotate-180' : ''}" style="color:${pct > 40 ? '#fff' : theme.text}">▼</span>
+              </div>
+            </div>
+
+            <div class="accordion-drawer ${isOpen ? 'open' : ''} bg-white rounded-3xl p-5 border border-gray-200/70 shadow-xs space-y-4">
+              <div class="flex flex-wrap justify-between items-center pb-3 border-b border-gray-100 text-xs gap-2">
+                <span class="font-bold text-gray-700">Lead PIC: ${t.pic} • SLA: ${t.handoverSla || 'H-2'}</span>
+                <div class="flex items-center space-x-1">
+                  ${t.assets?.drive ? `<a href="${t.assets.drive}" target="_blank" class="px-2 py-1 bg-blue-50 text-blue-700 font-bold rounded-lg text-[10px]">Drive ↗</a>` : ''}
+                  ${t.assets?.figma ? `<a href="${t.assets.figma}" target="_blank" class="px-2 py-1 bg-purple-50 text-purple-700 font-bold rounded-lg text-[10px]">Figma ↗</a>` : ''}
+                  ${t.assets?.ads ? `<a href="${t.assets.ads}" target="_blank" class="px-2 py-1 bg-emerald-50 text-emerald-700 font-bold rounded-lg text-[10px]">Ads ↗</a>` : ''}
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                ${t.actions.map((act, idx) => `
+                  <div class="p-3 rounded-2xl border ${act.isFlagged ? 'bg-rose-50/70 border-rose-200' : 'bg-gray-50 border-gray-100'} text-xs space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="flex items-center space-x-2 flex-1 min-w-0">
+                        <input type="checkbox" ${act.done ? 'checked' : ''} onchange="mutateAction('${t.id}',${idx}, 'done', this.checked)" class="apple-check">
+                        <span class="font-bold truncate ${act.done ? 'line-through text-gray-400' : 'text-gray-900'}">${act.text}</span>
+                      </div>
+                      <div class="flex items-center space-x-2 flex-shrink-0">
+                        <select onchange="mutateAction('${t.id}',${idx}, 'pic', this.value)" class="bg-white border border-gray-200 rounded-lg px-2 py-0.5 font-bold text-[10px] outline-none">
+                          ${teamNicknames.map(n => `<option value="${n}" ${n === act.pic ? 'selected' : ''}>${n}</option>`).join('')}
+                        </select>
+                        <button onclick="mutateAction('${t.id}', ${idx}, 'isFlagged',${!act.isFlagged})" class="text-xs font-bold ${act.isFlagged ? 'text-rose-600' : 'text-gray-400'} ios-press">⚑</button>
+                      </div>
+                    </div>
+
+                    ${act.isFlagged ? `
+                      <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-rose-200 text-[11px] gap-2">
+                        <span class="text-rose-700 font-bold truncate">🚨 ${act.blocker || 'Kendala pengerjaan aktif'}</span>
+                        <button onclick="pingWA('${t.title}', '${act.text}', '${act.pic}')" class="px-2 py-0.5 bg-emerald-600 text-white font-bold rounded text-[10px] ios-press flex-shrink-0">Eskalasi WA</button>
+                      </div>
+                    ` : ''}
+
+                    <div class="flex items-center justify-between text-[11px] text-gray-500 pt-1 border-t border-gray-200/50">
+                      <div>Tenggat: <input type="date" value="${act.dueDate || ''}" onchange="mutateAction('${t.id}',${idx}, 'dueDate', this.value)" class="bg-transparent font-medium outline-none text-gray-800"></div>
+                      <div class="flex items-center space-x-1">
+                        <span>Rev: <b class="text-gray-800">${act.revisions || 0}x</b></span>
+                        <button onclick="mutateAction('${t.id}', ${idx}, 'revisions',${(act.revisions || 0) + 1})" class="w-4 h-4 bg-gray-200 rounded font-bold leading-none">+</button>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function mutateAction(taskId, actionIndex, key, val) {
+      const t = AppState.tasks.find(x => x.id === taskId);
+      if (t && t.actions[actionIndex]) {
+        t.actions[actionIndex][key] = val;
+        if (key === 'done' && val) playSound('done');
+        else playSound('tick');
+        commitState();
+      }
+    }
+
+    function toggleCapsule(id) {
+      playSound('tick');
+      if (AppState.expandedCardIds.has(id)) AppState.expandedCardIds.delete(id);
+      else AppState.expandedCardIds.add(id);
+      renderCapsules();
+    }
+
+    function setViewMode(mode) {
+      AppState.viewMode = mode;
+      playSound('tick');
+      ['capsules', 'gantt', 'overview'].forEach(m => {
+        document.getElementById(`${m}View`).classList.toggle('hidden', m !== mode);
+        const btn = document.getElementById(`mBtn-${m}`);
+        if (btn) btn.className = m === mode ? "w-full flex items-center space-x-2.5 px-3 py-2 rounded-2xl bg-gray-100 text-gray-900 font-bold transition ios-press" : "w-full flex items-center space-x-2.5 px-3 py-2 rounded-2xl text-gray-600 hover:bg-gray-50 transition ios-press";
+      });
+      renderActiveView();
+    }
+
+    function setDeptFilter(d) {
+      AppState.deptFilter = d;
+      playSound('tick');
+      document.querySelectorAll('.df-btn').forEach(b => b.className = b.dataset.val === d ? "df-btn px-3.5 py-1 rounded-full bg-black text-white ios-press" : "df-btn px-3.5 py-1 rounded-full bg-white text-gray-700 border border-gray-200 ios-press");
+      renderActiveView();
+    }
+
+    function setStatusFilter(s) {
+      AppState.statusFilter = s;
+      playSound('tick');
+      document.querySelectorAll('.sf-btn').forEach(b => b.className = b.dataset.val === s ? "sf-btn px-3 py-1 rounded-full bg-white text-gray-900 shadow-xs ios-press font-bold" : "sf-btn px-3 py-1 rounded-full text-gray-600 ios-press");
+      renderCapsules();
+    }
+
+    // --- COMMAND PALETTE (CMD+K) ---
+    function openCommandPalette() {
+      document.getElementById('cmdPaletteModal').classList.remove('hidden');
+      document.getElementById('cmdInput').value = '';
+      renderCommandResults('');
+      setTimeout(() => document.getElementById('cmdInput').focus(), 50);
+    }
+
+    function renderCommandResults(q) {
+      const query = (q || '').toLowerCase().trim();
+      const resEl = document.getElementById('cmdResults');
+      let html = '';
+
+      const actions = [
+        { label: "✦ Buka Gemini AI Copilot", fn: "openGeminiModal()" },
+        { label: "Buka Capsules View", fn: "setViewMode('capsules')" },
+        { label: "Buka Timeline Gantt", fn: "setViewMode('gantt')" },
+        { label: "Buka Dept Overview", fn: "setViewMode('overview')" },
+        { label: "+ Buat Task Baru", fn: "openNewTaskModal()" }
+      ];
+
+      actions.filter(a => a.label.toLowerCase().includes(query)).forEach(a => {
+        html += `<div onclick="${a.fn}; document.getElementById('cmdPaletteModal').classList.add('hidden');" class="p-2 rounded-xl hover:bg-gray-100 cursor-pointer font-bold text-gray-800">${a.label}</div>`;
+      });
+
+      AppState.tasks.filter(t => t.title.toLowerCase().includes(query)).forEach(t => {
+        html += `<div onclick="setViewMode('capsules'); AppState.expandedCardIds.add('${t.id}'); renderCapsules(); document.getElementById('cmdPaletteModal').classList.add('hidden');" class="p-2 rounded-xl hover:bg-blue-50 cursor-pointer text-blue-900 font-bold border-t border-gray-50">${t.title} (${t.dept})</div>`;
+      });
+
+      resEl.innerHTML = html || `<div class="p-3 text-center text-gray-400 italic">Tidak ada aksi yang cocok.</div>`;
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openCommandPalette(); }
+      if (e.key === 'Escape') {
+        document.getElementById('cmdPaletteModal').classList.add('hidden');
+        document.getElementById('newTaskModal').classList.add('hidden');
+        document.getElementById('userModal').classList.add('hidden');
+        document.getElementById('geminiAiModal').classList.add('hidden');
+      }
+    });
+
+    function openNewTaskModal() {
+      document.getElementById('npPic').innerHTML = teamNicknames.map(n => `<option value="${n}">${n}</option>`).join('');
+      document.getElementById('newTaskModal').classList.remove('hidden');
+    }
+    function closeNewTaskModal() { document.getElementById('newTaskModal').classList.add('hidden'); }
+    function submitNewTask() {
+      const title = document.getElementById('npTitle').value.trim();
+      if (!title) return alert("Judul wajib diisi.");
+      AppState.tasks.unshift({
+        id: "tsk-" + Date.now(),
+        dept: document.getElementById('npDept').value,
+        title, pic: document.getElementById('npPic').value,
+        actions: [{ text: "Eksekusi Utama", pic: document.getElementById('npPic').value, dueDate: "2026-10-22", duration: 2, done: false, isFlagged: false, revisions: 0, running: false, link: "", workSessions: [] }]
+      });
+      commitState();
+      closeNewTaskModal();
+      showToast("Task berhasil dibuat.");
+    }
+
+    async function loadLiveKpi(roleName) {
+      const tbody = document.getElementById('kpiTableBody');
+      tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-gray-400 italic">Sinkronisasi KPI Google Sheet...</td></tr>`;
+      try {
+        const res = await fetch(`${KPI_SHEET_URL}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(roleName)}&t=${Date.now()}`);
+        const txt = await res.text();
+        const json = JSON.parse(txt.substring(txt.indexOf("{"), txt.lastIndexOf("}") + 1));
+        tbody.innerHTML = json.table.rows.filter(r => r.c && r.c[0]?.v && !String(r.c[0].v).toLowerCase().includes("total")).map(r => `
+          <tr class="hover:bg-gray-50">
+            <td class="py-2 font-bold text-gray-800">${r.c[0]?.v || ''}</td>
+            <td class="py-2 text-blue-600 font-bold">${r.c[2]?.f || r.c[2]?.v || ''}</td>
+            <td class="py-2">${r.c[3]?.f || r.c[3]?.v || '-'}</td>
+            <td class="py-2"><span class="px-2 py-0.5 rounded bg-gray-100 font-bold">${r.c[4]?.f || r.c[4]?.v || '0'}</span></td>
+            <td class="py-2 font-bold text-emerald-700">${r.c[5]?.f || r.c[5]?.v || '0%'}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-gray-400 italic">Data spreadsheet siap disinkronkan.</td></tr>`;
+      }
+    }
+
+    function openUserProfileModal(userKey) {
+      document.getElementById('uModalAvatar').innerHTML = getAvatarBadge(userKey, "w-10 h-10 text-xl");
+      document.getElementById('uModalName').innerText = userKey;
+      const role = USER_ROLE_SHEET_MAP[userKey] || "PROJECT MANAGER";
+      document.getElementById('uModalRole').innerText = role;
+      document.getElementById('kpiRoleBadge').innerText = role;
+
+      const wh = calculateWeeklyHours(userKey);
+      const pill = document.getElementById('uModalWeeklyHoursPill');
+      pill.innerText = `${wh.hours}h this week (${wh.status})`;
+      pill.className = wh.isOverCap 
+        ? "px-3 py-1 bg-rose-100 text-rose-800 font-black text-xs rounded-xl animate-pulse" 
+        : "px-3 py-1 bg-emerald-50 text-emerald-800 font-extrabold text-xs rounded-xl";
+
+      const subtasks = [];
+      AppState.tasks.forEach(t => t.actions.forEach((a, i) => {
+        if (a.pic === userKey) {
+          subtasks.push(`
+            <div class="p-2 bg-gray-50 rounded-xl flex items-center justify-between">
+              <label class="flex items-center space-x-2 cursor-pointer min-w-0">
+                <input type="checkbox" ${a.done ? 'checked' : ''} onchange="mutateAction('${t.id}', ${i}, 'done', this.checked); openUserProfileModal('${userKey}');" class="apple-check">
+                <span class="${a.done ? 'line-through text-gray-400' : 'text-gray-800'} truncate">[${t.dept}] ${a.text}</span>
+              </label>
+              <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white border border-gray-200 flex-shrink-0">${a.dueDate || '-'}</span>
+            </div>
+          `);
+        }
+      }));
+
+      document.getElementById('uSubtaskList').innerHTML = subtasks.join('') || '<div class="text-gray-400 italic">Tidak ada task aktif.</div>';
+      loadLiveKpi(role);
+      document.getElementById('userModal').classList.remove('hidden');
+    }
+
+    function openKpiScorecardModal() { openUserProfileModal(AppState.activeUserKey); }
+    function closeUserModal() { document.getElementById('userModal').classList.add('hidden'); }
+
+    function promptUserPinLogin() {
+      const nick = prompt("Login sebagai Nickname (" + teamNicknames.slice(0, 4).join('/') + "):", AppState.activeUserKey);
+      if (!nick) return;
+      const pin = prompt(`Masukkan 4 digit PIN:`);
+      if (pin === "1111" || pin === "2222") {
+        AppState.activeUserKey = nick;
+        commitState();
+        closeUserModal();
+        showToast(`Login sebagai ${nick}`);
+      } else {
+        alert("PIN salah.");
+      }
+    }
+
+    function pingWA(pTitle, aText, pic) {
+      window.open(`https://wa.me/?text=${encodeURIComponent(`🚨 *BLOCKER OPERASIONAL*\nProject: ${pTitle}\nTask: ${aText}\nPIC:${pic}\nMohon tindak lanjut segera.`)}`, '_blank');
+    }
+
+    function copyWAStandup() {
+      let msg = "*DAILY OPERATIONS & TIMESHEET STANDUP*\n\n";
+      const wh = calculateWeeklyHours(AppState.activeUserKey);
+      msg += `👤 *PIC:* ${AppState.activeUserKey} (${wh.hours}h this week)\n\n`;
+
+      AppState.tasks.forEach((t, i) => {
+        const userActs = t.actions.filter(a => a.pic === AppState.activeUserKey);
+        if (userActs.length) {
+          msg += `*${t.title} [${t.dept}]*\n`;
+          userActs.forEach(a => {
+            msg += `  ${a.done ? '✓' : '•'} ${a.text} (${a.dueDate || '-'})${a.isFlagged ? ' - [BLOCKER]' : ''}\n`;
+          });
+          msg += '\n';
+        }
+      });
+      navigator.clipboard.writeText(msg).then(() => showToast("Laporan standup disalin!"));
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.remove('opacity-0');
+      setTimeout(() => t.classList.add('opacity-0'), 2000);
+    }
+
+    async function syncTeamNicknames() {
+      try {
+        const res = await fetch(`${TEAM_DB_URL}/gviz/tq?tqx=out:json&sheet=DATABASE TEAM CTS&t=${Date.now()}`);
+        const txt = await res.text();
+        const json = JSON.parse(txt.substring(txt.indexOf("{"), txt.lastIndexOf("}") + 1));
+        const names = json.table.rows.map(r => r.c?.[2]?.v ? String(r.c[2].v).trim().replace("*", "") : null).filter(Boolean);
+        if (names.length) teamNicknames = Array.from(new Set(names));
+      } catch (e) {}
+      renderNavAndSidebar();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      syncTeamNicknames();
+      renderActiveView();
+    });
+  </script>
+</body>
+</html>
