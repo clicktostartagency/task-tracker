@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress Tracker - Multi Department</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #f2f2f7;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .progress-capsule {
+      position: relative;
+      border-radius: 28px;
+      overflow: hidden;
+      cursor: pointer;
+      min-height: 104px;
+      display: flex;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+      transition: transform 0.24s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.24s ease;
+    }
+    .progress-capsule:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+    }
+    .progress-capsule:active {
+      transform: scale(0.985);
+    }
+
+    .accordion-drawer {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: scaleY(0.96);
+      transform-origin: top;
+      transition: max-height 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.28s ease,
+                  transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                  margin-top 0.32s ease;
+    }
+    .accordion-drawer.open {
+      max-height: 650px;
+      opacity: 1;
+      transform: scaleY(1);
+      margin-top: 12px;
+    }
+
+    .apple-check {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #c7c7cc;
+      border-radius: 50%;
+      outline: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .apple-check:checked {
+      background-color: #34c759;
+      border-color: #34c759;
+      transform: scale(1.05);
+    }
+    .apple-check:checked::after {
+      content: '';
+      width: 6px;
+      height: 11px;
+      border: solid white;
+      border-width: 0 2.5px 2.5px 0;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+  </style>
+</head>
+<body class="min-h-screen py-8 px-4 md:px-10 lg:px-16 flex justify-center pb-24">
+
+  <div class="w-full max-w-5xl flex flex-col">
+
+    <!-- Top Bar Navigation -->
+    <header class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200/70">
+      
+      <!-- Logo / Title -->
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-2 mr-2">
+          <span class="w-3 h-3 rounded-full bg-[#ff5f56]"></span>
+          <span class="w-3 h-3 rounded-full bg-[#ffbd2e]"></span>
+          <span class="w-3 h-3 rounded-full bg-[#27c93f]"></span>
+        </div>
+        <h1 class="text-3xl font-extrabold text-black tracking-tight">
+          Progress
+        </h1>
+      </div>
+
+      <!-- Controls & Role Selector -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        
+        <!-- Role Indicator & Toggle -->
+        <div class="bg-white px-3.5 py-1.5 rounded-full border border-gray-200/80 shadow-sm flex items-center space-x-2 text-xs">
+          <span class="text-gray-500 font-medium">Role:</span>
+          <button onclick="toggleRole()" id="roleBadge" class="font-bold text-blue-600 hover:underline">
+            Lead / Manager
+          </button>
+        </div>
+
+        <button onclick="toggleEdit()" id="editBtn" class="bg-white text-gray-800 font-semibold text-xs md:text-sm px-4 py-2 rounded-full shadow-sm border border-gray-200/60 hover:bg-gray-50 transition">
+          Edit
+        </button>
+
+        <button onclick="copyWA()" class="bg-white text-gray-800 hover:text-emerald-600 font-semibold text-xs md:text-sm px-4 py-2 rounded-full shadow-sm border border-gray-200/60 transition">
+          Share WA
+        </button>
+
+        <!-- New Task Button (Only visible/active for Lead/Manager) -->
+        <button onclick="handleNewTaskClick()" id="btnNewTask" class="bg-[#0071e3] hover:bg-[#0062c4] text-white font-semibold text-xs md:text-sm px-4 md:px-5 py-2 rounded-full shadow-sm flex items-center space-x-1.5 active:scale-95 transition">
+          <span class="text-base font-bold leading-none">+</span>
+          <span>Task Baru</span>
+        </button>
+      </div>
+
+    </header>
+
+    <!-- Department Filter Tabs -->
+    <div class="flex items-center space-x-2 overflow-x-auto pb-3 mb-6 text-xs font-semibold">
+      <button onclick="filterDept('ALL')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-black text-white" data-dept="ALL">
+        Semua
+      </button>
+      <button onclick="filterDept('HRGA')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="HRGA">
+        HRGA
+      </button>
+      <button onclick="filterDept('DM')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="DM">
+        DM
+      </button>
+      <button onclick="filterDept('Production')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="Production">
+        Production
+      </button>
+      <button onclick="filterDept('Management')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="Management">
+        Management
+      </button>
+      <button onclick="filterDept('ABD')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="ABD">
+        ABD
+      </button>
+    </div>
+
+    <!-- 2-Column Responsive Grid -->
+    <main id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      <!-- Injected by JavaScript -->
+    </main>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-8 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-md text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50">
+    Laporan standup disalin ke clipboard
+  </div>
+
+  <!-- MODAL: Task Baru (Lead / Manager Only) -->
+  <div id="taskModal" class="fixed inset-0 bg-black/35 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[32px] w-full max-w-md p-7 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-5">
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900">Task Baru</h3>
+          <p class="text-xs text-gray-500 font-medium">Akses Khusus Lead / Manager</p>
+        </div>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-3xl font-light">&times;</button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Departemen</label>
+          <select id="inpDept" onchange="updateDeptPreview(this.value)" class="w-full mt-1.5 px-3.5 py-2.5 bg-gray-100 rounded-2xl text-sm font-semibold focus:outline-none">
+            <option value="HRGA">HRGA (#C3C1FF)</option>
+            <option value="DM">DM (#FF6584)</option>
+            <option value="Production">Production (#8EE4E2)</option>
+            <option value="Management">Management (#FFF0D4)</option>
+            <option value="ABD">ABD (#8AD5FF)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Judul / Brand</label>
+          <input type="text" id="inpTitle" placeholder="Misal: Payroll Q4 / Scale Meta Ads" class="w-full mt-1.5 px-4 py-2.5 bg-gray-100 rounded-2xl text-sm focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Lead PIC</label>
+            <input type="text" id="inpPic" placeholder="Misal: Budi" class="w-full mt-1.5 px-3.5 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Satuan Unit</label>
+            <input type="text" id="inpUnit" placeholder="Tasks / Items / $" class="w-full mt-1.5 px-3.5 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Action Plans & Assignee</label>
+            <button onclick="addField()" class="text-xs font-bold text-blue-600 hover:underline">+ Tambah</button>
+          </div>
+          <div id="fieldsBox" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+            <div class="flex space-x-2">
+              <input type="text" placeholder="Langkah 1" class="step-txt flex-1 px-3 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+              <input type="text" placeholder="Assignee" class="step-pic w-24 px-2 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex space-x-3">
+        <button onclick="closeModal()" class="w-1/2 py-2.5 rounded-2xl bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-gray-200 transition">Batal</button>
+        <button onclick="saveTask()" class="w-1/2 py-2.5 rounded-2xl bg-[#0071e3] text-white font-bold text-sm shadow-md hover:bg-[#0062c4] transition">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Palet Warna Resmi per Departemen
+    const DEPARTMENTS = {
+      HRGA: {
+        name: 'HRGA',
+        tint: '#C3C1FF',
+        fill: '#6C68EB',
+        textFill: '#FFFFFF',
+        textTint: '#312E81'
+      },
+      DM: {
+        name: 'DM',
+        tint: '#FFD6DF',
+        fill: '#FF6584',
+        textFill: '#FFFFFF',
+        textTint: '#881337'
+      },
+      Production: {
+        name: 'Production',
+        tint: '#8EE4E2',
+        fill: '#0F9F9C',
+        textFill: '#FFFFFF',
+        textTint: '#134E4A'
+      },
+      Management: {
+        name: 'Management',
+        tint: '#FFF0D4',
+        fill: '#E09B19',
+        textFill: '#FFFFFF',
+        textTint: '#78350F'
+      },
+      ABD: {
+        name: 'ABD',
+        tint: '#8AD5FF',
+        fill: '#0087D6',
+        textFill: '#FFFFFF',
+        textTint: '#0C4A6E'
+      }
+    };
+
+    // State Manajemen Akses Role
+    let currentRole = 'Lead / Manager'; // 'Lead / Manager' | 'Staff'
+    let activeDeptFilter = 'ALL';
+    let expandedIds = new Set(['tsk-1']);
+    let isEditMode = false;
+
+    const defaultData = [
+      {
+        id: "tsk-1",
+        dept: "ABD",
+        title: "Books Read",
+        pic: "Budi Santoso",
+        unit: "Books",
+        actions: [
+          { text: "Bab 1 - 5 Pengenalan Account", pic: "Budi", done: true },
+          { text: "Bab 6 - 10 Studi Kasus BD", pic: "Budi", done: true },
+          { text: "Bab 11 - 15 Analisis Client Funnel", pic: "Siti", done: false },
+          { text: "Bab 16 - 20 Penutup", pic: "Andi", done: false }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      },
+      {
+        id: "tsk-2",
+        dept: "Management",
+        title: "Budget",
+        pic: "Siti Rahma",
+        unit: "$",
+        actions: [
+          { text: "Alokasi Budget Q4 Semua Departemen", pic: "Siti", done: true },
+          { text: "Audit Arus Kas Bulanan", pic: "Dewi", done: false }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      },
+      {
+        id: "tsk-3",
+        dept: "DM",
+        title: "Miles Run",
+        pic: "Andi Wijaya",
+        unit: "mi",
+        actions: [
+          { text: "Audit Campaign Meta CAPI", pic: "Andi", done: true },
+          { text: "Review ROAS Akun Fashion", pic: "Budi", done: true },
+          { text: "Testing Funnel Direct-to-WA", pic: "Andi", done: true },
+          { text: "Scaling Budget Campaign Utama", pic: "Andi", done: false }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      },
+      {
+        id: "tsk-4",
+        dept: "HRGA",
+        title: "Weight Lost",
+        pic: "Dewi Lestari",
+        unit: "lb",
+        actions: [
+          { text: "Evaluasi Kontrak Kerja & SLA", pic: "Dewi", done: true },
+          { text: "Review Kebutuhan Fasilitas Kantor", pic: "Tim GA", done: false },
+          { text: "Penyusunan Form Absensi Baru", pic: "Dewi", done: false }
+        ],
+        hasBlocker: true,
+        blockerDesc: "Persetujuan vendor tertahan di bagian Legal"
+      },
+      {
+        id: "tsk-5",
+        dept: "Production",
+        title: "Creative Assets Batch 4",
+        pic: "Rian Pratama",
+        unit: "Assets",
+        actions: [
+          { text: "Shooting Video Reels Produk", pic: "Rian", done: true },
+          { text: "Editing 10 Variasi Hook Video", pic: "Rian", done: true },
+          { text: "Color Grading & Export Final", pic: "Editor", done: false }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      }
+    ];
+
+    function getData() {
+      const stored = localStorage.getItem('apple_dept_tracker_v1');
+      if (!stored) {
+        localStorage.setItem('apple_dept_tracker_v1', JSON.stringify(defaultData));
+        return defaultData;
+      }
+      return JSON.parse(stored);
+    }
+
+    function saveData(data) {
+      localStorage.setItem('apple_dept_tracker_v1', JSON.stringify(data));
+      render();
+    }
+
+    // Role Control
+    function toggleRole() {
+      if (currentRole === 'Lead / Manager') {
+        currentRole = 'Staff';
+      } else {
+        const pin = prompt("Masukkan PIN Lead / Manager (Default: 1234):");
+        if (pin === "1234") {
+          currentRole = 'Lead / Manager';
+        } else {
+          alert("PIN salah. Akses tetap sebagai Staff.");
+          return;
+        }
+      }
+      updateRoleUI();
+    }
+
+    function updateRoleUI() {
+      const badge = document.getElementById('roleBadge');
+      const btnNew = document.getElementById('btnNewTask');
+
+      badge.innerText = currentRole;
+      if (currentRole === 'Lead / Manager') {
+        badge.className = "font-bold text-blue-600 hover:underline";
+        btnNew.classList.remove('opacity-40', 'cursor-not-allowed');
+        btnNew.title = "Buat Task Baru";
+      } else {
+        badge.className = "font-bold text-gray-600 hover:underline";
+        btnNew.classList.add('opacity-40', 'cursor-not-allowed');
+        btnNew.title = "Hanya Lead / Manager yang dapat membuat task";
+      }
+    }
+
+    function handleNewTaskClick() {
+      if (currentRole !== 'Lead / Manager') {
+        alert("Akses dibatasi. Hanya Lead atau Manager yang memiliki wewenang membuat task baru.");
+        return;
+      }
+      openModal();
+    }
+
+    function filterDept(dept) {
+      activeDeptFilter = dept;
+      document.querySelectorAll('.dept-filter-btn').forEach(btn => {
+        if (btn.dataset.dept === dept) {
+          btn.className = "dept-filter-btn px-4 py-1.5 rounded-full bg-black text-white";
+        } else {
+          btn.className = "dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200";
+        }
+      });
+      render();
+    }
+
+    function toggleEdit() {
+      isEditMode = !isEditMode;
+      document.getElementById('editBtn').innerText = isEditMode ? 'Done' : 'Edit';
+      document.getElementById('editBtn').classList.toggle('text-blue-600', isEditMode);
+      render();
+    }
+
+    function toggleCard(id) {
+      if (isEditMode) return;
+      if (expandedIds.has(id)) {
+        expandedIds.delete(id);
+      } else {
+        expandedIds.add(id);
+      }
+      render();
+    }
+
+    function render() {
+      const list = getData();
+      const container = document.getElementById('cardsGrid');
+      container.innerHTML = '';
+
+      let filtered = list;
+      if (activeDeptFilter !== 'ALL') {
+        filtered = list.filter(item => item.dept === activeDeptFilter);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="col-span-2 text-center py-12 text-sm text-gray-400 font-medium">Tidak ada task di departemen ini.</div>`;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const theme = DEPARTMENTS[item.dept] || DEPARTMENTS.ABD;
+        const total = item.actions.length;
+        const done = item.actions.filter(a => a.done).length;
+        const pct = total === 0 ? 0 : (done / total) * 100;
+        const pctText = pct.toFixed(2) + '%';
+        const isExpanded = expandedIds.has(item.id);
+
+        let ratioText = `${done} / ${total} Langkah Selesai`;
+        if (item.unit === '$') {
+          ratioText = `$${(1500 * (pct / 100)).toFixed(2)} / $1,500.00`;
+        } else if (item.unit === 'Books') {
+          ratioText = `${Math.round(30 * (pct / 100))} / 30 Books`;
+        } else if (item.unit === 'mi') {
+          ratioText = `${Math.round(500 * (pct / 100))} / 500 mi`;
+        } else if (item.unit === 'lb') {
+          ratioText = `${Math.round(40 * (pct / 100))} / 40 lb`;
+        }
+
+        const col = document.createElement('div');
+        col.className = 'w-full flex flex-col';
+
+        col.innerHTML = `
+          <!-- Kapsul Utama -->
+          <div onclick="toggleCard('${item.id}')" class="progress-capsule" style="background-color: ${theme.tint};">
+            
+            <!-- Solid Fill Bagian Kiri -->
+            <div class="h-full transition-all duration-500" style="width: ${pct}%; background-color: ${theme.fill};"></div>
+
+            <!-- Teks Menimpa di Atas -->
+            <div class="absolute inset-0 px-6 py-4 flex flex-col justify-center pointer-events-none">
+              
+              <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                  <span class="text-[17px] font-bold tracking-tight" style="color: ${theme.textFill};">
+                    ${item.title}
+                  </span>
+                  <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/30 text-white backdrop-blur-sm">
+                    ${item.dept}
+                  </span>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                  ${isEditMode ? `
+                    <button onclick="event.stopPropagation(); deleteCard('${item.id}')" class="pointer-events-auto w-6 h-6 rounded-full bg-red-500 text-white font-bold text-xs flex items-center justify-center">
+                      &times;
+                    </button>
+                  ` : `
+                    ${item.hasBlocker ? `<span class="bg-rose-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">BLOCKER</span>` : ''}
+                    <span class="text-xs font-bold transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}" style="color: ${theme.textFill}; opacity: 0.85;">
+                      ▼
+                    </span>
+                  `}
+                </div>
+              </div>
+
+              <!-- Nilai Rasio Sesuai Referensi -->
+              <span class="text-[13px] font-medium mt-0.5 opacity-90" style="color: ${theme.textFill};">
+                ${ratioText}
+              </span>
+
+              <!-- Persentase Presisi -->
+              <span class="text-[13px] font-medium opacity-90" style="color: ${theme.textFill};">
+                ${pctText}
+              </span>
+
+            </div>
+
+          </div>
+
+          <!-- Laci Accordion -->
+          <div class="accordion-drawer ${isExpanded ? 'open' : ''} bg-white rounded-3xl p-5 border border-gray-200/60 shadow-sm space-y-3">
+            
+            <div class="flex justify-between items-center text-xs text-gray-500 pb-2 border-b border-gray-100">
+              <span>Lead PIC: <b class="text-gray-800">${item.pic}</b></span>
+              ${item.hasBlocker ? `
+                <span class="text-rose-600 font-bold">🚨 Blocker: ${item.blockerDesc}</span>
+              ` : `
+                <button onclick="addBlocker('${item.id}')" class="text-rose-600 font-semibold hover:underline">+ Laporkan Blocker</button>
+              `}
+            </div>
+
+            <div class="space-y-2">
+              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Action Plans & Assignee:</span>
+              ${item.actions.map((act, idx) => `
+                <div class="flex items-center justify-between p-2.5 rounded-2xl border ${act.done ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-200/70'}">
+                  <label class="flex items-center space-x-3 flex-1 cursor-pointer">
+                    <input type="checkbox" ${act.done ? 'checked' : ''} onchange="toggleStep('${item.id}', ${idx}, this.checked)" class="apple-check">
+                    <span class="text-xs transition-all duration-200 ${act.done ? 'line-through text-gray-400 font-normal' : 'text-gray-800 font-semibold'}">${act.text}</span>
+                  </label>
+                  <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full ${act.done ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'}">
+                    ${act.pic || item.pic}
+                  </span>
+                </div>
+              `).join('')}
+            </div>
+
+          </div>
+        `;
+
+        container.appendChild(col);
+      });
+    }
+
+    function toggleStep(id, idx, isDone) {
+      const data = getData();
+      const item = data.find(c => c.id === id);
+      if (!item) return;
+
+      item.actions[idx].done = isDone;
+      saveData(data);
+    }
+
+    function addBlocker(id) {
+      const desc = prompt("Tuliskan kendala / blocker yang dialami:");
+      if (!desc) return;
+      const data = getData();
+      const item = data.find(c => c.id === id);
+      if (!item) return;
+
+      item.hasBlocker = true;
+      item.blockerDesc = desc;
+      saveData(data);
+    }
+
+    function deleteCard(id) {
+      if (currentRole !== 'Lead / Manager') {
+        alert("Hanya Lead / Manager yang berhak menghapus task.");
+        return;
+      }
+      if (!confirm("Hapus item progress ini?")) return;
+      let data = getData();
+      data = data.filter(c => c.id !== id);
+      saveData(data);
+    }
+
+    function openModal() {
+      document.getElementById('inpTitle').value = '';
+      document.getElementById('inpPic').value = '';
+      document.getElementById('inpUnit').value = 'Tasks';
+      document.getElementById('taskModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('taskModal').classList.add('hidden');
+    }
+
+    function addField() {
+      const box = document.getElementById('fieldsBox');
+      const div = document.createElement('div');
+      div.className = 'flex space-x-2';
+      div.innerHTML = `
+        <input type="text" placeholder="Langkah ${box.children.length + 1}" class="step-txt flex-1 px-3 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+        <input type="text" placeholder="Assignee" class="step-pic w-24 px-2 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+      `;
+      box.appendChild(div);
+    }
+
+    function saveTask() {
+      const dept = document.getElementById('inpDept').value;
+      const title = document.getElementById('inpTitle').value.trim();
+      const pic = document.getElementById('inpPic').value.trim() || 'Unassigned';
+      const unit = document.getElementById('inpUnit').value.trim() || 'Tasks';
+
+      const txts = document.querySelectorAll('.step-txt');
+      const pics = document.querySelectorAll('.step-pic');
+      const actions = [];
+
+      txts.forEach((t, i) => {
+        const val = t.value.trim();
+        const p = pics[i]?.value.trim() || pic;
+        if (val) {
+          actions.push({ text: val, pic: p, done: false });
+        }
+      });
+
+      if (!title) {
+        alert("Mohon isi judul task.");
+        return;
+      }
+
+      if (actions.length === 0) {
+        actions.push({ text: "Selesaikan eksekusi", pic, done: false });
+      }
+
+      const data = getData();
+      const newId = "tsk-" + Date.now();
+      data.unshift({
+        id: newId,
+        dept,
+        title,
+        pic,
+        unit,
+        actions,
+        hasBlocker: false,
+        blockerDesc: ""
+      });
+
+      expandedIds.add(newId);
+      saveData(data);
+      closeModal();
+    }
+
+    function copyWA() {
+      const list = getData();
+      let msg = `*DAILY PROGRESS UPDATE PER DEPARTEMEN*\n\n`;
+      list.forEach((p, idx) => {
+        const total = p.actions.length;
+        const done = p.actions.filter(a => a.done).length;
+        const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+        msg += `*${idx + 1}. [${p.dept}] ${p.title}*\n• Progress: ${pct}%\n• Lead: ${p.pic}\n`;
+        if (p.hasBlocker) msg += `• 🚨 *BLOCKER:* ${p.blockerDesc}\n`;
+        msg += `\n`;
+      });
+
+      navigator.clipboard.writeText(msg).then(() => {
+        const t = document.getElementById('toast');
+        t.classList.remove('opacity-0', 'pointer-events-none');
+        setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2000);
+      });
+    }
+
+    updateRoleUI();
+    render();
+  </script>
+
+</body>
+</html>
