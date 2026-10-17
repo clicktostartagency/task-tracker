@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Operations Hub - Ultimate Suite</title>
+  
+  <!-- UNIVERSAL APPLE FONT (INTER) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { 
+      --spring: cubic-bezier(0.32, 0.72, 0, 1);
+      --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      font-family: var(--font-stack) !important;
+      letter-spacing: -0.015em;
+    }
+
+    body {
+      background-color: #f5f5f7;
+      color: #1d1d1f;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .apple-sidebar-panel {
+      background: rgba(246, 246, 246, 0.78);
+      backdrop-filter: blur(32px) saturate(190%);
+      border-right: 0.5px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .apple-toolbar {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .apple-card {
+      background: #ffffff;
+      border: 0.5px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 16px rgba(0, 0, 0, 0.015);
+      border-radius: 20px;
+      transition: all 0.2s ease;
+    }
+    .apple-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 10px 24px rgba(0, 0, 0, 0.025);
+    }
+
+    .apple-press {
+      transition: transform 0.16s var(--spring), opacity 0.16s ease;
+    }
+    .apple-press:active {
+      transform: scale(0.97);
+      opacity: 0.82;
+    }
+
+    .segmented-group {
+      display: inline-flex;
+      background: rgba(120, 120, 128, 0.12);
+      border-radius: 9999px;
+      padding: 2px;
+    }
+    .segmented-btn {
+      padding: 4px 14px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #86868b;
+      border-radius: 9999px;
+      transition: all 0.18s var(--spring);
+    }
+    .segmented-active {
+      background: #ffffff;
+      color: #1d1d1f !important;
+      font-weight: 600;
+      box-shadow: 0 1.5px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .apple-check {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid #d1d1d6;
+      border-radius: 50%;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.18s var(--spring);
+      flex-shrink: 0;
+    }
+    .apple-check:checked {
+      background-color: #34c759;
+      border-color: #34c759;
+    }
+    .apple-check:checked::after {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 2px;
+      width: 5px;
+      height: 9px;
+      border: solid white;
+      border-width: 0 1.8px 1.8px 0;
+      transform: rotate(45deg);
+    }
+
+    .accordion-drawer {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.35s var(--spring), opacity 0.25s ease;
+    }
+    .accordion-drawer.open {
+      max-height: 4000px;
+      opacity: 1;
+    }
+
+    .subtask-drag-handle {
+      cursor: grab;
+      user-select: none;
+      opacity: 0.35;
+      transition: opacity 0.15s ease;
+    }
+    .subtask-drag-handle:hover {
+      opacity: 0.9;
+    }
+    .subtask-item.dragging {
+      opacity: 0.4;
+      background: #f1f5f9 !important;
+      border: 1px dashed #94a3b8 !important;
+    }
+
+    .gantt-cell {
+      min-width: 44px;
+      text-align: center;
+      border-right: 0.5px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .kanban-col {
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px dashed rgba(0, 0, 0, 0.08);
+      border-radius: 20px;
+      min-height: 520px;
+    }
+
+    .apple-modal {
+      animation: modalSpring 0.3s var(--spring) forwards;
+    }
+    @keyframes modalSpring {
+      from { opacity: 0; transform: scale(0.96) translateY(12px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+  </style>
+</head>
+<body class="w-screen h-screen flex overflow-hidden select-none">
+
+  <!-- MAC-STYLE SIDEBAR -->
+  <aside class="hidden md:flex flex-col apple-sidebar-panel w-64 h-full flex-shrink-0 z-20">
+    <div class="flex items-center space-x-2 px-5 pt-4 pb-4">
+      <span class="w-3 h-3 rounded-full bg-[#ff5f56]"></span>
+      <span class="w-3 h-3 rounded-full bg-[#ffbd2e]"></span>
+      <span class="w-3 h-3 rounded-full bg-[#27c93f]"></span>
+    </div>
+
+    <!-- Navigation List -->
+    <nav class="px-3 space-y-1 text-xs font-medium">
+      <button onclick="setViewMode('capsules')" id="mBtn-capsules" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl bg-black/5 text-[#1d1d1f] font-semibold apple-press">
+        <span class="text-sm">📁</span><span>Projects</span>
+      </button>
+      <button onclick="setViewMode('kanban')" id="mBtn-kanban" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-[#86868b] hover:bg-black/[0.03] apple-press">
+        <span class="text-sm">📋</span><span>Kanban Board</span>
+      </button>
+      <button onclick="setViewMode('gantt')" id="mBtn-gantt" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-[#86868b] hover:bg-black/[0.03] apple-press">
+        <span class="text-sm">📊</span><span>Timeline Gantt</span>
+      </button>
+      <button onclick="setViewMode('overview')" id="mBtn-overview" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-[#86868b] hover:bg-black/[0.03] apple-press">
+        <span class="text-sm">📈</span><span>Dept Overview</span>
+      </button>
+      <button onclick="openKpiModal()" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-[#0071e3] hover:bg-blue-50/50 apple-press">
+        <span class="text-sm">🎯</span><span>Live KPI</span>
+      </button>
+    </nav>
+
+    <!-- GAMIFIED FOCUS STATS CARD -->
+    <div class="mx-3 mt-3 p-3 bg-gradient-to-br from-indigo-50/70 to-blue-50/70 border border-indigo-100/60 rounded-2xl space-y-2">
+      <div class="flex justify-between items-center text-[10px] font-bold">
+        <span class="text-indigo-900 uppercase tracking-wider">Level &amp; Rank</span>
+        <span id="sideGamerLevel" class="text-indigo-600 bg-white px-2 py-0.5 rounded-full shadow-2xs">Lv.1</span>
+      </div>
+      <div>
+        <div class="flex justify-between items-center text-[10px] text-[#86868b] mb-1">
+          <span id="sideRankTitle" class="font-bold text-[#1d1d1f] truncate">Deep Work Novice</span>
+          <span id="sideExpPoints" class="font-mono">0 XP</span>
+        </div>
+        <div class="w-full bg-black/5 rounded-full h-1.5 overflow-hidden">
+          <div id="sideExpBar" class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: 10%;"></div>
+        </div>
+      </div>
+      <div class="flex justify-between items-center text-[10px] pt-1 border-t border-indigo-100/40 text-[#86868b]">
+        <span>Focus Streak:</span>
+        <span id="sideStreakCount" class="font-bold text-amber-600">🔥 0 Sesi</span>
+      </div>
+    </div>
+
+    <!-- Team Weekly Section -->
+    <div class="mt-3 px-3 pt-3 border-t border-black/5 text-xs flex-1 overflow-y-auto">
+      <span class="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider block mb-2 px-2">Team Weekly Hours</span>
+      <div id="sideTeam" class="space-y-0.5"></div>
+    </div>
+
+    <!-- DATABASE BACKUP & RESTORE FOOTER -->
+    <div class="p-3 border-t border-black/5 space-y-1 text-[11px] font-medium text-[#86868b]">
+      <span class="text-[9px] uppercase tracking-wider font-semibold block px-2 text-[#86868b]">Database Guard</span>
+      <div class="flex items-center space-x-1.5">
+        <button onclick="exportBackupJSON()" class="flex-1 py-1.5 px-2 bg-white border border-black/5 rounded-xl hover:bg-black/[0.02] text-[#1d1d1f] font-semibold text-center apple-press">
+          ↓ Backup JSON
+        </button>
+        <label class="flex-1 py-1.5 px-2 bg-white border border-black/5 rounded-xl hover:bg-black/[0.02] text-[#0071e3] font-semibold text-center cursor-pointer apple-press">
+          ↑ Restore
+          <input type="file" id="importJsonInput" accept=".json" onchange="importBackupJSON(event)" class="hidden">
+        </label>
+      </div>
+    </div>
+  </aside>
+
+  <!-- WORKSPACE WRAPPER -->
+  <div class="flex-1 flex flex-col h-full min-w-0 bg-[#f5f5f7]">
+    
+    <!-- TOP TOOLBAR -->
+    <header class="apple-toolbar px-6 py-3 flex items-center justify-between gap-4 flex-shrink-0 z-10">
+      <div class="flex items-center space-x-4 min-w-0">
+        <h1 class="text-lg font-bold tracking-tight text-[#1d1d1f] truncate">Agency Operations</h1>
+        
+        <div id="topPomodoroPill" class="hidden items-center space-x-2 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full text-xs animate-pulse">
+          <span class="w-2 h-2 rounded-full bg-indigo-600 animate-ping"></span>
+          <span id="topPomodoroText" class="font-mono font-bold text-indigo-700">25:00</span>
+          <button onclick="stopActivePomodoro()" class="text-rose-500 font-bold ml-1 hover:scale-110">&times;</button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5 flex-shrink-0">
+        <div id="statusFilter" class="segmented-group hidden sm:inline-flex">
+          <button onclick="setFilter('status', 'ALL')" class="sf-btn segmented-btn segmented-active" data-val="ALL">Semua</button>
+          <button onclick="setFilter('status', 'ACTIVE')" class="sf-btn segmented-btn" data-val="ACTIVE">In-Progress</button>
+          <button onclick="setFilter('status', 'COMPLETED')" class="sf-btn segmented-btn" data-val="COMPLETED">Selesai</button>
+          <button onclick="setFilter('status', 'BLOCKED')" class="sf-btn segmented-btn text-[#ff3b30]" data-val="BLOCKED">Blocked</button>
+        </div>
+
+        <!-- AMBIENT FOCUS AUDIO CONTROL -->
+        <div class="flex items-center space-x-1.5 bg-white border border-black/5 rounded-full px-2.5 py-1 text-xs">
+          <button onclick="toggleAmbientSound()" id="btnAmbientToggle" class="text-xs font-semibold text-[#86868b] hover:text-[#1d1d1f] apple-press" title="Nyalakan/Matikan Suara Latar Fokus (Shortcut: A)">
+            🎧 Ambient Off
+          </button>
+          <select id="ambientSoundType" onchange="changeAmbientType(this.value)" class="text-[10px] font-semibold bg-transparent text-[#0071e3] outline-none cursor-pointer">
+            <option value="alpha">Alpha Waves (10Hz)</option>
+            <option value="white">White Noise</option>
+            <option value="pink">Deep Brown Noise</option>
+          </select>
+        </div>
+
+        <!-- NOTIFICATION CENTER (SLACK STYLE) -->
+        <button onclick="openNotificationCenter()" class="relative p-2 bg-white border border-black/5 rounded-full text-xs apple-press" title="Notifikasi Saya">
+          🔔
+          <span id="notifBadge" class="hidden absolute top-0 right-0 w-2 h-2 bg-rose-500 rounded-full"></span>
+        </button>
+
+        <button onclick="toggleModal('aiModal', true)" class="bg-[#0071e3] hover:bg-[#0077ed] text-white px-3.5 py-1.5 rounded-full text-xs font-medium shadow-xs transition apple-press flex items-center space-x-1">
+          <span>✦</span><span>AI Copilot</span>
+        </button>
+
+        <div id="badgeMyHours" class="bg-white border border-black/5 px-3 py-1.5 rounded-full text-xs font-semibold text-[#0071e3]">
+          0.0h this week
+        </div>
+
+        <button onclick="toggleAudio()" id="btnAudio" class="p-2 bg-white border border-black/5 rounded-full text-xs apple-press" title="Mute/Unmute Audio (Shortcut: M)">🔊</button>
+        <button onclick="copyStandup()" class="bg-white border border-black/5 px-3.5 py-1.5 rounded-full text-xs font-medium text-[#1d1d1f] apple-press">Share WA</button>
+        <button onclick="openNewTaskSheet()" class="bg-[#1d1d1f] hover:bg-black text-white px-4 py-1.5 rounded-full text-xs font-medium shadow-xs apple-press flex items-center space-x-1.5">
+          <span>+ Buat Project</span>
+        </button>
+        
+        <button onclick="openProfile(State.activeUser)" class="flex items-center space-x-2 bg-white border border-black/5 px-3 py-1 rounded-full apple-press">
+          <span id="navAvatar"></span><span id="navUser" class="text-xs font-semibold"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN SCROLLABLE CANVAS -->
+    <main class="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+      
+      <!-- VIEW 1: CLEAN APPLE CARDS -->
+      <section id="capsulesView" class="space-y-4 max-w-full">
+        <div class="flex items-center space-x-2">
+          <div class="relative flex-1">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#86868b] text-xs">🔍</span>
+            <input type="text" id="projectSearchInput" oninput="handleProjectSearch(this.value)" placeholder="Filter nama project, subtask, deliverable link, atau PIC... (⌘K)" class="w-full pl-9 pr-4 py-2 bg-white border border-black/5 rounded-2xl text-xs font-medium outline-none text-[#1d1d1f] focus:ring-2 focus:ring-[#0071e3]/20 shadow-xs">
+          </div>
+          <!-- Label Filter Dropdown -->
+          <select id="labelFilterSelect" onchange="setLabelFilter(this.value)" class="bg-white border border-black/5 rounded-2xl px-3 py-2 text-xs font-semibold outline-none text-[#86868b]">
+            <option value="ALL">Semua Label</option>
+            <option value="URGENT">🚨 Urgent</option>
+            <option value="CREATIVE">🎨 Creative</option>
+            <option value="MEDIA">⚡ Media Buying</option>
+            <option value="QA">✅ QA Testing</option>
+          </select>
+        </div>
+
+        <div id="capsulesList" class="space-y-4"></div>
+        
+        <!-- DATABASE ROLLUP FOOTER -->
+        <div id="rollupPanel" class="apple-card p-4 flex flex-wrap items-center justify-between gap-4 text-xs"></div>
+      </section>
+
+      <!-- VIEW 2: KANBAN BOARD ALA TRELLO -->
+      <section id="kanbanView" class="hidden space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="kanban-col p-4 flex flex-col space-y-3" ondragover="event.preventDefault()" ondrop="dropOnKanban(event, 'TODO')">
+            <div class="flex justify-between items-center font-bold text-xs text-[#86868b] px-1">
+              <span>BACKLOG &amp; QUEUE</span>
+              <span id="kbCountTodo" class="bg-black/5 px-2 py-0.5 rounded-full">0</span>
+            </div>
+            <div id="kbListTodo" class="space-y-2.5 flex-1"></div>
+          </div>
+          
+          <div class="kanban-col p-4 flex flex-col space-y-3" ondragover="event.preventDefault()" ondrop="dropOnKanban(event, 'DOING')">
+            <div class="flex justify-between items-center font-bold text-xs text-[#0071e3] px-1">
+              <span>IN PROGRESS</span>
+              <span id="kbCountDoing" class="bg-blue-50 text-[#0071e3] px-2 py-0.5 rounded-full">0</span>
+            </div>
+            <div id="kbListDoing" class="space-y-2.5 flex-1"></div>
+          </div>
+
+          <div class="kanban-col p-4 flex flex-col space-y-3" ondragover="event.preventDefault()" ondrop="dropOnKanban(event, 'DONE')">
+            <div class="flex justify-between items-center font-bold text-xs text-[#34c759] px-1">
+              <span>COMPLETED</span>
+              <span id="kbCountDone" class="bg-emerald-50 text-[#34c759] px-2 py-0.5 rounded-full">0</span>
+            </div>
+            <div id="kbListDone" class="space-y-2.5 flex-1"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: GANTT CHART -->
+      <section id="ganttView" class="hidden apple-card p-6 pb-28">
+        <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-black/5 gap-3">
+          <div>
+            <h3 class="font-bold text-base text-[#1d1d1f]">Work Pace &amp; Timeline</h3>
+            <p class="text-xs text-[#86868b] mt-0.5">Arahkan kursor pada jam untuk rincian instan subtasks</p>
+          </div>
+          <div class="flex items-center space-x-1.5 segmented-group p-1">
+            <button onclick="changeGanttMonth(-1)" class="w-6 h-6 rounded-full bg-white font-bold shadow-xs apple-press">&lsaquo;</button>
+            <div id="ganttMonthLabel" class="text-xs font-semibold px-3 min-w-[110px] text-center">October 2026</div>
+            <button onclick="changeGanttMonth(1)" class="w-6 h-6 rounded-full bg-white font-bold shadow-xs apple-press">&rsaquo;</button>
+          </div>
+          <div id="ganttCapacityPills" class="flex flex-wrap gap-1.5 text-xs"></div>
+        </div>
+        <div class="overflow-x-auto w-full pt-1" style="overflow-y: visible !important;">
+          <div id="ganttContent" class="min-w-max pb-6" style="overflow: visible !important;"></div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: OVERVIEW -->
+      <section id="overviewView" class="hidden space-y-5">
+        <div class="apple-card p-5 flex justify-between items-center">
+          <div>
+            <h2 class="text-base font-bold text-[#1d1d1f]">Department Performance Tracker</h2>
+            <p class="text-xs text-[#86868b]">Monitoring velocity, kapasitas tim, dan status gamifikasi sprint.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="apple-card p-4"><span class="text-[10px] text-[#86868b] font-bold uppercase block">Total</span><div id="ovTotal" class="text-2xl font-bold my-1">0</div><span class="text-[11px] text-[#86868b]">Tasks</span></div>
+          <div class="apple-card p-4"><span class="text-[10px] text-[#34c759] font-bold uppercase block">Completed</span><div id="ovDone" class="text-2xl font-bold text-[#34c759] my-1">0</div><span id="ovDoneSub" class="text-[11px] text-[#34c759]">0% target</span></div>
+          <div class="apple-card p-4"><span class="text-[10px] text-[#ff3b30] font-bold uppercase block">Blockers</span><div id="ovBlockers" class="text-2xl font-bold text-[#ff3b30] my-1">0</div><span class="text-[11px] text-[#ff3b30]">Perlu eskalasi</span></div>
+          <div class="apple-card p-4"><span class="text-[10px] text-[#0071e3] font-bold uppercase block">Velocity</span><div id="ovScore" class="text-2xl font-bold text-[#0071e3] my-1">0%</div><div class="w-full bg-black/5 rounded-full h-1 mt-2 overflow-hidden"><div id="ovScoreBar" class="bg-[#0071e3] h-full" style="width:0%"></div></div></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="apple-card p-5 flex flex-col items-center justify-between text-center">
+            <span class="text-[10px] font-bold text-[#86868b] uppercase block">Gamified Activity Rings</span>
+            <div class="relative w-36 h-36 flex items-center justify-center my-2">
+              <svg class="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="68" stroke="rgba(255,59,48,0.12)" stroke-width="8" fill="none" />
+                <circle id="ringExec" cx="80" cy="80" r="68" stroke="#ff3b30" stroke-width="8" stroke-linecap="round" stroke-dasharray="427.26" stroke-dashoffset="427.26" fill="none" class="transition-all duration-700" />
+                <circle cx="80" cy="80" r="52" stroke="rgba(52,199,89,0.12)" stroke-width="8" fill="none" />
+                <circle id="ringQual" cx="80" cy="80" r="52" stroke="#34c759" stroke-width="8" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73" fill="none" class="transition-all duration-700" />
+                <circle cx="80" cy="80" r="36" stroke="rgba(79,70,229,0.12)" stroke-width="8" fill="none" />
+                <circle id="ringPomodoro" cx="80" cy="80" r="36" stroke="#4f46e5" stroke-width="8" stroke-linecap="round" stroke-dasharray="226.19" stroke-dashoffset="226.19" fill="none" class="transition-all duration-700" />
+              </svg>
+              <span id="ringOverall" class="absolute font-bold text-xl">0%</span>
+            </div>
+            <div class="w-full grid grid-cols-3 gap-1 pt-2 border-t border-black/5 text-[9px] font-bold text-[#86868b]">
+              <span id="legExec">Exec 0%</span><span id="legQual">OTD 0%</span><span id="legPomo" class="text-indigo-600">Focus 0%</span>
+            </div>
+          </div>
+
+          <div class="apple-card p-5 flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-[10px] font-bold text-[#86868b] uppercase">Unlocked Badges</span>
+              <span id="trophyCount" class="text-[10px] font-bold text-[#ff9500]">0/3</span>
+            </div>
+            <div class="space-y-2">
+              <div id="trophy1" class="p-2.5 rounded-xl border border-black/5 bg-black/[0.015] flex items-center space-x-2.5 opacity-40"><span>🏆</span><div class="truncate"><b class="text-xs block truncate">Sprint Crusher</b><span class="text-[10px] text-[#86868b]">&ge; 70% tuntas</span></div></div>
+              <div id="trophy2" class="p-2.5 rounded-xl border border-black/5 bg-black/[0.015] flex items-center space-x-2.5 opacity-40"><span>⚡</span><div class="truncate"><b class="text-xs block truncate">Pomodoro Master</b><span class="text-[10px] text-[#86868b]">&ge; 4 sesi fokus tanpa jeda</span></div></div>
+              <div id="trophy3" class="p-2.5 rounded-xl border border-black/5 bg-black/[0.015] flex items-center space-x-2.5 opacity-40"><span>🛡️</span><div class="truncate"><b class="text-xs block truncate">Zero Blocker Guard</b><span class="text-[10px] text-[#86868b]">0 kendala aktif di sprint</span></div></div>
+            </div>
+          </div>
+
+          <div class="apple-card p-5 flex flex-col justify-between">
+            <span class="text-[10px] font-bold text-[#86868b] uppercase block mb-2">Top Performers of the Week</span>
+            <div id="mvpList" class="space-y-2 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <div class="apple-card p-5 space-y-4">
+          <div class="flex justify-between items-center pb-2 border-b border-black/5">
+            <h3 class="font-bold text-xs uppercase tracking-wider text-[#1d1d1f]">Weekly Talent Dossier</h3>
+            <select id="ovTalentSel" onchange="renderTalentDossier(this.value)" class="bg-black/5 px-3 py-1 rounded-full text-xs font-semibold outline-none"></select>
+          </div>
+          <div id="talentDossierBar" class="grid grid-cols-3 gap-3 text-center"></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="p-3.5 rounded-2xl bg-black/[0.015] border border-black/5 space-y-2">
+              <span class="text-xs font-semibold text-[#1d1d1f] block">Tugas Selesai</span>
+              <div id="talentDoneList" class="space-y-1.5 max-h-48 overflow-y-auto text-xs"></div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-black/[0.015] border border-black/5 space-y-2">
+              <span class="text-xs font-semibold text-[#1d1d1f] block">Sedang Berjalan</span>
+              <div id="talentProgressList" class="space-y-1.5 max-h-48 overflow-y-auto text-xs"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- NOTIFICATION CENTER MODAL (SLACK STYLE) -->
+  <div id="notifModal" class="fixed inset-0 bg-black/30 backdrop-blur-md hidden flex items-start justify-end p-4 z-50">
+    <div class="bg-white rounded-[24px] w-full max-w-sm p-5 shadow-2xl border border-black/5 space-y-3 apple-modal mt-12">
+      <div class="flex justify-between items-center pb-2 border-b border-black/5">
+        <h3 class="font-bold text-sm text-[#1d1d1f]">Notification Center</h3>
+        <button onclick="toggleModal('notifModal', false)" class="w-6 h-6 rounded-full bg-black/5 font-bold text-xs apple-press">&times;</button>
+      </div>
+      <div id="notifList" class="max-h-80 overflow-y-auto space-y-2 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- SLACK-STYLE SUBTASK THREAD ACTIVITY MODAL -->
+  <div id="threadModal" class="fixed inset-0 bg-black/30 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[24px] w-full max-w-lg p-5 shadow-2xl border border-black/5 space-y-3 apple-modal">
+      <div class="flex justify-between items-center pb-2 border-b border-black/5">
+        <div>
+          <h3 class="font-bold text-sm text-[#1d1d1f]">Task Activity &amp; Thread</h3>
+          <p id="threadTaskSubtitle" class="text-[11px] text-[#86868b] truncate"></p>
+        </div>
+        <button onclick="toggleModal('threadModal', false)" class="w-6 h-6 rounded-full bg-black/5 font-bold text-xs apple-press">&times;</button>
+      </div>
+
+      <div id="threadMessageList" class="max-h-56 overflow-y-auto space-y-2 text-xs py-1"></div>
+
+      <div class="flex space-x-2 pt-2 border-t border-black/5">
+        <input type="text" id="threadInput" placeholder="Ketik @Nama untuk mention, atau catat revisi..." onkeydown="if(event.key === 'Enter') submitThreadMessage()" class="flex-1 p-2.5 bg-black/[0.04] rounded-xl text-xs font-medium outline-none">
+        <button onclick="submitThreadMessage()" class="px-4 py-2 bg-[#0071e3] text-white rounded-xl font-bold text-xs apple-press">Kirim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PROOF OF WORK (POW) -->
+  <div id="powModal" class="fixed inset-0 bg-black/30 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[24px] w-full max-w-md p-6 shadow-2xl border border-black/5 space-y-4 apple-modal">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#0071e3] flex items-center justify-center font-bold text-lg">🔗</div>
+        <div>
+          <h3 class="font-bold text-sm text-[#1d1d1f]">Lampirkan Proof of Work (PoW)</h3>
+          <p class="text-[11px] text-[#86868b]">Sematkan link hasil deliverable sebelum menyelesaikan tugas.</p>
+        </div>
+      </div>
+      <div class="p-3 bg-black/[0.02] rounded-xl border border-black/5 text-xs text-[#1d1d1f]">
+        <span class="text-[#86868b] block text-[10px] uppercase font-semibold">Subtask:</span>
+        <b id="powTaskTitle" class="block truncate mt-0.5 font-bold"></b>
+      </div>
+      <div>
+        <label class="font-semibold text-[#86868b] block mb-1 text-xs">URL Hasil Pengerjaan (Drive, Figma, Docs, Ads)</label>
+        <input type="url" id="powLinkInput" placeholder="https://drive.google.com/..." class="w-full p-2.5 bg-black/[0.04] rounded-xl font-medium outline-none text-xs text-[#1d1d1f] focus:bg-white focus:ring-2 focus:ring-[#0071e3]">
+      </div>
+      <div class="flex space-x-2 pt-2">
+        <button onclick="skipPowValidation()" class="w-1/2 py-2.5 bg-black/5 text-[#86868b] hover:text-[#1d1d1f] font-semibold rounded-xl text-xs apple-press">Lewati (Tanpa Link)</button>
+        <button onclick="confirmPowValidation()" class="w-1/2 py-2.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold rounded-xl text-xs apple-press shadow-xs">Simpan &amp; Selesaikan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TASK INPUT PRO -->
+  <div id="newTaskModal" class="fixed inset-0 bg-black/30 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[28px] w-full max-w-2xl p-6 shadow-2xl border border-black/5 space-y-4 max-h-[92vh] overflow-y-auto apple-modal">
+      <div class="flex justify-between items-center pb-3 border-b border-black/5">
+        <div>
+          <h3 class="font-bold text-base text-[#1d1d1f]">Buat Project &amp; Action Plan</h3>
+          <p class="text-[11px] text-[#86868b]">Tentukan alur kerja, assign PIC, dan alokasi durasi sprint.</p>
+        </div>
+        <button onclick="toggleModal('newTaskModal', false)" class="w-7 h-7 rounded-full bg-black/5 flex items-center justify-center font-bold text-sm text-[#86868b] apple-press">&times;</button>
+      </div>
+
+      <div class="space-y-1">
+        <span class="text-[10px] font-bold text-[#86868b] uppercase tracking-wider block">TEMPLATE CEPAT:</span>
+        <div class="flex items-center space-x-2 overflow-x-auto text-[11px] font-semibold py-1">
+          <button onclick="applyTaskTemplate('CTWA')" class="px-3 py-1.5 rounded-full bg-blue-50 text-[#0071e3] whitespace-nowrap apple-press">⚡ Meta CTWA Setup</button>
+          <button onclick="applyTaskTemplate('PROD')" class="px-3 py-1.5 rounded-full bg-purple-50 text-[#5856d6] whitespace-nowrap apple-press">🎨 Creative Video Batch</button>
+          <button onclick="applyTaskTemplate('WEB')" class="px-3 py-1.5 rounded-full bg-emerald-50 text-[#34c759] whitespace-nowrap apple-press">💻 Web &amp; CAPI Landing</button>
+          <button onclick="applyTaskTemplate('ABD')" class="px-3 py-1.5 rounded-full bg-amber-50 text-[#ff9500] whitespace-nowrap apple-press">🤝 Pitching &amp; Deal</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
+        <div class="md:col-span-3">
+          <label class="font-semibold text-[#86868b] block mb-1">Nama Project / Klien</label>
+          <input type="text" id="npTitle" placeholder="Misal: Cherry Oaks - Scaling Meta Ads Q4" class="w-full p-2.5 bg-black/[0.04] rounded-xl font-medium outline-none text-[#1d1d1f] focus:bg-white focus:ring-2 focus:ring-[#0071e3]">
+        </div>
+        <div>
+          <label class="font-semibold text-[#86868b] block mb-1">Lead PIC Project</label>
+          <select id="npPic" class="w-full p-2.5 bg-black/[0.04] rounded-xl font-semibold outline-none text-[#1d1d1f]"></select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="font-semibold text-[#86868b] block mb-1">Target SLA Serah Terima</label>
+          <input type="date" id="npSla" class="w-full p-2.5 bg-black/[0.04] rounded-xl font-medium outline-none text-[#1d1d1f]">
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-2 text-xs border-t border-black/5">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-[#1d1d1f]">Action Plans &amp; Subtasks</span>
+          <button onclick="addActionRow()" class="text-xs font-semibold text-[#0071e3] hover:underline apple-press">+ Tambah Item</button>
+        </div>
+        <div id="actionPlanRows" class="space-y-2.5 max-h-60 overflow-y-auto pr-1"></div>
+      </div>
+
+      <div class="flex space-x-2 pt-3 border-t border-black/5">
+        <button onclick="toggleModal('newTaskModal', false)" class="w-1/2 py-2.5 bg-black/5 text-[#1d1d1f] font-semibold rounded-xl text-xs apple-press">Batal</button>
+        <button onclick="submitNewTaskPro()" class="w-1/2 py-2.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold rounded-xl text-xs apple-press shadow-xs">Simpan Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GEMINI AI COPILOT -->
+  <div id="aiModal" class="fixed inset-0 bg-black/30 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[28px] w-full max-w-lg p-5 shadow-2xl border border-black/5 flex flex-col max-h-[85vh] apple-modal">
+      <div class="flex justify-between items-center pb-3 border-b border-black/5">
+        <div class="flex items-center space-x-2">
+          <h3 class="font-bold text-sm text-[#1d1d1f]">✦ Gemini Copilot</h3>
+          <span id="aiKeyBadge" class="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Dedicated API Active</span>
+        </div>
+        <button onclick="toggleModal('aiModal', false)" class="w-6 h-6 rounded-full bg-black/5 font-bold text-xs apple-press">&times;</button>
+      </div>
+      <div class="flex space-x-1.5 py-2.5 border-b border-black/5 overflow-x-auto text-[10px] font-semibold">
+        <button onclick="presetAI('breakdown')" class="px-2.5 py-1 rounded-full bg-black/5 apple-press whitespace-nowrap">⚡ Breakdown Task</button>
+        <button onclick="presetAI('blocker')" class="px-2.5 py-1 rounded-full bg-black/5 apple-press whitespace-nowrap">🚨 Solusi Blocker</button>
+        <button onclick="presetAI('angles')" class="px-2.5 py-1 rounded-full bg-black/5 apple-press whitespace-nowrap">🎯 Copy Angles</button>
+      </div>
+      <div id="aiBox" class="flex-1 overflow-y-auto py-3 space-y-2.5 text-xs text-[#1d1d1f]">
+        <div class="p-3 rounded-xl bg-black/[0.02] text-[#86868b] italic">Tuliskan brief proyek atau gunakan tombol preset di atas.</div>
+      </div>
+      <div class="pt-2.5 border-t border-black/5 space-y-2">
+        <div class="flex space-x-1.5">
+          <input type="text" id="aiInput" placeholder="Tanyakan pada Gemini..." onkeydown="if(event.key === 'Enter') sendAI()" class="flex-1 p-2.5 bg-black/5 rounded-xl text-xs font-medium outline-none focus:bg-white focus:ring-1 focus:ring-[#0071e3]">
+          <button id="aiBtn" onclick="sendAI()" class="px-4 py-2.5 bg-[#0071e3] text-white rounded-xl font-semibold text-xs apple-press">Kirim</button>
+        </div>
+        <div class="flex justify-between items-center text-[10px] text-[#86868b] pt-1">
+          <span>Gemini 1.5 Flash</span>
+          <button onclick="configureApiKeyManual()" class="text-[#0071e3] font-semibold hover:underline">⚙️ Atur / Ganti Key</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: COMMAND PALETTE -->
+  <div id="cmdModal" class="fixed inset-0 bg-black/30 backdrop-blur-md hidden flex items-start justify-center pt-24 p-4 z-50">
+    <div class="bg-white rounded-[24px] w-full max-w-md shadow-2xl p-3 border border-black/5 apple-modal">
+      <div class="flex items-center space-x-2 pb-2 border-b border-black/5">
+        <span>🔍</span><input type="text" id="cmdInput" placeholder="Ketik perintah atau cari project..." oninput="filterCmd(this.value)" class="w-full text-xs font-medium outline-none bg-transparent">
+      </div>
+      <div id="cmdList" class="max-h-64 overflow-y-auto pt-2 space-y-1 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: PROFILE & KPI -->
+  <div id="userModal" class="fixed inset-0 bg-black/30 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[28px] w-full max-w-2xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto space-y-3 apple-modal">
+      <div class="flex justify-between items-center pb-2 border-b border-black/5">
+        <div class="flex items-center space-x-2"><div id="uAvatar"></div><h3 id="uName" class="font-bold text-sm text-[#1d1d1f]"></h3></div>
+        <button onclick="toggleModal('userModal', false)" class="w-6 h-6 rounded-full bg-black/5 font-bold text-xs apple-press">&times;</button>
+      </div>
+      <div>
+        <span class="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider block mb-1.5">Live KPI Google Sheet</span>
+        <table class="w-full text-left text-xs"><tbody id="kpiBody" class="divide-y divide-black/5"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-[#1d1d1f]/90 backdrop-blur-md text-white text-xs font-medium px-4 py-2 rounded-full transition-all duration-300 opacity-0 pointer-events-none z-50"></div>
+
+  <script>
+    const DEDICATED_GEMINI_KEY = "MASUKKAN_GEMINI_API_KEY_ANDA_DI_SINI";
+    const KPI_SHEET_URL = "https://docs.google.com/spreadsheets/d/1J7qOn6NbqfFPd2WaWNUyj1HET6ykuF9E_STu7I8cTpw";
+    const USER_ROLE_MAP = { Mike: "PROJECT MANAGER", Selin: "PROJECT MANAGER", Anggun: "HRGA", Razaan: "DM", Nicho: "DM", Jireh: "CREATIVE DIRECTOR", Arif: "GRAPHIC DESIGN", Giza: "VIDEO EDITOR", Dzaky: "FINANCE" };
+    let teamList = ["Mike", "Selin", "Jireh", "Anggun", "Razaan", "Nicho", "Arif", "Giza", "Dzaky"];
+
+    const nowTs = Date.now();
+    const initialTasks = [
+      {
+        id: "tsk-1", title: "Cherry Oaks", pic: "Mike", handoverSla: "2026-10-20",
+        actions: [
+          { text: "Design wireframe", label: "CREATIVE", callout: "Pastikan font inter dan sistem grid 8px konsisten.", desc: "https://figma.com/file/sample-wireframe", pic: "Arif", dueDate: "2026-10-18", duration: 3, done: true, isFlagged: false, revisions: 1, workSessions: [{ start: nowTs - 86400000, durationSeconds: 7200 }], threads: [{ user: "Mike", text: "Wireframe lolos sign off.", time: "10:30" }] },
+          { text: "Development & CAPI", label: "MEDIA", callout: "Gunakan token webhook production terkini.", desc: "https://github.com/sample/repo", pic: "Razaan", dueDate: "2026-10-15", duration: 4, done: true, isFlagged: false, revisions: 0, workSessions: [{ start: nowTs - 43200000, durationSeconds: 7200 }], threads: [] },
+          { text: "QA & Client handover", label: "URGENT", callout: "Dokumen kontrak wajib dilampirkan sebelum sign-off.", desc: "Review akhir bersama tim lead", pic: "Selin", dueDate: "2026-10-17", duration: 2, done: false, isFlagged: true, blocker: "Menunggu sign-off dokumen", revisions: 3, workSessions: [{ start: nowTs - 1800000, durationSeconds: 1800 }], threads: [{ user: "Selin", text: "Klien meminta penyesuaian SLA 2 hari.", time: "14:15" }] }
+        ]
+      },
+      {
+        id: "tsk-2", title: "Social Media Campaigns", pic: "Razaan", handoverSla: "2026-10-22",
+        actions: [
+          { text: "Meta CTWA ads setup", label: "MEDIA", callout: "", desc: "https://adsmanager.facebook.com", pic: "Nicho", dueDate: "2026-10-18", duration: 2, done: true, isFlagged: false, revisions: 0, workSessions: [{ start: nowTs - 86400000, durationSeconds: 5600 }], threads: [] },
+          { text: "Budget scaling analysis", label: "QA", callout: "", desc: "Evaluasi CPR dan ROAS harian", pic: "Mike", dueDate: "2026-10-28", duration: 3, done: false, isFlagged: false, revisions: 1, workSessions: [{ start: nowTs - 3600000, durationSeconds: 3600 }], threads: [] }
+        ]
+      }
+    ];
+
+    let ganttDate = new Date(2026, 9, 1);
+    let State = {
+      activeUser: "Mike",
+      status: "ALL",
+      labelFilter: "ALL",
+      searchQuery: "",
+      view: "capsules",
+      expanded: new Set(["tsk-1"]),
+      tasks: JSON.parse(localStorage.getItem('agency_ultimate_v6')) || initialTasks,
+      gamification: JSON.parse(localStorage.getItem('agency_ultimate_gamestats_v6')) || {
+        exp: 320, streak: 2, level: 1, totalFocusSeconds: 3600
+      }
+    };
+
+    function commit() {
+      localStorage.setItem('agency_ultimate_v6', JSON.stringify(State.tasks));
+      localStorage.setItem('agency_ultimate_gamestats_v6', JSON.stringify(State.gamification));
+      render();
+    }
+
+    function getActiveGeminiKey() {
+      if (DEDICATED_GEMINI_KEY && !DEDICATED_GEMINI_KEY.includes("MASUKKAN_GEMINI_API_KEY")) return DEDICATED_GEMINI_KEY;
+      return localStorage.getItem('agency_gemini_key') || '';
+    }
+
+    function configureApiKeyManual() {
+      const current = getActiveGeminiKey();
+      const input = prompt("Masukkan Gemini API Key Anda (diawali dengan 'AIzaSy...'):", current);
+      if (input !== null) {
+        const trimmed = input.trim();
+        if (trimmed) {
+          localStorage.setItem('agency_gemini_key', trimmed);
+          updateKeyBadgeUI();
+          showToast("Gemini API Key tersimpan di browser.");
+        } else {
+          localStorage.removeItem('agency_gemini_key');
+          updateKeyBadgeUI();
+          showToast("API Key dihapus.");
+        }
+      }
+    }
+
+    function updateKeyBadgeUI() {
+      const badge = document.getElementById('aiKeyBadge');
+      const key = getActiveGeminiKey();
+      if (badge) {
+        badge.className = key ? "text-[9px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700" : "text-[9px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700";
+        badge.innerText = key ? "Dedicated API Active" : "Kunci Belum Diatur";
+      }
+    }
+
+    // --- NOTION SLASH COMMANDS ---
+    function handleSlashCommand(inputEl) {
+      const v = inputEl.value;
+      if (v === '/drive ') inputEl.value = 'https://drive.google.com/drive/folders/...';
+      else if (v === '/figma ') inputEl.value = 'https://www.figma.com/design/...';
+      else if (v === '/qa ') inputEl.value = '[QA Checklist]: Testing Form Valid, Mobile Tested, Pixel Active';
+      else if (v === '/brief ') inputEl.value = '[Brief]: Hook visual 3s, Script CTA WhatsApp';
+    }
+
+    // --- DUE DATE STATUS EVALUATOR (TRELLO STYLE) ---
+    function getDueDateStatus(dueDateStr, done) {
+      if (!dueDateStr || done) return { text: dueDateStr || '-', class: 'text-[#86868b]' };
+      const todayStr = new Date().toISOString().slice(0, 10);
+      if (dueDateStr === todayStr) {
+        return { text: `Due Today`, class: 'bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-full' };
+      } else if (dueDateStr < todayStr) {
+        return { text: `Overdue (${dueDateStr})`, class: 'bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full' };
+      }
+      return { text: dueDateStr, class: 'text-[#86868b]' };
+    }
+
+    // --- NOTIFICATION CENTER & MENTIONS (SLACK STYLE) ---
+    function openNotificationCenter() {
+      const notifs = [];
+      const user = State.activeUser;
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      State.tasks.forEach(t => {
+        t.actions.forEach(a => {
+          if (a.pic === user && !a.done) {
+            if (a.dueDate < todayStr) {
+              notifs.push({ title: "Tugas Terlambat", desc: `${t.title} › ${a.text}`, type: "overdue" });
+            } else if (a.dueDate === todayStr) {
+              notifs.push({ title: "Jatuh Tempo Hari Ini", desc: `${t.title} › ${a.text}`, type: "today" });
+            }
+          }
+          if (a.threads) {
+            a.threads.forEach(m => {
+              if (m.text.includes(`@${user}`)) {
+                notifs.push({ title: `Mention dari ${m.user}`, desc: `"${m.text}" pada ${a.text}`, type: "mention" });
+              }
+            });
+          }
+        });
+      });
+
+      const list = document.getElementById('notifList');
+      list.innerHTML = notifs.map(n => `
+        <div class="p-2.5 rounded-xl border ${n.type === 'overdue' ? 'bg-rose-50 border-rose-100 text-rose-900' : n.type === 'today' ? 'bg-amber-50 border-amber-100 text-amber-900' : 'bg-black/[0.02] border-black/5'}">
+          <b class="block text-xs">${n.title}</b>
+          <span class="text-[11px] opacity-80">${n.desc}</span>
+        </div>
+      `).join('') || `<div class="p-6 text-center text-[#86868b] italic">Tidak ada notifikasi aktif.</div>`;
+
+      document.getElementById('notifBadge').classList.toggle('hidden', notifs.length === 0);
+      toggleModal('notifModal', true);
+    }
+
+    // --- SLACK-STYLE SUBTASK THREADS ---
+    let activeThreadTask = null;
+    function openThreadModal(taskId, actionIdx) {
+      activeThreadTask = { taskId, actionIdx };
+      const t = State.tasks.find(x => x.id === taskId);
+      const a = t?.actions[actionIdx];
+      if (!a) return;
+      document.getElementById('threadTaskSubtitle').innerText = `${t.title} › ${a.text}`;
+      renderThreadMessages();
+      toggleModal('threadModal', true);
+    }
+
+    function renderThreadMessages() {
+      if (!activeThreadTask) return;
+      const t = State.tasks.find(x => x.id === activeThreadTask.taskId);
+      const a = t?.actions[activeThreadTask.actionIdx];
+      const list = document.getElementById('threadMessageList');
+      const threads = a.threads || [];
+
+      list.innerHTML = threads.map(m => `
+        <div class="p-2.5 bg-black/[0.02] border border-black/5 rounded-xl space-y-0.5">
+          <div class="flex justify-between items-center text-[10px] text-[#86868b]">
+            <b class="text-[#1d1d1f]">${m.user}</b><span>${m.time}</span>
+          </div>
+          <p class="text-[11px] text-[#1d1d1f]">${m.text.replace(/@(\w+)/g, '<span class="text-[#0071e3] font-bold">@$1</span>')}</p>
+        </div>
+      `).join('') || `<div class="p-4 text-center text-[#86868b] italic">Belum ada catatan aktivitas.</div>`;
+    }
+
+    function submitThreadMessage() {
+      const inp = document.getElementById('threadInput');
+      const val = inp.value.trim();
+      if (!val || !activeThreadTask) return;
+      const t = State.tasks.find(x => x.id === activeThreadTask.taskId);
+      const a = t?.actions[activeThreadTask.actionIdx];
+      if (!a.threads) a.threads = [];
+      const d = new Date();
+      const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      a.threads.push({ user: State.activeUser, text: val, time: timeStr });
+      inp.value = '';
+      commit();
+      renderThreadMessages();
+      showToast("Pesan thread ditambahkan.");
+    }
+
+    // --- TRELLO-STYLE KANBAN ENGINE ---
+    let draggedKanbanItem = null;
+    function renderKanban() {
+      const todoList = [], doingList = [], doneList = [];
+
+      State.tasks.forEach(t => {
+        t.actions.forEach((a, i) => {
+          const item = { ...a, taskId: t.id, actionIdx: i, projectTitle: t.title };
+          if (a.done) doneList.push(item);
+          else if (a.workSessions && a.workSessions.length > 0) doingList.push(item);
+          else todoList.push(item);
+        });
+      });
+
+      document.getElementById('kbCountTodo').innerText = todoList.length;
+      document.getElementById('kbCountDoing').innerText = doingList.length;
+      document.getElementById('kbCountDone').innerText = doneList.length;
+
+      const renderCol = (arr) => arr.map(item => `
+        <div class="apple-card p-3 space-y-2 cursor-grab apple-press text-xs"
+             draggable="true"
+             ondragstart="draggedKanbanItem = { taskId: '${item.taskId}', actionIdx: ${item.actionIdx} }">
+          <div class="flex justify-between items-start">
+            <span class="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider">${item.projectTitle}</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-black/5 font-bold">${item.pic}</span>
+          </div>
+          <div class="font-bold text-[#1d1d1f] leading-snug">${item.text}</div>
+          ${item.label ? `<span class="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full ${item.label === 'URGENT' ? 'bg-rose-50 text-rose-700' : 'bg-blue-50 text-blue-700'}">${item.label}</span>` : ''}
+          <div class="flex justify-between items-center text-[10px] text-[#86868b] pt-1 border-t border-black/5">
+            <span>⏱ ${item.duration || 2}h</span>
+            <button onclick="openThreadModal('${item.taskId}', ${item.actionIdx})" class="text-[#0071e3] font-bold">💬 ${(item.threads || []).length}</button>
+          </div>
+        </div>
+      `).join('') || `<div class="p-6 text-center text-[11px] text-[#86868b] italic">Kosong</div>`;
+
+      document.getElementById('kbListTodo').innerHTML = renderCol(todoList);
+      document.getElementById('kbListDoing').innerHTML = renderCol(doingList);
+      document.getElementById('kbListDone').innerHTML = renderCol(doneList);
+    }
+
+    function dropOnKanban(e, targetStatus) {
+      e.preventDefault();
+      if (!draggedKanbanItem) return;
+      const { taskId, actionIdx } = draggedKanbanItem;
+      const t = State.tasks.find(x => x.id === taskId);
+      const a = t?.actions[actionIdx];
+      if (!a) return;
+
+      if (targetStatus === 'DONE') {
+        a.done = true;
+      } else if (targetStatus === 'DOING') {
+        a.done = false;
+        if (!a.workSessions) a.workSessions = [];
+        if (a.workSessions.length === 0) a.workSessions.push({ start: Date.now(), durationSeconds: 60 });
+      } else {
+        a.done = false;
+        a.workSessions = [];
+      }
+
+      playAudio('done');
+      draggedKanbanItem = null;
+      commit();
+      renderKanban();
+      showToast(`Subtask dipindahkan ke ${targetStatus}`);
+    }
+
+    // --- NOTION ROLLUP SUMMARY BAR ---
+    function renderRollupBar() {
+      let estHours = 0, loggedSecs = 0, totalActions = 0, completedActions = 0;
+
+      State.tasks.forEach(t => {
+        t.actions.forEach(a => {
+          totalActions++;
+          estHours += (a.duration || 2);
+          if (a.done) completedActions++;
+          if (a.workSessions) a.workSessions.forEach(w => loggedSecs += (w.durationSeconds || 0));
+        });
+      });
+
+      const actualHours = (loggedSecs / 3600).toFixed(1);
+      const completionRate = totalActions ? Math.round((completedActions / totalActions) * 100) : 0;
+      const paceRatio = estHours ? Math.round(((loggedSecs / 3600) / estHours) * 100) : 0;
+
+      document.getElementById('rollupPanel').innerHTML = `
+        <div class="flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-[#0071e3]"></span>
+          <span class="font-bold text-[#1d1d1f]">Database Rollup:</span>
+          <span class="text-[#86868b]">${totalActions} Total Subtasks</span>
+        </div>
+        <div class="flex items-center space-x-6 text-[#86868b]">
+          <div>Estimasi: <b class="text-[#1d1d1f] font-mono">${estHours}h</b></div>
+          <div>Realisasi: <b class="text-[#0071e3] font-mono">${actualHours}h</b> (${paceRatio}%)</div>
+          <div>Deliverable Selesai: <b class="text-[#34c759] font-mono">${completionRate}%</b></div>
+        </div>
+      `;
+    }
+
+    // --- AMBIENT SOUND & POMODORO ENGINE ---
+    let ambientCtx = null, ambientActive = false, ambientNodes = [];
+    function initAmbientContext() {
+      if (!ambientCtx) ambientCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (ambientCtx.state === 'suspended') ambientCtx.resume();
+    }
+    function stopAmbientNodes() {
+      ambientNodes.forEach(n => { try { if (n.stop) n.stop(); if (n.disconnect) n.disconnect(); } catch(e) {} });
+      ambientNodes = [];
+    }
+    function toggleAmbientSound() {
+      initAmbientContext();
+      ambientActive = !ambientActive;
+      const btn = document.getElementById('btnAmbientToggle');
+      if (ambientActive) {
+        startAmbientGenerator(document.getElementById('ambientSoundType').value);
+        btn.innerText = "🎧 Ambient On";
+        btn.classList.add('text-[#0071e3]');
+        showToast("Suara latar fokus aktif.");
+      } else {
+        stopAmbientNodes();
+        btn.innerText = "🎧 Ambient Off";
+        btn.classList.remove('text-[#0071e3]');
+        showToast("Suara latar dimatikan.");
+      }
+    }
+    function changeAmbientType(type) { if (ambientActive) { stopAmbientNodes(); startAmbientGenerator(type); } }
+    function startAmbientGenerator(type) {
+      if (!ambientCtx) return;
+      if (type === 'alpha') {
+        const merger = ambientCtx.createChannelMerger(2), oscL = ambientCtx.createOscillator(), oscR = ambientCtx.createOscillator(), gain = ambientCtx.createGain();
+        oscL.frequency.setValueAtTime(200, ambientCtx.currentTime); oscR.frequency.setValueAtTime(210, ambientCtx.currentTime); gain.gain.setValueAtTime(0.04, ambientCtx.currentTime);
+        oscL.connect(merger, 0, 0); oscR.connect(merger, 0, 1); merger.connect(gain); gain.connect(ambientCtx.destination);
+        oscL.start(); oscR.start(); ambientNodes.push(oscL, oscR, merger, gain);
+      } else if (type === 'white') {
+        const bs = 2 * ambientCtx.sampleRate, nb = ambientCtx.createBuffer(1, bs, ambientCtx.sampleRate), out = nb.getChannelData(0);
+        for (let i = 0; i < bs; i++) out[i] = Math.random() * 2 - 1;
+        const wn = ambientCtx.createBufferSource(); wn.buffer = nb; wn.loop = true;
+        const gain = ambientCtx.createGain(); gain.gain.setValueAtTime(0.02, ambientCtx.currentTime);
+        wn.connect(gain); gain.connect(ambientCtx.destination); wn.start(); ambientNodes.push(wn, gain);
+      } else if (type === 'pink') {
+        const bs = 2 * ambientCtx.sampleRate, nb = ambientCtx.createBuffer(1, bs, ambientCtx.sampleRate), out = nb.getChannelData(0);
+        let lastOut = 0.0;
+        for (let i = 0; i < bs; i++) { const w = Math.random() * 2 - 1; out[i] = (lastOut + (0.02 * w)) / 1.02; lastOut = out[i]; out[i] *= 3.5; }
+        const bn = ambientCtx.createBufferSource(); bn.buffer = nb; bn.loop = true;
+        const filter = ambientCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.setValueAtTime(450, ambientCtx.currentTime);
+        const gain = ambientCtx.createGain(); gain.gain.setValueAtTime(0.04, ambientCtx.currentTime);
+        bn.connect(filter); filter.connect(gain); gain.connect(ambientCtx.destination); bn.start(); ambientNodes.push(bn, filter, gain);
+      }
+    }
+
+    let activePomodoroTimer = null, activePomoState = null;
+    function toggleSubtaskPomodoro(taskId, actionIdx) {
+      if (activePomoState && activePomoState.taskId === taskId && activePomoState.actionIdx === actionIdx) { stopActivePomodoro(true); return; }
+      if (activePomoState) stopActivePomodoro(true);
+      activePomoState = { taskId, actionIdx, remainingSeconds: 25 * 60, runSeconds: 0, startTime: Date.now() };
+      playAudio('tick');
+      startPomodoroTick();
+      updatePomodoroUIs();
+      if (!ambientActive) toggleAmbientSound();
+      showToast("Sesi Pomodoro 25 menit dimulai!");
+    }
+    function startPomodoroTick() {
+      if (activePomodoroTimer) clearInterval(activePomodoroTimer);
+      activePomodoroTimer = setInterval(() => {
+        if (!activePomoState) return;
+        activePomoState.remainingSeconds--;
+        activePomoState.runSeconds++;
+        State.gamification.exp += 1;
+        State.gamification.totalFocusSeconds += 1;
+        updatePomodoroUIs();
+        if (activePomoState.remainingSeconds <= 0) finishPomodoroSession();
+      }, 1000);
+    }
+    function updatePomodoroUIs() {
+      const pill = document.getElementById('topPomodoroPill');
+      if (!activePomoState) { pill.classList.add('hidden'); pill.classList.remove('flex'); return; }
+      const m = Math.floor(activePomoState.remainingSeconds / 60), s = activePomoState.remainingSeconds % 60;
+      const formatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      pill.classList.remove('hidden'); pill.classList.add('flex');
+      document.getElementById('topPomodoroText').innerText = formatted;
+      const btn = document.getElementById(`pomo-btn-${activePomoState.taskId}-${activePomoState.actionIdx}`);
+      if (btn) { btn.innerText = `⏸ ${formatted}`; btn.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white animate-pulse apple-press"; }
+      updateGamificationSideBadge();
+    }
+    function finishPomodoroSession() {
+      clearInterval(activePomodoroTimer); playAudio('done');
+      State.gamification.streak += 1; State.gamification.exp += 150;
+      savePomodoroWorkSession(); activePomoState = null; updatePomodoroUIs(); commit();
+      alert("🎉 Selesai! Sesi fokus 25 menit tuntas. Streak bertambah!");
+    }
+    function stopActivePomodoro(saveElapsed = true) {
+      if (activePomodoroTimer) clearInterval(activePomodoroTimer);
+      if (saveElapsed && activePomoState && activePomoState.runSeconds > 10) savePomodoroWorkSession();
+      activePomoState = null; updatePomodoroUIs(); commit();
+      showToast("Timer fokus dihentikan.");
+    }
+    function savePomodoroWorkSession() {
+      if (!activePomoState) return;
+      const t = State.tasks.find(x => x.id === activePomoState.taskId);
+      if (t && t.actions[activePomoState.actionIdx]) {
+        if (!Array.isArray(t.actions[activePomoState.actionIdx].workSessions)) t.actions[activePomoState.actionIdx].workSessions = [];
+        t.actions[activePomoState.actionIdx].workSessions.push({ start: activePomoState.startTime, durationSeconds: activePomoState.runSeconds });
+      }
+    }
+    function updateGamificationSideBadge() {
+      const g = State.gamification, level = Math.floor(g.exp / 500) + 1; g.level = level;
+      const currentLevelExp = g.exp % 500, pct = Math.min(100, Math.round((currentLevelExp / 500) * 100));
+      const rankTitles = ["Novice Explorer", "Deep Work Specialist", "Sprint Crusher", "Efficiency Master", "Focus Grandmaster"];
+      document.getElementById('sideGamerLevel').innerText = `Lv.${level}`;
+      document.getElementById('sideRankTitle').innerText = rankTitles[Math.min(rankTitles.length - 1, level - 1)];
+      document.getElementById('sideExpPoints').innerText = `${g.exp} XP`;
+      document.getElementById('sideExpBar').style.width = `${pct}%`;
+      document.getElementById('sideStreakCount').innerText = `🔥 ${g.streak} Sesi`;
+    }
+
+    // --- AUDIO FEEDBACK ---
+    let audioCtx = null, audioMuted = false;
+    function playAudio(t) {
+      if (audioMuted) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+        osc.connect(g); g.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+        if (t === 'tick') {
+          osc.frequency.setValueAtTime(600, now); g.gain.setValueAtTime(0.03, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+          osc.start(now); osc.stop(now + 0.03);
+        } else {
+          osc.frequency.setValueAtTime(783.99, now); g.gain.setValueAtTime(0.04, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          osc.start(now); osc.stop(now + 0.15);
+        }
+      } catch (e) {}
+    }
+    function toggleAudio() {
+      audioMuted = !audioMuted;
+      document.getElementById('btnAudio').innerText = audioMuted ? '🔇' : '🔊';
+      showToast(audioMuted ? "Suara dinonaktifkan" : "Suara aktif");
+    }
+    function showToast(m) {
+      const t = document.getElementById('toast');
+      t.innerText = m; t.classList.remove('opacity-0');
+      setTimeout(() => t.classList.add('opacity-0'), 1800);
+    }
+    function toggleModal(id, open) {
+      document.getElementById(id).classList.toggle('hidden', !open);
+      if (open) { playAudio('tick'); if (id === 'aiModal') updateKeyBadgeUI(); }
+    }
+    function getMonday() {
+      const d = new Date(), day = d.getDay();
+      return new Date(d.setDate(d.getDate() - day + (day === 0 ? -6 : 1))).setHours(0,0,0,0);
+    }
+    function getWeeklyHours(nick) {
+      const mon = getMonday();
+      let s = 0;
+      State.tasks.forEach(t => t.actions.forEach(a => {
+        if (a.pic === nick && a.workSessions) a.workSessions.forEach(w => { if (w.start >= mon) s += Math.min(w.durationSeconds || 0, 7200); });
+      }));
+      return (s / 3600).toFixed(1);
+    }
+    function getAvatar(n) {
+      const em = ['😀', '😎', '🥳', '🤓', '🤩', '😄', '🤠', '😊'];
+      return `<span class="w-6 h-6 rounded-full bg-black/5 inline-flex items-center justify-center text-xs select-none">${em[n.charCodeAt(0) % em.length]}</span>`;
+    }
+
+    // --- PROOF OF WORK VALIDATION ---
+    let pendingPowAction = null;
+    function handleCheckboxClick(taskId, actionIdx, isChecked) {
+      if (!isChecked) { mutateAction(taskId, actionIdx, 'done', false); return; }
+      const t = State.tasks.find(x => x.id === taskId);
+      const a = t?.actions[actionIdx];
+      if (!a) return;
+      const hasUrl = a.desc && (a.desc.includes('http://') || a.desc.includes('https://') || a.desc.includes('drive.google') || a.desc.includes('figma.com'));
+      if (!hasUrl) {
+        pendingPowAction = { taskId, actionIdx };
+        document.getElementById('powTaskTitle').innerText = a.text;
+        document.getElementById('powLinkInput').value = '';
+        toggleModal('powModal', true);
+      } else {
+        mutateAction(taskId, actionIdx, 'done', true);
+      }
+    }
+    function confirmPowValidation() {
+      if (!pendingPowAction) return;
+      const link = document.getElementById('powLinkInput').value.trim();
+      const { taskId, actionIdx } = pendingPowAction;
+      const t = State.tasks.find(x => x.id === taskId);
+      if (link) t.actions[actionIdx].desc = link;
+      t.actions[actionIdx].done = true;
+      playAudio('done'); State.gamification.exp += 30; commit();
+      toggleModal('powModal', false); pendingPowAction = null;
+      showToast("Tugas diverifikasi (+30 XP) & selesai.");
+    }
+    function skipPowValidation() {
+      if (!pendingPowAction) return;
+      const { taskId, actionIdx } = pendingPowAction;
+      mutateAction(taskId, actionIdx, 'done', true);
+      State.gamification.exp += 15; toggleModal('powModal', false); pendingPowAction = null;
+    }
+
+    function handleProjectSearch(query) { State.searchQuery = query.toLowerCase().trim(); renderCapsules(); }
+    function setLabelFilter(val) { State.labelFilter = val; playAudio('tick'); renderCapsules(); }
+
+    // --- ACTION PLAN BUILDER ---
+    function openNewTaskSheet() {
+      document.getElementById('npPic').innerHTML = teamList.map(n => `<option value="${n}" ${n === State.activeUser ? 'selected' : ''}>${n}</option>`).join('');
+      document.getElementById('npTitle').value = '';
+      document.getElementById('npSla').value = '2026-10-25';
+      document.getElementById('actionPlanRows').innerHTML = '';
+      addActionRow("Riset Hook & Angle Copywriting", "Analisis competitor angle", "MEDIA", "", State.activeUser, 2, "2026-10-20");
+      addActionRow("Setup Teknis & QA Tracking", "Validasi UTM parameter", "QA", "", "Razaan", 3, "2026-10-22");
+      toggleModal('newTaskModal', true);
+    }
+    function addActionRow(text = "", desc = "", label = "CREATIVE", callout = "", pic = "", dur = 2, due = "2026-10-22") {
+      const box = document.getElementById('actionPlanRows');
+      const div = document.createElement('div');
+      div.className = "bg-black/[0.02] p-2.5 rounded-2xl border border-black/5 space-y-2 action-plan-row";
+      div.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <input type="text" placeholder="Judul subtask..." value="${text}" class="row-task-text flex-1 p-2 bg-white rounded-xl border border-black/5 font-semibold text-xs outline-none">
+          <select class="row-task-label p-2 bg-white rounded-xl border border-black/5 font-semibold text-xs outline-none text-[#0071e3]">
+            <option value="CREATIVE" ${label === 'CREATIVE' ? 'selected' : ''}>🎨 Creative</option>
+            <option value="MEDIA" ${label === 'MEDIA' ? 'selected' : ''}>⚡ Media Buying</option>
+            <option value="URGENT" ${label === 'URGENT' ? 'selected' : ''}>🚨 Urgent</option>
+            <option value="QA" ${label === 'QA' ? 'selected' : ''}>✅ QA</option>
+          </select>
+          <select class="row-task-pic p-2 bg-white rounded-xl border border-black/5 font-semibold text-xs outline-none">
+            ${teamList.map(n => `<option value="${n}" ${n === pic ? 'selected' : ''}>${n}</option>`).join('')}
+          </select>
+          <input type="number" placeholder="Jam" value="${dur}" title="Estimasi jam" class="row-task-dur w-14 p-2 bg-white rounded-xl border border-black/5 font-semibold text-xs text-center outline-none">
+          <input type="date" value="${due}" class="row-task-due p-1.5 bg-white rounded-xl border border-black/5 text-[11px] outline-none">
+          <button onclick="this.closest('.action-plan-row').remove()" class="text-rose-500 font-bold px-2 py-1 hover:bg-rose-50 rounded-lg text-sm apple-press">&times;</button>
+        </div>
+        <div class="space-y-1">
+          <input type="text" placeholder="Ketik /drive, /figma, /qa, atau deskripsi..." oninput="handleSlashCommand(this)" value="${desc}" class="row-task-desc w-full p-2 bg-white/80 rounded-xl border border-black/5 text-[11px] font-normal outline-none text-[#86868b] focus:text-[#1d1d1f]">
+          <input type="text" placeholder="Catatan peringatan / SOP khusus (Callout Block opsional)..." value="${callout}" class="row-task-callout w-full p-1.5 bg-amber-50/50 rounded-lg border border-amber-200/50 text-[10px] text-amber-900 outline-none">
+        </div>
+      `;
+      box.appendChild(div); playAudio('tick');
+    }
+    function applyTaskTemplate(type) {
+      document.getElementById('actionPlanRows').innerHTML = '';
+      if (type === 'CTWA') {
+        document.getElementById('npTitle').value = "Scale Meta CTWA Campaign";
+        addActionRow("Setup Audiens & Budget Scaling", "Atur broad targeting dan alokasi budget harian", "MEDIA", "Pastikan limit akun sudah di-raise", "Razaan", 2, "2026-10-20");
+        addActionRow("Copywriting Hook WhatsApp Direct", "Buat 3 variasi script respon cepat CS", "CREATIVE", "", "Nicho", 2, "2026-10-21");
+        addActionRow("QA Konversi CAPI & UTM Links", "Pengujian event lead dan routing nomor wa", "QA", "Uji routing nomor di 3 provider berbeda", "Mike", 1, "2026-10-22");
+      } else if (type === 'PROD') {
+        document.getElementById('npTitle').value = "Batch Konten Video 9:16";
+        addActionRow("Storyboarding & Script Hook", "Konsep visual 3 detik awal", "CREATIVE", "", "Jireh", 3, "2026-10-21");
+        addActionRow("Shooting Footage Lapangan", "Pengambilan aset b-roll", "CREATIVE", "", "Robby", 4, "2026-10-22");
+        addActionRow("Editing & Subtitle Animasi", "Cutting dinamis dan trending audio", "CREATIVE", "", "Giza", 4, "2026-10-23");
+      } else if (type === 'WEB') {
+        document.getElementById('npTitle').value = "Landing Page & Web Development";
+        addActionRow("Wireframing & UI Figma", "Desain antarmuka mobile-first", "CREATIVE", "", "Arif", 4, "2026-10-20");
+        addActionRow("Frontend Slicing & Mobile Opt", "Optimalisasi pagespeed", "MEDIA", "", "Razaan", 5, "2026-10-23");
+        addActionRow("QA Testing & Client Sign-off", "Uji fungsional form submit", "QA", "", "Selin", 2, "2026-10-25");
+      } else if (type === 'ABD') {
+        document.getElementById('npTitle').value = "Retainer Pitching & Proposal";
+        addActionRow("Discovery Call & Analisis Brand", "Riset competitor angle", "URGENT", "", "Mike", 2, "2026-10-19");
+        addActionRow("Penyusunan Deck Pitching", "Penyusunan deck penawaran", "CREATIVE", "", "Selin", 3, "2026-10-21");
+        addActionRow("Kirim Kontrak & Follow Up", "Pengiriman dokumen penawaran", "URGENT", "", "Mike", 1, "2026-10-24");
+      }
+      playAudio('done'); showToast(`Template ${type} dimuat.`);
+    }
+    function submitNewTaskPro() {
+      const title = document.getElementById('npTitle').value.trim(), pic = document.getElementById('npPic').value, sla = document.getElementById('npSla').value || "2026-10-25";
+      if (!title) return alert("Judul project wajib diisi.");
+      const rows = document.querySelectorAll('.action-plan-row'), actions = [];
+      rows.forEach(r => {
+        const txt = r.querySelector('.row-task-text').value.trim();
+        const desc = r.querySelector('.row-task-desc').value.trim();
+        const label = r.querySelector('.row-task-label').value;
+        const callout = r.querySelector('.row-task-callout').value.trim();
+        const p = r.querySelector('.row-task-pic').value;
+        const dur = parseFloat(r.querySelector('.row-task-dur').value) || 2;
+        const due = r.querySelector('.row-task-due').value || "2026-10-22";
+        if (txt) actions.push({ text: txt, desc: desc || "", label, callout, pic: p, duration: dur, dueDate: due, done: false, isFlagged: false, revisions: 0, workSessions: [], threads: [] });
+      });
+      if (actions.length === 0) actions.push({ text: "Eksekusi Utama", desc: "", label: "CREATIVE", callout: "", pic, duration: 2, dueDate: sla, done: false, isFlagged: false, revisions: 0, workSessions: [], threads: [] });
+      State.tasks.unshift({ id: "tsk-" + Date.now(), title, pic, handoverSla: sla, actions });
+      commit(); toggleModal('newTaskModal', false); playAudio('done'); showToast("Project baru berhasil disimpan.");
+    }
+
+    // --- GEMINI COPILOT ---
+    function presetAI(type) {
+      const map = {
+        breakdown: "Breakdown proyek 'Campaign Scaling Q4' menjadi 4 subtask teknis, PIC, dan durasi estimasi.",
+        blocker: "Solusi teknis: Akun Meta Ads payment gateway dibatasi dan Purchase CAPI tidak terbaca.",
+        angles: "3 angle copywriting Direct-to-Chat (CTWA) brand fashion pria dengan CTA ke WhatsApp."
+      };
+      document.getElementById('aiInput').value = map[type]; document.getElementById('aiInput').focus();
+    }
+    async function sendAI() {
+      const inp = document.getElementById('aiInput'), q = inp.value.trim(); if (!q) return;
+      const activeKey = getActiveGeminiKey();
+      if (!activeKey) { configureApiKeyManual(); return; }
+      const box = document.getElementById('aiBox'), btn = document.getElementById('aiBtn');
+      box.innerHTML += `<div class="flex justify-end"><div class="p-2.5 bg-[#0071e3] text-white rounded-2xl rounded-tr-none max-w-[85%]">${q}</div></div>`;
+      inp.value = ''; btn.disabled = true;
+      const loadId = 'ld-' + Date.now();
+      box.innerHTML += `<div id="${loadId}" class="p-2.5 bg-black/5 text-[#86868b] rounded-2xl italic">✦ Gemini berpikir...</div>`;
+      box.scrollTop = box.scrollHeight;
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: `Operations Consultant Agensi. Jawab singkat, profesional, bullet points:\n${q}` }] }] })
+        });
+        const data = await res.json();
+        document.getElementById(loadId)?.remove();
+        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+          const rawText = data.candidates[0].content.parts[0].text;
+          const txt = rawText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+          box.innerHTML += `<div class="p-3 bg-black/[0.03] rounded-2xl border border-black/5 max-w-[90%] leading-relaxed space-y-2"><div>${txt}</div><button onclick="convertAiToProject('${encodeURIComponent(rawText)}')" class="px-2.5 py-1 bg-[#0071e3]/10 hover:bg-[#0071e3]/20 text-[#0071e3] font-bold rounded-lg text-[10px] apple-press">Salin ke Form Project ↗</button></div>`;
+          playAudio('done');
+        } else { throw new Error(data.error?.message || "Format respon tidak valid"); }
+      } catch (e) {
+        document.getElementById(loadId)?.remove();
+        box.innerHTML += `<div class="p-2.5 bg-rose-50 text-rose-700 rounded-xl space-y-1"><b>Error:</b> ${e.message}<div class="pt-1"><button onclick="configureApiKeyManual()" class="underline font-bold text-xs text-rose-800">Periksa / Ganti API Key</button></div></div>`;
+      } finally { btn.disabled = false; box.scrollTop = box.scrollHeight; }
+    }
+    function convertAiToProject(encodedText) {
+      const raw = decodeURIComponent(encodedText); toggleModal('aiModal', false); openNewTaskSheet();
+      document.getElementById('npTitle').value = "AI Recommended Sprint Project";
+      const lines = raw.split('\n').filter(l => l.trim().startsWith('*') || l.trim().startsWith('-') || /^\d+\./.test(l.trim()));
+      if (lines.length > 0) {
+        document.getElementById('actionPlanRows').innerHTML = '';
+        lines.slice(0, 4).forEach((l, i) => {
+          const clean = l.replace(/^[\*\-\d\.\s]+/, '').replace(/\*\*/g, '').trim();
+          addActionRow(clean, "Deliverable rekomendasi AI Copilot", "MEDIA", "", teamList[i % teamList.length], 2, "2026-10-22");
+        });
+      }
+      showToast("Rekomendasi AI berhasil disalin ke form project.");
+    }
+
+    // --- REORDER DRAG & DROP ENGINE ---
+    let draggedItemInfo = null;
+    function handleDragStart(e, taskId, actionIdx) { draggedItemInfo = { taskId, actionIdx }; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.closest('.subtask-item')?.classList.add('dragging'), 0); }
+    function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+    function handleDragEnd(e) { document.querySelectorAll('.subtask-item').forEach(el => el.classList.remove('dragging')); draggedItemInfo = null; }
+    function handleDrop(e, targetTaskId, targetIdx) {
+      e.preventDefault(); if (!draggedItemInfo) return;
+      const { taskId, actionIdx } = draggedItemInfo;
+      if (taskId === targetTaskId && actionIdx !== targetIdx) {
+        const task = State.tasks.find(t => t.id === taskId);
+        if (task && task.actions) {
+          const [movedAction] = task.actions.splice(actionIdx, 1);
+          task.actions.splice(targetIdx, 0, movedAction);
+          playAudio('tick'); commit(); showToast("Urutan subtask diperbarui.");
+        }
+      }
+    }
+
+    // --- RENDER PIPELINE ---
+    function render() {
+      document.getElementById('navAvatar').innerHTML = getAvatar(State.activeUser);
+      document.getElementById('navUser').innerText = State.activeUser;
+      document.getElementById('badgeMyHours').innerText = `${getWeeklyHours(State.activeUser)}h this week`;
+      document.getElementById('sideTeam').innerHTML = teamList.map(n => `
+        <div onclick="openProfile('${n}')" class="flex justify-between items-center p-2 rounded-xl hover:bg-black/[0.04] cursor-pointer apple-press">
+          <div class="flex items-center space-x-2.5">${getAvatar(n)}<span class="font-medium text-[11px] ${n === State.activeUser ? 'text-[#0071e3] font-semibold' : 'text-[#1d1d1f]'}">${n}</span></div>
+          <span class="text-[10px] font-mono text-[#86868b]">${getWeeklyHours(n)}h</span>
+        </div>
+      `).join('');
+
+      updateGamificationSideBadge();
+
+      if (State.view === 'capsules') { renderCapsules(); renderRollupBar(); }
+      if (State.view === 'kanban') renderKanban();
+      if (State.view === 'gantt') renderGantt();
+      if (State.view === 'overview') renderOverview();
+    }
+
+    function renderCapsules() {
+      let list = State.tasks;
+      if (State.status !== 'ALL') {
+        list = list.filter(t => {
+          const d = t.actions.every(a => a.done);
+          return State.status === 'COMPLETED' ? d : State.status === 'BLOCKED' ? t.actions.some(a => a.isFlagged) : !d;
+        });
+      }
+      if (State.labelFilter !== 'ALL') {
+        list = list.filter(t => t.actions.some(a => a.label === State.labelFilter));
+      }
+      if (State.searchQuery) {
+        list = list.filter(t => {
+          const inTitle = t.title.toLowerCase().includes(State.searchQuery);
+          const inPic = t.pic.toLowerCase().includes(State.searchQuery);
+          const inActions = t.actions.some(a => a.text.toLowerCase().includes(State.searchQuery) || (a.desc && a.desc.toLowerCase().includes(State.searchQuery)) || a.pic.toLowerCase().includes(State.searchQuery));
+          return inTitle || inPic || inActions;
+        });
+      }
+
+      const el = document.getElementById('capsulesList');
+      el.innerHTML = list.map(t => {
+        const total = t.actions.length, done = t.actions.filter(a => a.done).length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const isOpen = State.expanded.has(t.id);
+        const hasBlocker = t.actions.some(a => a.isFlagged);
+
+        return `
+          <div class="apple-card overflow-hidden w-full">
+            <div onclick="toggleExpand('${t.id}')" class="px-6 py-4 cursor-pointer flex justify-between items-center apple-press select-none">
+              <div class="flex-1 min-w-0 pr-4">
+                <div class="flex items-center space-x-2.5 mb-1">
+                  <h4 class="font-semibold text-sm text-[#1d1d1f] truncate">${t.title}</h4>
+                  ${hasBlocker ? `<span class="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-[#ff3b30] border border-rose-100">BLOCKER</span>` : ''}
+                </div>
+                <div class="flex items-center space-x-3 text-xs text-[#86868b]">
+                  <span>Lead: <b class="text-[#1d1d1f] font-medium">${t.pic}</b></span>
+                  <span>•</span><span>SLA: <b class="text-[#1d1d1f] font-medium">${t.handoverSla}</b></span>
+                  <span>•</span><span>${done}/${total} Selesai</span>
+                </div>
+              </div>
+              <div class="flex items-center space-x-4 flex-shrink-0">
+                <span class="text-xs font-semibold ${pct === 100 ? 'text-[#34c759]' : 'text-[#0071e3]'}">${pct}%</span>
+                <span class="text-xs text-[#86868b] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}">▼</span>
+              </div>
+            </div>
+            <div class="w-full bg-black/[0.04] h-[2.5px] overflow-hidden">
+              <div class="h-full ${pct === 100 ? 'bg-[#34c759]' : 'bg-[#0071e3]'} transition-all duration-500" style="width: ${pct}%;"></div>
+            </div>
+            <div class="accordion-drawer ${isOpen ? 'open' : ''} bg-[#fafafc]">
+              <div class="p-4 space-y-2" ondragover="handleDragOver(event)">
+                ${t.actions.map((a, i) => {
+                  const isUrl = a.desc && (a.desc.includes('http://') || a.desc.includes('https://'));
+                  const isPomoRunning = activePomoState && activePomoState.taskId === t.id && activePomoState.actionIdx === i;
+                  const dueInfo = getDueDateStatus(a.dueDate, a.done);
+
+                  return `
+                    <div class="subtask-item p-3.5 rounded-xl bg-white border border-black/[0.04] flex flex-col space-y-1.5 transition-all"
+                         draggable="true" ondragstart="handleDragStart(event, '${t.id}',${i})" ondragend="handleDragEnd(event)" ondrop="handleDrop(event, '${t.id}',${i})">
+                      <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center space-x-2.5 flex-1 min-w-0">
+                          <span class="subtask-drag-handle font-mono text-sm leading-none" title="Geser untuk ubah urutan">⠿</span>
+                          <input type="checkbox" ${a.done ? 'checked' : ''} onchange="handleCheckboxClick('${t.id}',${i}, this.checked)" class="apple-check">
+                          <span class="text-xs ${a.done ? 'line-through text-[#86868b]' : 'text-[#1d1d1f] font-medium'} truncate">${a.text}</span>${a.label ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${a.label === 'URGENT' ? 'bg-rose-50 text-rose-700' : 'bg-blue-50 text-[#0071e3]'}">${a.label}</span>` : ''}
+                        </div>
+                        <div class="flex items-center space-x-2 flex-shrink-0">
+                          <button id="pomo-btn-${t.id}-${i}" onclick="toggleSubtaskPomodoro('${t.id}',${i})" class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${isPomoRunning ? 'bg-indigo-600 text-white animate-pulse' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'} apple-press">
+                            ${isPomoRunning ? '⏸ Pause' : '▶ Focus'}
+                          </button>
+                          <button onclick="openThreadModal('${t.id}',${i})" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/5 hover:bg-black/10 text-[#1d1d1f] apple-press" title="Thread & Catatan Revisi">
+                            💬 ${(a.threads || []).length}
+                          </button>
+                          <span class="text-[10px] font-mono ${dueInfo.class}">${dueInfo.text}</span>
+                          <span class="text-[10px] text-[#86868b] font-medium px-2.5 py-0.5 rounded-full bg-black/[0.03]">${a.pic}</span>
+                          <button onclick="mutateAction('${t.id}',${i}, 'isFlagged', ${!a.isFlagged})" class="text-xs ${a.isFlagged ? 'text-[#ff3b30]' : 'text-[#d1d1d6] hover:text-[#86868b]'} apple-press">⚑</button>
+                        </div>
+                      </div>
+                      ${a.callout ? `
+                        <div class="ml-[45px] p-2 bg-amber-50/70 border border-amber-200/50 rounded-xl flex items-center space-x-2 text-[10px] text-amber-900 font-medium">
+                          <span>💡</span><span>${a.callout}</span>
+                        </div>
+                      ` : ''}
+                      ${a.desc ? `
+                        <div class="pl-[45px] text-[11px] leading-relaxed break-words">
+                          ${isUrl ? `<a href="${a.desc}" target="_blank" class="inline-flex items-center space-x-1 text-[#0071e3] font-medium hover:underline"><span>🔗</span><span class="truncate">${a.desc}</span><span>↗</span></a>` : `<p class="text-[#86868b]">${a.desc}</p>`}
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('') || `<div class="p-10 text-center text-xs text-[#86868b] apple-card italic">Tidak ada project yang cocok.</div>`;
+    }
+
+    function renderGantt() {
+      const y = ganttDate.getFullYear(), m = ganttDate.getMonth();
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      document.getElementById('ganttMonthLabel').innerText = `${monthNames[m]} ${y}`;
+      const totalDays = new Date(y, m + 1, 0).getDate();
+      const days = Array.from({ length: totalDays }, (_, i) => ({ num: String(i + 1).padStart(2, '0'), dateStr: `${y}-${String(m + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}` }));
+
+      let html = `<div class="flex border-b border-black/5 pb-2 text-xs font-semibold text-[#86868b]"><div class="w-48 pl-2 sticky left-0 bg-white">PROJECT</div><div class="flex">${days.map(d => `<div class="gantt-cell text-[10px]">${d.num}</div>`).join('')}</div></div>`;
+      State.tasks.forEach(t => {
+        html += `<div class="flex items-center py-3 border-b border-black/5 hover:bg-black/[0.01] text-xs"><div class="w-48 pl-2 truncate font-medium text-[#1d1d1f] sticky left-0 bg-white">${t.title}</div><div class="flex">${days.map(d => {
+          const match = t.actions.filter(a => a.dueDate === d.dateStr);
+          const h = match.reduce((s, a) => s + (a.duration || 2), 0);
+          return `<div class="gantt-cell popover-wrap relative">${h ? `<span class="bg-[#0071e3]/10 text-[#0071e3] font-semibold px-1 rounded cursor-pointer">${h}h</span><div class="popover-box bg-[#1d1d1f] text-white p-2.5 rounded-xl w-48 text-left shadow-xl text-[10px]"><b class="block truncate">${t.title}</b><span>${match.map(a => a.text).join('<br>')}</span></div>` : '·'}</div>`;
+        }).join('')}</div></div>`;
+      });
+      document.getElementById('ganttContent').innerHTML = html;
+    }
+
+    function renderOverview() {
+      let total = 0, done = 0, blockers = 0;
+      State.tasks.forEach(t => t.actions.forEach(a => { total++; if (a.done) done++; if (a.isFlagged) blockers++; }));
+      const pct = total ? Math.round((done / total) * 100) : 0;
+
+      document.getElementById('ovTotal').innerText = total;
+      document.getElementById('ovDone').innerText = done;
+      document.getElementById('ovDoneSub').innerText = `${pct}% target`;
+      document.getElementById('ovBlockers').innerText = blockers;
+      document.getElementById('ovScore').innerText = `${pct}%`;
+      document.getElementById('ovScoreBar').style.width = `${pct}%`;
+
+      const c1 = 427.26; document.getElementById('ringExec').style.strokeDashoffset = c1 - (pct / 100) * c1; document.getElementById('legExec').innerText = `Exec ${pct}%`;
+      const qualPct = total ? Math.min(100, Math.round(((total - blockers) / total) * 100)) : 100;
+      const c2 = 326.73; document.getElementById('ringQual').style.strokeDashoffset = c2 - (qualPct / 100) * c2; document.getElementById('legQual').innerText = `OTD ${qualPct}%`;
+      const pomoTargetSeconds = 4 * 25 * 60;
+      const pomoPct = Math.min(100, Math.round((State.gamification.totalFocusSeconds / pomoTargetSeconds) * 100));
+      const c3 = 226.19; document.getElementById('ringPomodoro').style.strokeDashoffset = c3 - (pomoPct / 100) * c3; document.getElementById('legPomo').innerText = `Focus ${pomoPct}%`;
+
+      const overallHealth = Math.round((pct + qualPct + pomoPct) / 3);
+      document.getElementById('ringOverall').innerText = `${overallHealth}%`;
+
+      const updateBadge = (id, condition) => {
+        const el = document.getElementById(id);
+        if (condition) el.classList.remove('opacity-40'); else el.classList.add('opacity-40');
+      };
+      updateBadge('trophy1', pct >= 70);
+      updateBadge('trophy2', State.gamification.streak >= 4);
+      updateBadge('trophy3', blockers === 0 && done > 0);
+      const unlocked = (pct >= 70 ? 1 : 0) + (State.gamification.streak >= 4 ? 1 : 0) + (blockers === 0 && done > 0 ? 1 : 0);
+      document.getElementById('trophyCount').innerText = `${unlocked}/3`;
+
+      const sel = document.getElementById('ovTalentSel');
+      sel.innerHTML = teamList.map(n => `<option value="${n}" ${n === State.activeUser ? 'selected' : ''}>${n}</option>`).join('');
+      renderTalentDossier(sel.value);
+    }
+
+    function renderTalentDossier(nick) {
+      const doneList = [], progList = [];
+      State.tasks.forEach(t => t.actions.forEach(a => { if (a.pic === nick) (a.done ? doneList : progList).push(`${t.title}: ${a.text}`); }));
+      document.getElementById('talentDossierBar').innerHTML = `
+        <div class="p-3 bg-black/[0.02] rounded-xl"><span class="text-[10px] text-[#86868b] font-medium block">Jam Kerja</span><b class="text-[#0071e3] text-lg">${getWeeklyHours(nick)}h</b></div>
+        <div class="p-3 bg-black/[0.02] rounded-xl"><span class="text-[10px] text-[#86868b] font-medium block">Selesai</span><b class="text-[#34c759] text-lg">${doneList.length}</b></div>
+        <div class="p-3 bg-black/[0.02] rounded-xl"><span class="text-[10px] text-[#86868b] font-medium block">Progress</span><b class="text-[#ff9500] text-lg">${progList.length}</b></div>
+      `;
+      document.getElementById('talentDoneList').innerHTML = doneList.map(t => `<div class="p-1.5 bg-white border border-black/5 rounded truncate">${t}</div>`).join('') || 'Belum ada.';
+      document.getElementById('talentProgressList').innerHTML = progList.map(t => `<div class="p-1.5 bg-white border border-black/5 rounded truncate">${t}</div>`).join('') || 'Tidak ada.';
+    }
+
+    function mutateAction(tid, idx, key, val) {
+      const t = State.tasks.find(x => x.id === tid);
+      if (t?.actions[idx]) { t.actions[idx][key] = val; playAudio(val ? 'done' : 'tick'); commit(); }
+    }
+    function toggleExpand(id) {
+      if (State.expanded.has(id)) State.expanded.delete(id); else State.expanded.add(id);
+      playAudio('tick'); renderCapsules();
+    }
+    function setViewMode(v) {
+      State.view = v; playAudio('tick');
+      ['capsules', 'kanban', 'gantt', 'overview'].forEach(m => {
+        document.getElementById(`${m}View`).classList.toggle('hidden', m !== v);
+        document.getElementById(`mBtn-${m}`).className = m === v ? "w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl bg-black/5 font-semibold text-[#1d1d1f] apple-press" : "w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-[#86868b] hover:bg-black/[0.03] apple-press";
+      });
+      render();
+    }
+    function setFilter(type, val) {
+      State[type] = val; playAudio('tick');
+      document.querySelectorAll(`.${type === 'status' ? 'sf' : ''}-btn`).forEach(b => b.classList.toggle('segmented-active', b.dataset.val === val));
+      render();
+    }
+    function changeGanttMonth(d) { ganttDate.setMonth(ganttDate.getMonth() + d); playAudio('tick'); renderGantt(); }
+    function copyStandup() {
+      let m = `*DAILY OPERATIONS UPDATE - ${State.activeUser} (${getWeeklyHours(State.activeUser)}h)*\n\n`;
+      State.tasks.forEach(t => t.actions.filter(a => a.pic === State.activeUser).forEach(a => m += `${a.done ? '✓' : '•'} ${t.title}: ${a.text}\n`));
+      navigator.clipboard.writeText(m).then(() => showToast("Disalin ke WhatsApp!"));
+    }
+    function filterCmd(q) {
+      const items = [{ l: "✦ Gemini Copilot", f: "toggleModal('aiModal', true)" }, { l: "Kanban Board", f: "setViewMode('kanban')" }, { l: "Gantt Timeline", f: "setViewMode('gantt')" }, { l: "+ Buat Project Baru", f: "openNewTaskSheet()" }, { l: "Export Backup JSON", f: "exportBackupJSON()" }];
+      document.getElementById('cmdList').innerHTML = items.filter(i => i.l.toLowerCase().includes(q.toLowerCase())).map(i => `<div onclick="${i.f}; toggleModal('cmdModal', false)" class="p-2 rounded-xl hover:bg-black/5 cursor-pointer font-medium">${i.l}</div>`).join('');
+    }
+    async function openKpiModal() {
+      toggleModal('userModal', true);
+      document.getElementById('uAvatar').innerHTML = getAvatar(State.activeUser);
+      document.getElementById('uName').innerText = State.activeUser;
+      const body = document.getElementById('kpiBody');
+      body.innerHTML = `<tr><td class="p-2 text-[#86868b] italic">Memuat sheet...</td></tr>`;
+      try {
+        const res = await fetch(`${KPI_SHEET_URL}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(USER_ROLE_MAP[State.activeUser] || "PROJECT MANAGER")}&t=${Date.now()}`);
+        const json = JSON.parse((await res.text()).match(/\{[\s\S]*\}/)[0]);
+        body.innerHTML = json.table.rows.filter(r => r.c?.[0]?.v).map(r => `<tr class="hover:bg-black/[0.01]"><td class="py-2 font-medium">${r.c[0]?.v}</td><td class="text-[#0071e3] font-medium">${r.c[2]?.f || r.c[2]?.v || ''}</td><td class="text-[#34c759] font-medium">${r.c[5]?.f || r.c[5]?.v || '0%'}</td></tr>`).join('');
+      } catch (e) { body.innerHTML = `<tr><td class="p-2 text-rose-600">Gagal load KPI.</td></tr>`; }
+    }
+    function openProfile(u) { State.activeUser = u; commit(); showToast(`Switch ke ${u}`); }
+
+    // --- KEYBOARD SHORTCUTS ---
+    window.addEventListener('keydown', (e) => {
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      const isInputActive = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); toggleModal('cmdModal', true); return; }
+      if (e.key === 'Escape') { ['aiModal', 'cmdModal', 'newTaskModal', 'userModal', 'powModal', 'threadModal', 'notifModal'].forEach(id => toggleModal(id, false)); return; }
+
+      if (!isInputActive && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'n') { e.preventDefault(); openNewTaskSheet(); }
+        else if (k === '1') { e.preventDefault(); setViewMode('capsules'); }
+        else if (k === '2') { e.preventDefault(); setViewMode('kanban'); }
+        else if (k === '3') { e.preventDefault(); setViewMode('gantt'); }
+        else if (k === '4') { e.preventDefault(); setViewMode('overview'); }
+        else if (k === 'a') { e.preventDefault(); toggleAmbientSound(); }
+        else if (k === 'm') { e.preventDefault(); toggleAudio(); }
+        else if (k === 'p') {
+          e.preventDefault();
+          if (activePomoState) stopActivePomodoro(true);
+          else if (State.tasks[0]?.actions?.[0]) toggleSubtaskPomodoro(State.tasks[0].id, 0);
+        }
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => { render(); });
+  </script>
+</body>
+</html>
