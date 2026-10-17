@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Operations Hub</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            apple: {
+              gray: '#f5f5f7',
+              dark: '#000000',
+              cardLight: '#ffffff',
+              cardDark: '#1c1c1e',
+              borderLight: 'rgba(0, 0, 0, 0.08)',
+              borderDark: 'rgba(255, 255, 255, 0.1)',
+              blue: '#0071e3',
+              green: '#34c759',
+              red: '#ff3b30',
+              orange: '#ff9500',
+              secondaryText: '#86868b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { 
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif !important; 
+      letter-spacing: -0.019em; 
+    }
+    body { 
+      background-color: #f5f5f7; 
+      color: #1d1d1f; 
+      -webkit-font-smoothing: antialiased; 
+    }
+    .dark body { 
+      background-color: #000000; 
+      color: #f5f5f7; 
+    }
+    .macos-sidebar {
+      background: rgba(246, 246, 248, 0.85);
+      backdrop-filter: blur(40px) saturate(210%);
+    }
+    .dark .macos-sidebar {
+      background: rgba(28, 28, 30, 0.85);
+      backdrop-filter: blur(40px) saturate(210%);
+    }
+    .macos-header {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(30px) saturate(190%);
+    }
+    .dark .macos-header {
+      background: rgba(20, 20, 22, 0.8);
+      backdrop-filter: blur(30px) saturate(190%);
+    }
+    .apple-card {
+      background: #ffffff;
+      border: 0.5px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.015);
+      border-radius: 18px;
+    }
+    .dark .apple-card {
+      background: #1c1c1e;
+      border: 0.5px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    }
+    .apple-checkbox {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid #d1d1d6;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+    }
+    .dark .apple-checkbox { border-color: #48484a; }
+    .apple-checkbox:checked { background-color: #0071e3; border-color: #0071e3; }
+    .apple-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      left: 4.5px;
+      top: 1.5px;
+      width: 4px;
+      height: 7.5px;
+      border: solid white;
+      border-width: 0 1.6px 1.6px 0;
+      transform: rotate(45deg);
+    }
+    .collapsible-drawer {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+    }
+    .collapsible-drawer.open {
+      max-height: 4000px;
+      opacity: 1;
+    }
+    .gantt-col-line { border-right: 0.5px dashed rgba(0, 0, 0, 0.07); }
+    .dark .gantt-col-line { border-right: 0.5px dashed rgba(255, 255, 255, 0.08); }
+    .funnel-layer-trapezoid {
+      clip-path: polygon(5% 0%, 95% 0%, 82% 100%, 18% 100%);
+      cursor: pointer;
+      transition: transform 0.18s ease;
+    }
+    .funnel-layer-trapezoid:hover { transform: scale(1.02); }
+  </style>
+</head>
+<body class="w-screen h-screen flex overflow-hidden select-none">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-56 h-full flex flex-col border-r border-apple-borderLight dark:border-apple-borderDark macos-sidebar z-20">
+    <div class="flex items-center justify-between px-4 pt-4 pb-3">
+      <div class="flex space-x-2">
+        <span class="w-3 h-3 rounded-full bg-[#ff5f56] inline-block"></span>
+        <span class="w-3 h-3 rounded-full bg-[#ffbd2e] inline-block"></span>
+        <span class="w-3 h-3 rounded-full bg-[#27c93f] inline-block"></span>
+      </div>
+    </div>
+
+    <nav class="px-2 space-y-1 text-[13px] font-medium">
+      <button onclick="switchTab('home')" id="tab-home" class="w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 text-apple-blue font-semibold">
+        <span class="text-[10px] font-mono px-1 py-0.5 rounded bg-apple-blue/10">01</span>
+        <span>Home</span>
+      </button>
+      <button onclick="switchTab('projects')" id="tab-projects" class="w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-xl text-apple-secondaryText hover:bg-black/5 dark:hover:bg-white/5">
+        <span class="text-[10px] font-mono px-1 py-0.5 rounded bg-black/5 dark:bg-white/10">02</span>
+        <span>Projects</span>
+      </button>
+      <button onclick="switchTab('kanban')" id="tab-kanban" class="w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-xl text-apple-secondaryText hover:bg-black/5 dark:hover:bg-white/5">
+        <span class="text-[10px] font-mono px-1 py-0.5 rounded bg-black/5 dark:bg-white/10">03</span>
+        <span>Kanban</span>
+      </button>
+      <button onclick="switchTab('timeline')" id="tab-timeline" class="w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-xl text-apple-secondaryText hover:bg-black/5 dark:hover:bg-white/5">
+        <span class="text-[10px] font-mono px-1 py-0.5 rounded bg-black/5 dark:bg-white/10">04</span>
+        <span>Timeline</span>
+      </button>
+    </nav>
+
+    <div class="mt-auto p-3 border-t border-apple-borderLight dark:border-apple-borderDark text-xs">
+      <span class="text-[10px] font-semibold text-apple-secondaryText uppercase tracking-wider block mb-2 px-1">Active Team</span>
+      <div id="teamListUI" class="space-y-1"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="flex-1 flex flex-col h-full min-w-0 bg-[#f5f5f7] dark:bg-black">
+    
+    <!-- TOP TOOLBAR -->
+    <header class="macos-header px-6 py-2.5 flex items-center justify-between border-b border-apple-borderLight dark:border-apple-borderDark flex-shrink-0 z-10">
+      <div class="flex items-center space-x-2.5">
+        <span class="font-bold text-sm tracking-tight">Agency Operations Hub</span>
+      </div>
+
+      <div class="flex items-center space-x-2 text-xs">
+        <div class="flex items-center bg-black/[0.04] dark:bg-white/[0.06] border border-black/5 dark:border-white/10 rounded-full px-2.5 py-1">
+          <button onclick="togglePomodoro()" id="pomoBtn" class="flex items-center space-x-1.5 text-[#1d1d1f] dark:text-white font-mono font-semibold">
+            <span id="pomoStatusDot" class="w-1.5 h-1.5 rounded-full bg-apple-orange"></span>
+            <span id="pomoTimer">25:00</span>
+          </button>
+          <button onclick="resetPomodoro()" class="ml-2 text-apple-secondaryText hover:text-apple-red font-bold">&times;</button>
+        </div>
+
+        <button onclick="toggleBrownNoise()" id="noiseBtn" class="px-3 py-1 rounded-full border border-black/5 dark:border-white/10 bg-white dark:bg-white/10 text-apple-secondaryText font-medium">
+          <span id="noiseLabel">Brown Noise Off</span>
+        </button>
+
+        <button onclick="toggleTheme()" id="themeBtn" class="px-2.5 py-1 rounded-full border border-black/5 dark:border-white/10 bg-white dark:bg-white/10 text-apple-secondaryText font-mono text-[11px]">THEME</button>
+        <button onclick="forceCleanReset()" class="px-2.5 py-1 rounded-full border border-rose-300 text-rose-500 font-mono text-[11px]" title="Reset memori cache data">RESET CACHE</button>
+        <button onclick="openStandup()" class="px-3.5 py-1 rounded-full border border-black/5 dark:border-white/10 bg-white dark:bg-white/10 text-[#1d1d1f] dark:text-white font-medium">Daily Standup</button>
+        <button onclick="openNewProjectModal()" class="px-4 py-1 rounded-full bg-[#1d1d1f] hover:bg-black dark:bg-white dark:text-black text-white font-semibold">+ Project</button>
+      </div>
+    </header>
+
+    <!-- CONTENT CANVAS -->
+    <main class="flex-1 overflow-y-auto p-6 space-y-4">
+      <!-- VIEW: HOME -->
+      <section id="view-home" class="space-y-4">
+        <div id="clientCardsContainer" class="grid grid-cols-1 gap-4"></div>
+      </section>
+
+      <!-- VIEW: PROJECTS -->
+      <section id="view-projects" class="hidden space-y-4">
+        <div class="flex items-center space-x-2.5">
+          <div class="relative flex-1">
+            <input type="text" id="searchInput" oninput="renderProjects()" placeholder="Filter deliverables, PIC, atau penanggung jawab..." class="w-full px-4 py-2 rounded-xl bg-white dark:bg-[#1c1c1e] border border-black/5 dark:border-white/10 text-xs outline-none focus:ring-2 focus:ring-apple-blue/20">
+          </div>
+          <select id="divisionFilter" onchange="renderProjects()" class="px-3.5 py-2 rounded-xl bg-white dark:bg-[#1c1c1e] border border-black/5 dark:border-white/10 text-xs font-semibold outline-none text-[#1d1d1f] dark:text-white">
+            <option value="ALL">Semua Divisi</option>
+            <option value="MEDIA">Media Buying</option>
+            <option value="CREATIVE">Creative</option>
+            <option value="QA">QA Testing</option>
+          </select>
+        </div>
+        <div id="projectsList" class="space-y-4"></div>
+      </section>
+
+      <!-- VIEW: KANBAN -->
+      <section id="view-kanban" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-black/[0.02] dark:bg-white/[0.02] p-4 rounded-2xl border border-black/5 dark:border-white/10 space-y-3 min-h-[520px]" ondragover="event.preventDefault()" ondrop="dropKanban(event, 'TODO')">
+          <div class="flex justify-between items-center text-xs font-bold text-apple-secondaryText px-1"><span>BACKLOG</span><span id="count-todo">0</span></div>
+          <div id="kanban-todo" class="space-y-2"></div>
+        </div>
+        <div class="bg-black/[0.02] dark:bg-white/[0.02] p-4 rounded-2xl border border-black/5 dark:border-white/10 space-y-3 min-h-[520px]" ondragover="event.preventDefault()" ondrop="dropKanban(event, 'DOING')">
+          <div class="flex justify-between items-center text-xs font-bold text-apple-blue px-1"><span>IN PROGRESS</span><span id="count-doing">0</span></div>
+          <div id="kanban-doing" class="space-y-2"></div>
+        </div>
+        <div class="bg-black/[0.02] dark:bg-white/[0.02] p-4 rounded-2xl border border-black/5 dark:border-white/10 space-y-3 min-h-[520px]" ondragover="event.preventDefault()" ondrop="dropKanban(event, 'DONE')">
+          <div class="flex justify-between items-center text-xs font-bold text-apple-green px-1"><span>COMPLETED</span><span id="count-done">0</span></div>
+          <div id="kanban-done" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- VIEW: TIMELINE -->
+      <section id="view-timeline" class="hidden space-y-4">
+        <div class="apple-card p-5 space-y-4">
+          <div class="flex justify-between items-center pb-2 border-b border-black/5 dark:border-white/10">
+            <div>
+              <h2 class="text-base font-bold text-[#1d1d1f] dark:text-white">Master Deliverable Timeline</h2>
+              <p class="text-xs text-apple-secondaryText">Pemetaan jadwal sprint, kapasitas kerja PIC, dan tanggal serah terima seluruh klien.</p>
+            </div>
+            <span class="text-xs font-mono font-semibold px-3 py-1 rounded-full bg-black/5 dark:bg-white/10 text-apple-secondaryText">October 2026</span>
+          </div>
+          <div id="masterTimelineContainer" class="space-y-5"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- NATIVE MODAL -->
+  <div id="modal" class="fixed inset-0 bg-black/30 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-[#1c1c1e] w-full max-w-md p-5 rounded-3xl border border-black/5 dark:border-white/10 shadow-2xl space-y-3.5">
+      <div class="flex justify-between items-center pb-2 border-b border-black/5 dark:border-white/10">
+        <h3 id="modalTitle" class="text-xs font-bold tracking-tight text-[#1d1d1f] dark:text-white uppercase font-mono"></h3>
+        <button onclick="closeModal()" class="px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-xs font-bold text-apple-secondaryText hover:text-[#1d1d1f] dark:hover:text-white">CLOSE</button>
+      </div>
+      <div id="modalContent" class="text-xs space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-[#1d1d1f]/90 dark:bg-white/95 text-white dark:text-black text-xs font-medium px-4 py-2 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 z-50"></div>
+
+  <script>
+    // ==========================================
+    // DATASET MASTER TERINTEGRASI
+    // ==========================================
+    const GANTT_FLAT_DAYS = [
+      { d: "14", w: false }, { d: "15", w: false }, { d: "16", w: false }, { d: "17", w: true }, { d: "18", w: true },
+      { d: "19", w: false }, { d: "20", w: false }, { d: "21", w: false }, { d: "22", w: false }, { d: "23", w: false }, { d: "24", w: true }, { d: "25", w: true }
+    ];
+    const TODAY_DAY_INDEX = 4; // 18 Okt
+
+    const INITIAL_DATA = [
+      {
+        id: "cli-1", title: "Sondaika", pic: "Razaan", handoverSla: "2026-10-25 18:00 WIB",
+        spendNum: 18500000, revenueNum: 79550000, beRoas: "2.50x", csSla: "2.4m",
+        dailyCapacity: ["", "", "2", "2", "2.3", "", "2.3", "2.3", "2.3", "", "2.5", "0.5"],
+        vwoFunnel: { visitors: 10000, leads: 500, mqls: 150, mqlRate: 20, opportunities: 30, oppRate: 60, customers: 4 },
+        actions: [
+          { text: "Pink Flamingo Copywriting & Hook", label: "CREATIVE", pic: "Razaan", assignedBy: "Jireh (Creative Lead)", durationEst: "3h 45m", dueDateTime: "22 Oct, 17:30 WIB", done: true, startCol: 4, spanCol: 8, labelText: "2h for 8 days", colorStyle: "pink" },
+          { text: "Meta Broad CAPI Campaign Setup", label: "MEDIA", pic: "Razaan", assignedBy: "Mike (Project Manager)", durationEst: "5h 15m", dueDateTime: "23 Oct, 14:00 WIB", done: true, startCol: 2, spanCol: 7, labelText: "2h / day for 7 days", colorStyle: "pink" },
+          { text: "Testing WhatsApp Pixel & Tracking", label: "QA", pic: "Mike", assignedBy: "Selin (QA Lead)", durationEst: "2h 30m", dueDateTime: "25 Oct, 18:00 WIB", done: false, startCol: 4, spanCol: 8, labelText: "Requested 8 days", colorStyle: "dashed" }
+        ]
+      },
+      {
+        id: "cli-2", title: "Sibersih", pic: "Arif", handoverSla: "2026-10-24 16:30 WIB",
+        spendNum: 12800000, revenueNum: 40960000, beRoas: "2.80x", csSla: "4.8m",
+        blocker: "Menunggu aset video resolusi tinggi dari klien",
+        dailyCapacity: ["", "", "10", "10", "8", "8", "", "8", "8", "8", "0", ""],
+        vwoFunnel: { visitors: 8500, leads: 320, mqls: 80, mqlRate: 25, opportunities: 15, oppRate: 80, customers: 2 },
+        actions: [
+          { text: "Landing Page Slicing & Conversion", label: "MEDIA", pic: "Arif", assignedBy: "Mike (Project Manager)", durationEst: "6h 00m", dueDateTime: "21 Oct, 12:00 WIB", done: false, startCol: 0, spanCol: 5, labelText: "11 days", colorStyle: "green" },
+          { text: "Video Editing 9:16 Variation (Blocked)", label: "CREATIVE", pic: "Giza", assignedBy: "Jireh (Creative Lead)", durationEst: "8h 30m", dueDateTime: "23 Oct, 18:00 WIB", done: false, startCol: 2, spanCol: 7, labelText: "8h / day for 7 days", colorStyle: "brown" },
+          { text: "Client Sign-off & Launching", label: "QA", pic: "Arif", assignedBy: "Selin (Project Manager)", durationEst: "1h 45m", dueDateTime: "24 Oct, 16:30 WIB", done: false, startCol: 8, spanCol: 4, labelText: "2h / day for 4 days", colorStyle: "green" }
+        ]
+      },
+      {
+        id: "cli-3", title: "Nebula", pic: "Nicho", handoverSla: "2026-10-22 20:00 WIB",
+        spendNum: 32400000, revenueNum: 155520000, beRoas: "2.20x", csSla: "1.8m",
+        blocker: "Akses BM terbatas (Payment gateway pending)",
+        dailyCapacity: ["0.5", "0.5", "", "", "4", "4", "4", "4", "", "", "2", "2"],
+        vwoFunnel: { visitors: 22000, leads: 1400, mqls: 600, mqlRate: 15, opportunities: 180, oppRate: 40, customers: 35 },
+        actions: [
+          { text: "Visual Identity & Wireframing", label: "CREATIVE", pic: "Jireh", assignedBy: "Mike (Project Manager)", durationEst: "4h 00m", dueDateTime: "20 Oct, 15:30 WIB", done: true, startCol: 0, spanCol: 3, labelText: "2h for 3 days", colorStyle: "green" },
+          { text: "Custom Audience Scaling & CAPI", label: "MEDIA", pic: "Nicho", assignedBy: "Razaan (Lead Media)", durationEst: "4h 15m", dueDateTime: "22 Oct, 20:00 WIB", done: false, startCol: 4, spanCol: 7, labelText: "2h / day for 7 days", colorStyle: "pink" }
+        ]
+      },
+      {
+        id: "cli-4", title: "Cleanboss", pic: "Selin", handoverSla: "2026-10-28 17:00 WIB",
+        spendNum: 6500000, revenueNum: 14300000, beRoas: "2.70x", csSla: "5.5m",
+        blocker: "Menunggu memo kelulusan struktur harga paket diskon dari klien",
+        dailyCapacity: ["", "2", "2", "3", "3", "", "4", "4", "4", "", "", ""],
+        vwoFunnel: { visitors: 5000, leads: 180, mqls: 40, mqlRate: 40, opportunities: 10, oppRate: 75, customers: 1 },
+        actions: [
+          { text: "Naskah Script Promo & Price Matrix", label: "CREATIVE", pic: "Selin", assignedBy: "Jireh (Creative Lead)", durationEst: "3h 30m", dueDateTime: "25 Oct, 11:45 WIB", done: false, startCol: 1, spanCol: 5, labelText: "4h / day for 5 days", colorStyle: "brown" },
+          { text: "Direct CS WhatsApp Automation Flow", label: "MEDIA", pic: "Razaan", assignedBy: "Selin (Project Manager)", durationEst: "2h 45m", dueDateTime: "28 Oct, 17:00 WIB", done: false, startCol: 6, spanCol: 4, labelText: "2h / day for 4 days", colorStyle: "green" }
+        ]
+      }
+    ];
+
+    let State = {
+      clients: INITIAL_DATA,
+      tab: 'home',
+      sidebar: false,
+      dark: localStorage.getItem('agency_dark') === 'true',
+      collapsedCards: new Set(["cli-3", "cli-4"]),
+      dragged: null
+    };
+
+    // Auto-Fix Storage State
+    try {
+      const STORAGE_KEY = 'agency_bulletproof_store_v2';
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].vwoFunnel) {
+          State.clients = parsed;
+        } else {
+          State.clients = INITIAL_DATA;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_DATA));
+        }
+      } else {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_DATA));
+      }
+    } catch (e) {
+      State.clients = INITIAL_DATA;
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('agency_bulletproof_store_v2', JSON.stringify(State.clients));
+      } catch (e) {}
+      render();
+    }
+
+    function forceCleanReset() {
+      localStorage.clear();
+      State.clients = JSON.parse(JSON.stringify(INITIAL_DATA));
+      saveState();
+      location.reload();
+    }
+
+    function formatRupiahShort(amount) {
+      if (!amount) return 'Rp 0';
+      if (amount >= 1000000) return `Rp ${(amount / 1000000).toFixed(1)}M`;
+      if (amount >= 1000) return `Rp ${(amount / 1000).toFixed(0)}K`;
+      return `Rp ${amount}`;
+    }
+
+    function parseInputAmount(inputStr) {
+      if (!inputStr) return 0;
+      let clean = String(inputStr).toLowerCase().replace(/rp|\.|\s/g, '').replace(',', '.');
+      if (clean.endsWith('m')) return parseFloat(clean) * 1000000;
+      if (clean.endsWith('k')) return parseFloat(clean) * 1000;
+      return parseFloat(clean) || 0;
+    }
+
+    function getComputedRoas(c) {
+      if (!c.spendNum || c.spendNum <= 0) return "0.00x";
+      return `${(c.revenueNum / c.spendNum).toFixed(2)}x`;
+    }
+
+    function getClientHealthStatus(client) {
+      const roasVal = client.spendNum > 0 ? (client.revenueNum / client.spendNum) : 0;
+      const beRoasNum = parseFloat(client.beRoas) || 0;
+      const hasBlocker = Boolean(client.blocker);
+
+      if (hasBlocker || (roasVal < beRoasNum && client.spendNum > 0)) {
+        return { label: "CRITICAL", badgeClass: "bg-rose-50 dark:bg-rose-950/40 text-apple-red border border-rose-200 dark:border-rose-900/50" };
+      } else if (roasVal >= 4.0 && !hasBlocker) {
+        return { label: "SCALE MODE", badgeClass: "bg-emerald-50 dark:bg-emerald-950/40 text-apple-green border border-emerald-200 dark:border-emerald-900/50" };
+      } else {
+        return { label: "WATCHLIST", badgeClass: "bg-amber-50 dark:bg-amber-950/40 text-apple-orange border border-amber-200 dark:border-amber-900/50" };
+      }
+    }
+
+    function toggleCardCollapse(clientId) {
+      if (State.collapsedCards.has(clientId)) State.collapsedCards.delete(clientId);
+      else State.collapsedCards.add(clientId);
+      renderHome();
+    }
+
+    // 3D VWO TAPERED FUNNEL COMPONENT
+    function generateVwoFunnelHTML(c, cIdx) {
+      const f = c.vwoFunnel || { visitors: 10000, leads: 500, mqls: 150, mqlRate: 20, opportunities: 30, oppRate: 60, customers: 4 };
+      return `
+        <div class="p-4 bg-white dark:bg-[#161618] rounded-2xl border border-black/5 dark:border-white/10 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-black/5 dark:border-white/5">
+            <span class="font-bold text-[11px] uppercase tracking-wider text-apple-secondaryText font-mono">Conversion Funnel Visual (VWO Engine)</span>
+            <button onclick="openEditFunnelModal(${cIdx})" class="text-[10px] font-mono text-apple-blue hover:underline font-semibold">
+              EDIT VALUES
+            </button>
+          </div>
+
+          <div class="py-2 flex flex-col items-center justify-center space-y-1.5 max-w-lg mx-auto">
+            <div class="w-full flex items-center justify-center relative cursor-pointer" onclick="openEditFunnelModal(${cIdx})" title="Klik untuk edit">
+              <div class="w-[78%] h-12 bg-gradient-to-b from-[#49277a] to-[#391e60] rounded-t-2xl funnel-layer-trapezoid flex flex-col items-center justify-center text-white shadow-md relative">
+                <span class="font-bold text-xs tracking-wide font-mono">${(f.visitors || 0).toLocaleString()}</span>
+              </div>
+              <div class="absolute right-0 flex items-center space-x-1.5 text-xs text-apple-secondaryText">
+                <span class="w-1.5 h-1.5 rounded-full bg-pink-500"></span>
+                <span class="font-medium text-[11px]">Website visitors</span>
+              </div>
+            </div>
+
+            <div class="w-full flex items-center justify-center relative cursor-pointer" onclick="openEditFunnelModal(${cIdx})" title="Klik untuk edit">
+              <div class="w-[62%] h-11 bg-gradient-to-b from-[#5c339a] to-[#49277a] funnel-layer-trapezoid flex flex-col items-center justify-center text-white shadow-md relative">
+                <span class="font-bold text-xs tracking-wide font-mono">${(f.leads || 0).toLocaleString()}</span>
+              </div>
+              <div class="absolute right-6 flex items-center space-x-1.5 text-xs text-apple-secondaryText">
+                <span class="w-1.5 h-1.5 rounded-full bg-pink-500"></span>
+                <span class="font-medium text-[11px]">Leads</span>
+              </div>
+            </div>
+
+            <div class="w-full flex items-center justify-center relative cursor-pointer" onclick="openEditFunnelModal(${cIdx})" title="Klik untuk edit">
+              <div class="w-[46%] h-10 bg-gradient-to-b from-[#6e3cb9] to-[#5c339a] funnel-layer-trapezoid flex flex-col items-center justify-center text-white shadow-md relative">
+                <span class="font-bold text-xs font-mono">${f.mqls || 0}</span>
+                <span class="text-[7px] font-mono opacity-80">&darr; ${f.mqlRate || 0}%</span>
+              </div>
+              <div class="absolute right-0 flex items-center space-x-1.5 text-xs text-apple-secondaryText">
+                <span class="w-1.5 h-1.5 rounded-full bg-pink-500"></span>
+                <span class="font-medium text-[11px]">MQLs</span>
+              </div>
+            </div>
+
+            <div class="w-full flex items-center justify-center relative cursor-pointer" onclick="openEditFunnelModal(${cIdx})" title="Klik untuk edit">
+              <div class="w-[32%] h-9 bg-gradient-to-b from-[#8349db] to-[#6e3cb9] funnel-layer-trapezoid flex flex-col items-center justify-center text-white shadow-md relative">
+                <span class="font-bold text-xs font-mono">${f.opportunities || 0}</span>
+                <span class="text-[7px] font-mono opacity-80">&darr; ${f.oppRate || 0}%</span>
+              </div>
+              <div class="absolute right-12 flex items-center space-x-1.5 text-xs text-apple-secondaryText">
+                <span class="w-1.5 h-1.5 rounded-full bg-pink-500"></span>
+                <span class="font-medium text-[11px]">Opportunities</span>
+              </div>
+            </div>
+
+            <div class="w-full flex items-center justify-center relative cursor-pointer" onclick="openEditFunnelModal(${cIdx})" title="Klik untuk edit">
+              <div class="w-[18%] h-10 bg-gradient-to-b from-[#be185d] to-[#9d174d] rounded-b-xl flex flex-col items-center justify-center text-white shadow-md relative border-t-2 border-pink-400">
+                <span class="font-bold text-[10px] font-mono bg-pink-900/60 px-1 rounded">${f.customers || 0}</span>
+              </div>
+              <div class="absolute right-16 flex items-center space-x-1.5 text-xs text-apple-secondaryText">
+                <span class="w-1.5 h-1.5 rounded-full bg-pink-500"></span>
+                <span class="font-medium text-[11px] text-[#1d1d1f] dark:text-white font-semibold">Closed-won</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center pt-2 border-t border-black/5 dark:border-white/5 space-y-0.5">
+            <p class="font-bold text-xs text-[#1d1d1f] dark:text-white">
+              From ${(f.visitors || 0).toLocaleString()} visitors to ${f.customers || 0} customers.
+            </p>
+            <p class="text-[11px] text-apple-secondaryText">
+              Even a Small Lift at any stage can dramatically increase revenue.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    function openEditFunnelModal(cIdx) {
+      const c = State.clients[cIdx];
+      const f = c.vwoFunnel || { visitors: 10000, leads: 500, mqls: 150, mqlRate: 20, opportunities: 30, oppRate: 60, customers: 4 };
+      const html = `
+        <div class="space-y-3">
+          <p class="text-apple-secondaryText text-[11px]">Sunting angka metrik corong konversi untuk <b class="text-[#1d1d1f] dark:text-white">${c.title}</b>.</p>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">1. Website Visitors</label>
+              <input type="number" id="efVisitors" value="${f.visitors}" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">2. Inbound Leads</label>
+              <input type="number" id="efLeads" value="${f.leads}" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">3. MQLs</label>
+              <input type="number" id="efMqls" value="${f.mqls}" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">MQL Drop %</label>
+              <input type="number" id="efMqlRate" value="${f.mqlRate}" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">4. Opportunities</label>
+              <input type="number" id="efOpp" value="${f.opportunities}" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Closed-won Customers</label>
+              <input type="number" id="efCust" value="${f.customers}" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+          </div>
+          <button onclick="submitEditFunnel(${cIdx})" class="w-full py-2.5 bg-apple-blue hover:bg-[#0077ed] text-white rounded-xl font-bold">
+            Simpan Nilai Funnel
+          </button>
+        </div>
+      `;
+      openModal(`Edit Funnel: ${c.title}`, html);
+    }
+
+    function submitEditFunnel(cIdx) {
+      if (!State.clients[cIdx].vwoFunnel) State.clients[cIdx].vwoFunnel = {};
+      const f = State.clients[cIdx].vwoFunnel;
+      f.visitors = parseInt(document.getElementById('efVisitors').value) || 0;
+      f.leads = parseInt(document.getElementById('efLeads').value) || 0;
+      f.mqls = parseInt(document.getElementById('efMqls').value) || 0;
+      f.mqlRate = parseInt(document.getElementById('efMqlRate').value) || 0;
+      f.opportunities = parseInt(document.getElementById('efOpp').value) || 0;
+      f.customers = parseInt(document.getElementById('efCust').value) || 0;
+
+      closeModal();
+      saveState();
+      showToast("Funnel berhasil diperbarui");
+    }
+
+    // STEPPER PROGRESS BAR (TAB PROJECTS)
+    function generateStepperHTML(actions) {
+      const list = actions || [];
+      const total = list.length;
+      const done = list.filter(a => a.done).length;
+      const pct = total ? (done / total) : 0;
+
+      let activeStep = 1;
+      if (pct >= 1.0) activeStep = 4;
+      else if (pct >= 0.65) activeStep = 3;
+      else if (pct >= 0.25) activeStep = 2;
+      else activeStep = 1;
+
+      const steps = [
+        { num: 1, label: "Brief & Plan" },
+        { num: 2, label: "Production" },
+        { num: 3, label: "Review & QA" },
+        { num: 4, label: "Live & Scale" }
+      ];
+
+      return `
+        <div class="py-4 px-6 bg-black/[0.015] dark:bg-white/[0.02] border-b border-black/5 dark:border-white/10 flex items-center justify-center">
+          <div class="flex items-center space-x-0 w-full max-w-xl">
+            ${steps.map((s, idx) => {
+              const isPast = s.num < activeStep;
+              const isCurrent = s.num === activeStep;
+              let circleStyle = isPast ? "bg-apple-blue text-white" : isCurrent ? "border-2 border-apple-blue text-apple-blue bg-white dark:bg-[#1c1c1e]" : "bg-black/10 dark:bg-white/10 text-apple-secondaryText";
+              let lineStyle = (idx < steps.length - 1) ? `<div class="flex-1 h-0.5 mx-2 rounded-full ${s.num < activeStep ? 'bg-apple-blue' : 'bg-black/10 dark:bg-white/10'}"></div>` : "";
+
+              return `
+                <div class="flex items-center ${idx < steps.length - 1 ? 'flex-1' : ''}">
+                  <div class="flex flex-col items-center flex-shrink-0">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs font-mono ${circleStyle}">
+                      ${s.num}
+                    </div>
+                    <span class="text-[10px] mt-1.5 font-medium whitespace-nowrap ${isCurrent ? 'font-bold text-[#1d1d1f] dark:text-white' : 'text-apple-secondaryText'}">
+                      ${s.label}
+                    </span>
+                  </div>
+                  ${lineStyle}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function getCapsuleStyle(styleKey) {
+      if (styleKey === 'pink') return 'bg-pink-50/80 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800';
+      if (styleKey === 'green') return 'bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
+      if (styleKey === 'brown') return 'bg-[#7c2d12] text-white border-[#7c2d12] font-bold';
+      return 'bg-transparent text-purple-700 dark:text-purple-300 border border-dashed border-purple-400 dark:border-purple-600';
+    }
+
+    // GANTT TABLE GENERATOR
+    function generateGanttTableHTML(c, cIdx) {
+      const actions = c.actions || [];
+      const cap = c.dailyCapacity || [];
+      return `
+        <div class="overflow-x-auto rounded-2xl border border-black/5 dark:border-white/10 bg-white dark:bg-[#161618]">
+          <div class="min-w-[760px] text-xs">
+            <div class="flex border-b border-black/5 dark:border-white/10 bg-black/[0.015] dark:bg-white/[0.02]">
+              <div class="w-64 flex-shrink-0 p-2.5 font-bold text-apple-secondaryText text-[10px] uppercase tracking-wider flex items-center justify-between border-r border-black/5 dark:border-white/10">
+                <span>October 2026</span>
+                <span class="font-mono text-[9px] px-1 bg-black/5 dark:bg-white/10 rounded">CAL</span>
+              </div>
+              <div class="flex-1 flex flex-col">
+                <div class="flex border-b border-black/5 dark:border-white/5 text-[10px] font-mono text-apple-secondaryText font-semibold">
+                  <div class="w-[41.66%] text-center py-1 border-r border-black/5 dark:border-white/5">W42</div>
+                  <div class="w-[58.34%] text-center py-1">W43</div>
+                </div>
+                <div class="grid grid-cols-12 text-center text-[10px] font-mono text-apple-secondaryText">
+                  ${GANTT_FLAT_DAYS.map((dayItem, dIdx) => `<div class="py-1 gantt-col-line ${dayItem.w ? 'gantt-col-weekend' : ''} ${dIdx === TODAY_DAY_INDEX ? 'text-apple-red font-bold' : ''}">${dayItem.d}</div>`).join('')}
+                </div>
+              </div>
+            </div>
+            <div class="flex border-b border-black/5 dark:border-white/10 bg-black/[0.008] dark:bg-white/[0.01] items-center relative">
+              <div class="w-64 flex-shrink-0 p-2.5 flex items-center justify-between border-r border-black/5 dark:border-white/10">
+                <div class="flex items-center space-x-2 truncate">
+                  <span class="w-5 h-5 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center font-mono text-[9px] font-bold text-apple-blue">${c.pic ? c.pic.charAt(0) : 'P'}</span>
+                  <span class="font-bold text-[11px] truncate">${c.pic}</span>
+                </div>
+                <span class="text-apple-secondaryText text-[9px] font-mono">CAP</span>
+              </div>
+              <div class="flex-1 grid grid-cols-12 relative items-center h-10">
+                <div class="gantt-today-line" style="left: calc(${(TODAY_DAY_INDEX + 0.5) * 8.333}%);"></div>
+                ${GANTT_FLAT_DAYS.map((dayItem, dIdx) => {
+                  const val = cap[dIdx] || '';
+                  return `
+                    <div onclick="openEditCapacityModal(${cIdx},${dIdx})" class="h-full flex items-center justify-center gantt-col-line cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 ${dayItem.w ? 'gantt-col-weekend' : ''}">
+                      ${val ? `<span class="w-5 h-5 rounded flex items-center justify-center font-mono font-bold text-[10px] ${parseFloat(val) >= 10 ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'}">${val}</span>` : '<span class="text-[9px] opacity-0 hover:opacity-100 text-apple-secondaryText">+</span>'}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+            ${actions.map((a, aIdx) => `
+              <div class="flex border-b border-black/[0.03] dark:border-white/[0.04] items-center hover:bg-black/[0.01] dark:hover:bg-white/[0.015] relative">
+                <div class="w-64 flex-shrink-0 py-2.5 pl-6 pr-3 flex items-center space-x-2 truncate border-r border-black/5 dark:border-white/10 cursor-pointer" onclick="openEditGanttTaskModal(${cIdx},${aIdx})">
+                  <span class="w-2 h-2 rounded-full ${a.done ? 'bg-apple-green' : 'bg-apple-blue'}"></span>
+                  <span class="text-[11px] truncate font-medium text-[#1d1d1f] dark:text-white">${a.text}</span>
+                </div>
+                <div class="flex-1 grid grid-cols-12 relative h-9 items-center">
+                  <div class="gantt-today-line" style="left: calc(${(TODAY_DAY_INDEX + 0.5) * 8.333}%);"></div>
+                  ${GANTT_FLAT_DAYS.map((dayItem) => `<div class="h-full gantt-col-line ${dayItem.w ? 'gantt-col-weekend' : ''}"></div>`).join('')}
+                  <div onclick="openEditGanttTaskModal(${cIdx},${aIdx})" style="grid-column-start: ${Math.min(11, a.startCol \vert{}\vert{} 0) + 1}; grid-column-end: span${Math.min(12 - (a.startCol || 0), a.spanCol || 4)};" class="absolute inset-y-1.5 left-1 right-1 rounded-full border px-3 flex items-center justify-between text-[10px] shadow-2xs ${getCapsuleStyle(a.colorStyle)} z-2 truncate cursor-pointer">
+                    <span class="truncate font-medium font-mono">${a.labelText || (a.text + ' - ' + a.spanCol + 'd')}</span>
+                    <span class="text-[9px] opacity-60 font-mono ml-1">EDIT</span>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+            <div class="flex items-center text-apple-blue font-semibold text-[11px] py-2.5 pl-8 border-t border-black/5 dark:border-white/5 cursor-pointer hover:underline" onclick="openAddBookingModal(${cIdx})">
+              + Add Deliverable Booking
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openEditGanttTaskModal(cIdx, aIdx) {
+      const client = State.clients[cIdx];
+      const task = client.actions[aIdx];
+      const html = `
+        <div class="space-y-3">
+          <p class="text-apple-secondaryText text-[11px]">Sunting parameter tempahan jadual untuk <b class="text-[#1d1d1f] dark:text-white">${task.text}</b>.</p>
+          <div>
+            <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Tajuk Tugasan</label>
+            <input type="text" id="egText" value="${task.text}" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 text-xs">
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Hari Mula (0 - 11)</label>
+              <input type="number" id="egStartCol" min="0" max="11" value="${task.startCol || 0}" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Tempoh Hari (1 - 12)</label>
+              <input type="number" id="egSpanCol" min="1" max="12" value="${task.spanCol || 2}" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Teks Bar Kapsul</label>
+              <input type="text" id="egLabelText" value="${task.labelText || ''}" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 text-xs">
+            </div>
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Gaya Warna</label>
+              <select id="egColorStyle" class="w-full p-2.5 rounded-xl bg-white dark:bg-[#1c1c1e] outline-none border border-black/5 dark:border-white/10 text-xs">
+                <option value="pink" ${task.colorStyle === 'pink' ? 'selected' : ''}>Pink</option>
+                <option value="green" ${task.colorStyle === 'green' ? 'selected' : ''}>Green</option>
+                <option value="brown" ${task.colorStyle === 'brown' ? 'selected' : ''}>Brown</option>
+                <option value="dashed" ${task.colorStyle === 'dashed' ? 'selected' : ''}>Dashed</option>
+              </select>
+            </div>
+          </div>
+          <div class="pt-2 flex items-center space-x-2">
+            <button onclick="submitEditGanttTask(${cIdx}, ${aIdx})" class="flex-1 py-2.5 bg-apple-blue hover:bg-[#0077ed] text-white rounded-xl font-bold">Simpan</button>
+            <button onclick="deleteGanttTask(${cIdx}, ${aIdx})" class="px-3 py-2.5 bg-rose-50 dark:bg-rose-950/40 text-apple-red border border-rose-200 dark:border-rose-900 rounded-xl font-bold">Padam</button>
+          </div>
+        </div>
+      `;
+      openModal(`Sunting Gantt: ${client.title}`, html);
+    }
+
+    function submitEditGanttTask(cIdx, aIdx) {
+      const task = State.clients[cIdx].actions[aIdx];
+      task.text = document.getElementById('egText').value.trim() || task.text;
+      task.startCol = Math.max(0, Math.min(11, parseInt(document.getElementById('egStartCol').value) || 0));
+      task.spanCol = Math.max(1, Math.min(12 - task.startCol, parseInt(document.getElementById('egSpanCol').value) || 1));
+      task.labelText = document.getElementById('egLabelText').value.trim() || `${task.spanCol} days`;
+      task.colorStyle = document.getElementById('egColorStyle').value;
+      closeModal();
+      saveState();
+      showToast("Jadual Gantt dikemas kini");
+    }
+
+    function deleteGanttTask(cIdx, aIdx) {
+      if (confirm("Padam tugasan daripada garis masa?")) {
+        State.clients[cIdx].actions.splice(aIdx, 1);
+        closeModal();
+        saveState();
+        showToast("Tugasan dipadamkan");
+      }
+    }
+
+    function openEditCapacityModal(cIdx, dayIdx) {
+      const client = State.clients[cIdx];
+      const currentVal = (client.dailyCapacity && client.dailyCapacity[dayIdx]) || '';
+      const dayName = GANTT_FLAT_DAYS[dayIdx].d + ' Oct';
+      const newVal = prompt(`Kemas kini jam kapasiti ${client.pic} (${dayName}):`, currentVal);
+      if (newVal !== null) {
+        if (!client.dailyCapacity) client.dailyCapacity = [];
+        client.dailyCapacity[dayIdx] = newVal.trim();
+        saveState();
+        showToast("Kapasiti harian dikemas kini");
+      }
+    }
+
+    function openAddBookingModal(cIdx) {
+      const client = State.clients[cIdx];
+      const html = `
+        <div class="space-y-3">
+          <p class="text-apple-secondaryText text-[11px]">Tambah tempahan deliverable baharu ke garis masa <b class="text-[#1d1d1f] dark:text-white">${client.title}</b>.</p>
+          <div>
+            <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Tajuk Tugasan</label>
+            <input type="text" id="nbText" placeholder="Cth: Video Motion 9:16 Variation" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 text-xs">
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Hari Mula (0 - 11)</label>
+              <input type="number" id="nbStartCol" min="0" max="11" value="2" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Tempoh Hari (1 - 12)</label>
+              <input type="number" id="nbSpanCol" min="1" max="12" value="4" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+          </div>
+          <button onclick="submitAddBooking(${cIdx})" class="w-full py-2.5 bg-apple-blue hover:bg-[#0077ed] text-white rounded-xl font-bold">Tambah Tempahan</button>
+        </div>
+      `;
+      openModal(`Tambah Gantt: ${client.title}`, html);
+    }
+
+    function submitAddBooking(cIdx) {
+      const client = State.clients[cIdx];
+      const text = document.getElementById('nbText').value.trim();
+      const startCol = Math.max(0, Math.min(11, parseInt(document.getElementById('nbStartCol').value) || 0));
+      const spanCol = Math.max(1, Math.min(12 - startCol, parseInt(document.getElementById('nbSpanCol').value) || 2));
+      if (!text) return;
+      if (!client.actions) client.actions = [];
+      client.actions.push({
+        text, label: "CREATIVE", pic: client.pic, assignedBy: "Lead PM", durationEst: `${spanCol * 2}h 00m`,
+        dueDateTime: "25 Oct, 18:00 WIB", done: false, startCol, spanCol, labelText: `${spanCol} days`, colorStyle: "pink"
+      });
+      closeModal();
+      saveState();
+      showToast("Tempahan berjaya ditambah");
+    }
+
+    function openDmUpdateModal(cIdx) {
+      const client = State.clients[cIdx];
+      const html = `
+        <div class="space-y-3">
+          <p class="text-apple-secondaryText text-[11px]">Update spend & revenue harian untuk <b class="text-[#1d1d1f] dark:text-white">${client.title}</b>.</p>
+          <div class="grid grid-cols-2 gap-2.5 pt-1">
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Ad Spend (Rp)</label>
+              <input type="text" id="dmInputSpend" placeholder="Contoh: 500k / 500000" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+            <div>
+              <label class="font-semibold text-apple-secondaryText text-[11px] block mb-1">Revenue / Omset (Rp)</label>
+              <input type="text" id="dmInputRevenue" placeholder="Contoh: 2.5m / 2500000" class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10 font-mono text-xs">
+            </div>
+          </div>
+          <button onclick="submitDmUpdate(${cIdx})" class="w-full py-2.5 bg-apple-blue hover:bg-[#0077ed] text-white rounded-xl font-bold">Simpan & Kalkulasi Ulang</button>
+        </div>
+      `;
+      openModal(`Update Finansial: ${client.title}`, html);
+    }
+
+    function submitDmUpdate(cIdx) {
+      const client = State.clients[cIdx];
+      const spendInput = document.getElementById('dmInputSpend').value.trim();
+      const revenueInput = document.getElementById('dmInputRevenue').value.trim();
+      if (spendInput) client.spendNum += parseInputAmount(spendInput);
+      if (revenueInput) client.revenueNum += parseInputAmount(revenueInput);
+      closeModal();
+      saveState();
+      showToast(`Data ${client.title} diperbarui`);
+    }
+
+    function switchTab(tabId) {
+      State.tab = tabId;
+      ['home', 'projects', 'kanban', 'timeline'].forEach(t => {
+        const viewEl = document.getElementById(`view-${t}`);
+        if (viewEl) viewEl.classList.toggle('hidden', t !== tabId);
+        const btn = document.getElementById(`tab-${t}`);
+        if (btn) {
+          btn.className = (t === tabId)
+            ? "w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 text-apple-blue font-semibold"
+            : "w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-xl text-apple-secondaryText hover:bg-black/5 dark:hover:bg-white/5";
+        }
+      });
+      render();
+    }
+
+    function toggleSidebar() { 
+      document.getElementById('sidebar').classList.toggle('hidden'); 
+    }
+    
+    function toggleTheme() {
+      State.dark = !State.dark;
+      localStorage.setItem('agency_dark', State.dark);
+      document.documentElement.classList.toggle('dark', State.dark);
+      document.getElementById('themeBtn').innerText = State.dark ? 'LIGHT' : 'DARK';
+    }
+
+    // RENDER TAB HOME
+    function renderHome() {
+      const el = document.getElementById('clientCardsContainer');
+      if (!el) return;
+      el.innerHTML = State.clients.map((c, cIdx) => {
+        const computedRoas = getComputedRoas(c);
+        const isBleeding = (c.spendNum > 0) && ((c.revenueNum / c.spendNum) < parseFloat(c.beRoas));
+        const health = getClientHealthStatus(c);
+        const isCollapsed = State.collapsedCards.has(c.id);
+
+        return `
+          <div class="apple-card p-5 space-y-4">
+            <div class="flex justify-between items-start">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center font-bold text-xs font-mono text-apple-blue">
+                  ${c.title ? c.title.substring(0, 2).toUpperCase() : 'CL'}
+                </span>
+                <div>
+                  <h3 class="font-bold text-sm tracking-tight text-[#1d1d1f] dark:text-white">${c.title}</h3>
+                  <p class="text-[11px] text-apple-secondaryText">Lead: <b class="text-[#1d1d1f] dark:text-white font-medium">${c.pic}</b> - SLA: ${c.handoverSla}</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full ${health.badgeClass} font-mono">
+                  ${health.label}
+                </span>
+                <button onclick="toggleCardCollapse('${c.id}')" class="px-2 py-0.5 rounded-md hover:bg-black/5 dark:hover:bg-white/10 text-apple-secondaryText font-mono text-[10px]">
+                  ${isCollapsed ? 'EXPAND' : 'COLLAPSE'}
+                </button>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-black/[0.02] dark:bg-white/[0.03] rounded-2xl border border-black/5 dark:border-white/5 space-y-1.5">
+              <div class="grid grid-cols-3 gap-1 text-center text-xs">
+                <div>
+                  <span class="text-[9px] text-apple-secondaryText uppercase tracking-wider block font-semibold">Spend</span>
+                  <b class="font-mono text-[11px] text-[#1d1d1f] dark:text-white">${formatRupiahShort(c.spendNum)}</b>
+                </div>
+                <div>
+                  <span class="text-[9px] text-apple-secondaryText uppercase tracking-wider block font-semibold">Revenue</span>
+                  <b class="font-mono text-[11px] text-[#1d1d1f] dark:text-white">${formatRupiahShort(c.revenueNum)}</b>
+                </div>
+                <div>
+                  <span class="text-[9px] text-apple-secondaryText uppercase tracking-wider block font-semibold">ROAS / BE</span>
+                  <b class="font-mono text-[11px] ${isBleeding ? 'text-apple-red' : 'text-apple-green'}">${computedRoas} <span class="text-[9px] font-normal text-apple-secondaryText">(${c.beRoas})</span></b>
+                </div>
+              </div>
+              <div class="pt-1.5 border-t border-black/5 dark:border-white/5 flex justify-between items-center text-[10px]">
+                <span class="text-apple-secondaryText font-mono">CS SLA: ${c.csSla}</span>
+                <button onclick="openDmUpdateModal(${cIdx})" class="font-semibold text-apple-blue hover:underline">+ Update Spend/Rev (DM)</button>
+              </div>
+            </div>
+
+            ${generateVwoFunnelHTML(c, cIdx)}
+
+            <div class="collapsible-drawer ${isCollapsed ? '' : 'open'} space-y-4 pt-1">
+              ${generateGanttTableHTML(c, cIdx)}
+              ${c.blocker ? `<div class="p-2.5 bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-900/40 rounded-xl text-xs text-rose-800 dark:text-rose-300 font-medium"><span class="font-bold font-mono text-[10px] text-apple-red block mb-0.5">BLOCKER REPORT:</span>${c.blocker}</div>` : ''}
+              <div class="pt-1 flex justify-end text-xs">
+                <button onclick="copyWA(${cIdx})" class="text-apple-secondaryText hover:text-[#1d1d1f] dark:hover:text-white font-mono text-[11px] font-medium">SHARE REPORT VIA WA</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // RENDER TAB PROJECTS
+    function renderProjects() {
+      const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+      const div = document.getElementById('divisionFilter')?.value || 'ALL';
+      const el = document.getElementById('projectsList');
+      if (!el) return;
+
+      el.innerHTML = State.clients.map((c, cIdx) => {
+        let actions = c.actions || [];
+        if (div !== 'ALL') actions = actions.filter(a => a.label === div);
+        if (q) actions = actions.filter(a => a.text.toLowerCase().includes(q) || a.pic.toLowerCase().includes(q) || (a.assignedBy && a.assignedBy.toLowerCase().includes(q)));
+        if (actions.length === 0) return '';
+
+        return `
+          <div class="apple-card overflow-hidden">
+            <div class="px-5 py-3 border-b border-black/5 dark:border-white/10 flex justify-between items-center bg-black/[0.015] dark:bg-white/[0.02]">
+              <div class="flex items-center space-x-2.5">
+                <span class="font-bold text-sm text-[#1d1d1f] dark:text-white tracking-tight">${c.title}</span>
+                <span class="text-apple-secondaryText text-[11px] font-mono">PIC: ${c.pic}</span>
+              </div>
+              <span class="text-xs font-mono text-apple-secondaryText">SLA: ${c.handoverSla}</span>
+            </div>
+
+            ${generateStepperHTML(c.actions)}
+
+            <div class="px-5 py-2 border-b border-black/5 dark:border-white/10 flex items-center text-[9px] font-bold text-apple-secondaryText uppercase tracking-wider font-mono">
+              <div class="w-1/3 flex items-center pl-7">TITLE TASK / DELIVERABLE</div>
+              <div class="w-1/5">ASSIGNEE</div>
+              <div class="w-1/4">ASSIGNED BY</div>
+              <div class="w-24 text-right pr-4">EST. DURATION</div>
+              <div class="w-36 text-right pr-2">DUE DATE & TIME</div>
+            </div>
+
+            <div class="divide-y divide-black/[0.03] dark:divide-white/[0.04]">
+              ${actions.map((a, aIdx) => `
+                <div class="tracklist-row px-5 py-2.5 flex items-center text-xs">
+                  <div class="w-1/3 flex items-center space-x-2.5 pr-3 min-w-0">
+                    <input type="checkbox" ${a.done ? 'checked' : ''} onchange="toggleTask(${cIdx},${aIdx})" class="apple-checkbox">
+                    <span class="truncate ${a.done ? 'line-through text-apple-secondaryText' : 'font-medium text-[#1d1d1f] dark:text-white'}">${a.text}</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded font-mono ${a.label === 'MEDIA' ? 'bg-blue-50 text-apple-blue' : a.label === 'CREATIVE' ? 'bg-purple-50 text-purple-600' : 'bg-emerald-50 text-apple-green'}">${a.label}</span>
+                  </div>
+                  <div class="w-1/5 flex items-center space-x-1.5 truncate pr-2 text-apple-secondaryText">
+                    <span class="w-4 h-4 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center text-[9px] font-bold font-mono text-[#1d1d1f] dark:text-white">${a.pic.charAt(0)}</span>
+                    <span class="truncate font-medium text-[#1d1d1f] dark:text-white">${a.pic}</span>
+                  </div>
+                  <div class="w-1/4 truncate pr-2 text-apple-secondaryText font-medium">${a.assignedBy || c.pic + ' (Lead)'}</div>
+                  <div class="w-24 text-right pr-4 font-mono text-[11px] text-apple-secondaryText">${a.durationEst || '2h 00m'}</div>
+                  <div class="w-36 text-right pr-2 font-mono text-[11px] font-medium ${a.done ? 'text-apple-secondaryText' : 'text-apple-red'}">${a.dueDateTime || '25 Oct, 18:00 WIB'}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('') || `<div class="p-8 text-center text-xs text-apple-secondaryText italic">Tidak ada tugas ditemukan.</div>`;
+    }
+
+    // RENDER TAB TIMELINE
+    function renderTimelineView() {
+      const container = document.getElementById('masterTimelineContainer');
+      if (!container) return;
+      container.innerHTML = State.clients.map((c, cIdx) => `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between px-1">
+            <h4 class="font-bold text-sm text-[#1d1d1f] dark:text-white">${c.title}</h4>
+            <span class="text-xs font-mono text-apple-secondaryText">SLA: ${c.handoverSla}</span>
+          </div>
+          ${generateGanttTableHTML(c, cIdx)}
+        </div>
+      `).join('');
+    }
+
+    // RENDER TAB KANBAN
+    function renderKanban() {
+      const cols = { todo: [], doing: [], done: [] };
+      State.clients.forEach((c, cIdx) => {
+        (c.actions || []).forEach((a, aIdx) => {
+          const item = { ...a, cIdx, aIdx, client: c.title };
+          if (a.done) cols.done.push(item);
+          else if (a.doing) cols.doing.push(item);
+          else cols.todo.push(item);
+        });
+      });
+
+      ['todo', 'doing', 'done'].forEach(col => {
+        const countEl = document.getElementById(`count-${col}`);
+        const kanbanEl = document.getElementById(`kanban-${col}`);
+        if (countEl) countEl.innerText = cols[col].length;
+        if (kanbanEl) {
+          kanbanEl.innerHTML = cols[col].map(item => `
+            <div class="apple-card p-3 space-y-1.5 text-xs cursor-grab" draggable="true" ondragstart="State.dragged = { cIdx: ${item.cIdx}, aIdx: ${item.aIdx} }">
+              <div class="flex justify-between text-[10px] text-apple-secondaryText font-mono">
+                <span class="font-semibold text-[#1d1d1f] dark:text-white">${item.client}</span>
+                <span class="px-1.5 py-0.5 rounded-full bg-black/5 dark:bg-white/10">${item.pic}</span>
+              </div>
+              <p class="font-medium text-[#1d1d1f] dark:text-white leading-relaxed">${item.text}</p>
+            </div>
+          `).join('') || `<div class="p-6 text-center text-[10px] text-apple-secondaryText italic font-mono">KOSONG</div>`;
+        }
+      });
+    }
+
+    function dropKanban(e, targetCol) {
+      e.preventDefault();
+      if (!State.dragged) return;
+      const a = State.clients[State.dragged.cIdx].actions[State.dragged.aIdx];
+      a.done = targetCol === 'DONE';
+      a.doing = targetCol === 'DOING';
+      State.dragged = null; 
+      saveState();
+    }
+
+    function toggleTask(cIdx, aIdx) {
+      const a = State.clients[cIdx].actions[aIdx];
+      a.done = !a.done;
+      saveState();
+    }
+
+    function openModal(title, html) {
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalContent').innerHTML = html;
+      document.getElementById('modal').classList.remove('hidden');
+    }
+    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+    function openStandup() {
+      let lines = ['*DAILY STANDUP*', 'Tanggal: ' + new Date().toLocaleDateString('id-ID'), ''];
+      State.clients.forEach(c => {
+        const inProgress = (c.actions || []).find(a => !a.done);
+        lines.push('- ' + c.title + ': ' + (inProgress ? inProgress.text : 'Semua deliverable tuntas'));
+      });
+      openModal("Daily Standup Formatter", `
+        <textarea id="standupBox" class="w-full h-36 p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] text-xs font-mono outline-none border border-black/5 dark:border-white/10" readonly></textarea>
+        <button onclick="copyStandupText()" class="w-full py-2.5 bg-apple-blue hover:bg-[#0077ed] text-white rounded-xl font-bold">Salin Teks Standup</button>
+      `);
+      document.getElementById('standupBox').value = lines.join('\n');
+    }
+    function copyStandupText() {
+      navigator.clipboard.writeText(document.getElementById('standupBox').value);
+      closeModal(); showToast('Standup disalin');
+    }
+
+    function openNewProjectModal() {
+      openModal("Tambah Project Baru", `
+        <input type="text" id="npTitle" placeholder="Nama Klien..." class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10">
+        <input type="text" id="npPic" placeholder="Lead PIC..." class="w-full p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/10 outline-none border border-black/5 dark:border-white/10">
+        <button onclick="submitNewProject()" class="w-full py-2.5 bg-[#1d1d1f] dark:bg-white dark:text-black text-white font-bold rounded-xl">Simpan Project</button>
+      `);
+    }
+    function submitNewProject() {
+      const title = document.getElementById('npTitle').value.trim();
+      const pic = document.getElementById('npPic').value.trim() || 'Mike';
+      if (!title) return;
+      State.clients.push({
+        id: "cli-" + Date.now(), title, pic, handoverSla: "2026-10-31 18:00 WIB",
+        spendNum: 0, revenueNum: 0, beRoas: "2.50x", csSla: "< 3m",
+        dailyCapacity: ["", "", "2", "2", "2", "2", "", "", "", "", "", ""],
+        vwoFunnel: { visitors: 10000, leads: 500, mqls: 150, mqlRate: 20, opportunities: 30, oppRate: 60, customers: 4 },
+        actions: [{ text: "Setup Kampanye Utama", label: "MEDIA", pic, assignedBy: "Mike (PM)", durationEst: "3h 00m", dueDateTime: "31 Oct, 18:00 WIB", done: false, startCol: 2, spanCol: 4, labelText: "2h / day for 4 days", colorStyle: "pink" }]
+      });
+      closeModal(); saveState(); showToast("Project baru ditambahkan");
+    }
+
+    function copyWA(cIdx) {
+      const c = State.clients[cIdx];
+      const doneList = (c.actions || []).filter(a => a.done).map(a => '- ' + a.text).join('\n');
+      const text = '*UPDATE PROYEK ' + c.title.toUpperCase() + '*\nSpend: ' + formatRupiahShort(c.spendNum) + '\nRevenue: ' + formatRupiahShort(c.revenueNum) + '\nROAS: ' + getComputedRoas(c) + ' (BE: ' + c.beRoas + ')\n\nDeliverables Selesai:\n' + (doneList || '- On progress');
+      navigator.clipboard.writeText(text); showToast("Laporan disalin");
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg; t.classList.remove('opacity-0');
+      setTimeout(() => t.classList.add('opacity-0'), 1600);
+    }
+
+    // MAIN RENDER CONTROLLER
+    function render() {
+      try {
+        const pics = [...new Set(State.clients.flatMap(c => (c.actions || []).map(a => a.pic)))];
+        const teamListEl = document.getElementById('teamListUI');
+        if (teamListEl) {
+          teamListEl.innerHTML = pics.map(p => `
+            <div class="flex items-center space-x-2 py-1 px-1 rounded-lg text-apple-secondaryText">
+              <span class="w-4 h-4 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center text-[9px] font-mono font-bold">${p ? p.charAt(0) : 'T'}</span>
+              <span class="font-medium text-xs">${p}</span>
+            </div>
+          `).join('');
+        }
+
+        if (State.tab === 'home') renderHome();
+        else if (State.tab === 'projects') renderProjects();
+        else if (State.tab === 'kanban') renderKanban();
+        else if (State.tab === 'timeline') renderTimelineView();
+      } catch (err) {
+        console.error("Render engine recovered from error:", err);
+      }
+    }
+
+    // Jalankan segera saat DOM parsing selesai
+    if (document.readyState === 'loading') {
+      document.addEventListener("DOMContentLoaded", () => {
+        if (State.dark) document.documentElement.classList.add('dark');
+        render();
+      });
+    } else {
+      if (State.dark) document.documentElement.classList.add('dark');
+      render();
+    }
+  </script>
+</body>
+</html>
