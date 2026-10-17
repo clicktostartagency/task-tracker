@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>smallstep — Progress, Gantt & Operations Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #f2f2f7; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; user-select: none; }
+    #mainSidebar { overflow-x: hidden !important; scrollbar-width: none; transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), padding 0.25s ease; }
+    #mainSidebar::-webkit-scrollbar { display: none; }
+    #mainSidebar.is-collapsed { width: 4.75rem !important; padding: 1.25rem 0.5rem !important; align-items: center !important; }
+    #mainSidebar.is-collapsed .sidebar-text, #mainSidebar.is-collapsed .traffic-dots { display: none !important; }
+    #mainSidebar.is-collapsed .sidebar-btn, #mainSidebar.is-collapsed .online-user-item, #mainSidebar.is-collapsed #sidebarLogoArea, #mainSidebar.is-collapsed #sidebarHeaderControls { justify-content: center !important; padding-left: 0; padding-right: 0; }
+    .sidebar-tooltip { visibility: hidden; opacity: 0; transition: opacity 0.18s ease; }
+    .has-tooltip:hover .sidebar-tooltip { visibility: visible; opacity: 1; }
+    .progress-capsule { position: relative; border-radius: 28px; overflow: hidden; cursor: pointer; min-height: 120px; box-shadow: 0 4px 14px rgba(0,0,0,0.05); transition: transform 0.2s ease; }
+    .progress-capsule:active { transform: scale(0.985); }
+    .accordion-drawer { max-height: 0; opacity: 0; overflow: hidden; transform: scaleY(0.96); transform-origin: top; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .accordion-drawer.open { max-height: 2000px; opacity: 1; transform: scaleY(1); margin-top: 12px; }
+    .apple-check { appearance: none; width: 20px; height: 20px; border: 2px solid #cbd5e1; border-radius: 50%; outline: none; cursor: pointer; transition: all 0.2s; position: relative; }
+    .apple-check:checked { background: #34c759; border-color: #34c759; }
+    .apple-check:checked::after { content: ''; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+    .gantt-col-cell { min-width: 52px; width: 52px; text-align: center; border-right: 1px solid #f1f5f9; }
+    .modal-glass-card { background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); border-radius: 24px; }
+    .modal-dark-glass { background: linear-gradient(145deg, #1e293b, #0f172a); border-radius: 24px; }
+  </style>
+</head>
+<body class="min-h-screen py-6 px-3 md:px-6 flex justify-center pb-24">
+  <div class="w-full max-w-7xl flex items-start gap-5">
+    
+    <!-- SIDEBAR -->
+    <aside id="mainSidebar" class="hidden md:flex flex-col bg-white rounded-[32px] p-5 shadow-sm border border-gray-200/70 sticky top-6 self-start z-30 w-64 max-h-[92vh] overflow-y-auto">
+      <div id="sidebarHeaderControls" class="flex items-center justify-between mb-5 flex-shrink-0 w-full">
+        <div class="traffic-dots flex items-center space-x-2">
+          <span class="w-3 h-3 rounded-full bg-[#ff5f56]"></span>
+          <span class="w-3 h-3 rounded-full bg-[#ffbd2e]"></span>
+          <span class="w-3 h-3 rounded-full bg-[#27c93f]"></span>
+        </div>
+        <button onclick="toggleSidebarCollapse()" class="text-gray-400 hover:text-gray-700 p-1" title="Toggle Sidebar">
+          <svg id="sidebarToggleIcon" class="w-4 h-4 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+        </button>
+      </div>
+
+      <div id="sidebarLogoArea" class="flex items-center space-x-2.5 mb-6 pb-2 border-b border-gray-100 flex-shrink-0 w-full">
+        <div class="flex space-x-1 items-center flex-shrink-0">
+          <div class="w-1.5 h-5 bg-black rounded-sm transform -skew-x-12"></div>
+          <div class="w-1.5 h-5 bg-black rounded-sm transform -skew-x-12"></div>
+          <div class="w-1.5 h-5 bg-black rounded-sm transform -skew-x-12"></div>
+        </div>
+        <span class="sidebar-text font-black text-sm tracking-tight text-black">smallstep</span>
+      </div>
+
+      <div class="mb-5 space-y-1 flex-shrink-0 w-full text-xs font-semibold text-gray-700">
+        <div class="sidebar-text text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-2">Main Menu</div>
+        <button onclick="switchTabNav('home')" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2 rounded-2xl hover:bg-gray-100 relative has-tooltip">
+          <svg class="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <span class="sidebar-text">Home</span>
+          <span class="sidebar-tooltip absolute left-14 bg-black text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg pointer-events-none whitespace-nowrap z-40">Home</span>
+        </button>
+        <button onclick="setViewMode('dept-overview')" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-2 rounded-2xl text-purple-700 hover:bg-purple-50 relative has-tooltip">
+          <svg class="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          <span class="sidebar-text font-bold">Dept Overview</span>
+          <span class="sidebar-tooltip absolute left-14 bg-black text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg pointer-events-none whitespace-nowrap z-40">Dept Overview</span>
+        </button>
+      </div>
+
+      <div class="pt-4 border-t border-gray-100 space-y-1 flex-shrink-0 w-full text-xs font-semibold text-gray-700">
+        <div class="sidebar-text text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-2">Teams</div>
+        <button onclick="filterDept('ALL')" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-1.5 rounded-2xl hover:bg-gray-100"><span class="sidebar-text">All teams</span></button>
+        <button onclick="filterDept('Management')" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-1.5 rounded-2xl hover:bg-gray-100"><span class="w-4 h-4 rounded-md bg-blue-600 text-white font-extrabold text-[9px] flex items-center justify-center">F</span><span class="sidebar-text">Finance</span></button>
+        <button onclick="filterDept('Production')" class="sidebar-btn w-full flex items-center space-x-3 px-3 py-1.5 rounded-2xl hover:bg-gray-100"><span class="w-4 h-4 rounded-md bg-amber-600 text-white font-extrabold text-[9px] flex items-center justify-center">P</span><span class="sidebar-text">Product</span></button>
+      </div>
+
+      <div class="pt-4 border-t border-gray-100 space-y-2 flex-shrink-0 w-full mt-auto">
+        <div class="sidebar-text flex items-center justify-between px-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Online — <span id="onlineCounterText">4</span></div>
+        <div id="sidebarOnlineUsersList" class="space-y-2 w-full flex flex-col items-center"></div>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="flex-1 w-full max-w-5xl flex flex-col">
+      <header class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <button onclick="toggleMobileSidebar()" class="md:hidden p-1.5 rounded-xl bg-white border border-gray-200 shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-black">Tasks</h1>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <div class="hidden md:flex bg-gray-200 p-1 rounded-full text-xs font-semibold">
+            <button onclick="setViewMode('capsules')" id="btnViewCapsules" class="px-3.5 py-1.5 rounded-full bg-white text-gray-900 shadow-sm">Capsules View</button>
+            <button onclick="setViewMode('gantt')" id="btnViewGantt" class="px-3.5 py-1.5 rounded-full text-gray-600 hover:text-black">Gantt Chart</button>
+            <button onclick="setViewMode('dept-overview')" id="btnViewDeptOverview" class="px-3.5 py-1.5 rounded-full text-gray-600 hover:text-purple-700">Dept Overview</button>
+          </div>
+          <button onclick="copyWA()" class="bg-white text-gray-800 hover:text-emerald-600 font-semibold text-xs px-4 py-2 rounded-full shadow-sm border border-gray-200">Share WA</button>
+          <button onclick="handleNewTaskClick()" class="bg-[#0071e3] hover:bg-[#0062c4] text-white font-semibold text-xs px-4 py-2 rounded-full shadow-sm active:scale-95 transition">+ Task Baru</button>
+          <button onclick="openUserProfileModal(currentActiveUserKey)" class="flex items-center space-x-2 bg-white border border-gray-200 pl-1.5 pr-3.5 py-1 rounded-full shadow-sm">
+            <img id="navAvatarImg" src="" alt="Avatar" class="w-7 h-7 rounded-full object-cover ring-2 ring-blue-500/30">
+            <div class="text-left leading-tight"><span id="navUserName" class="text-xs font-bold text-gray-900 block"></span><span class="text-[9px] text-gray-400 font-medium">Switch / PIN</span></div>
+          </button>
+        </div>
+      </header>
+
+      <!-- Department Filter Tabs -->
+      <div id="deptFilterTabsRow" class="flex items-center space-x-2 overflow-x-auto pb-3 mb-6 text-xs font-semibold">
+        <button onclick="filterDept('ALL')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-black text-white" data-dept="ALL">Semua</button>
+        <button onclick="filterDept('HRGA')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="HRGA">HRGA</button>
+        <button onclick="filterDept('DM')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="DM">DM</button>
+        <button onclick="filterDept('Production')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="Production">Production</button>
+        <button onclick="filterDept('Management')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="Management">Management</button>
+        <button onclick="filterDept('ABD')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="ABD">ABD</button>
+      </div>
+
+      <!-- VIEW 1: CAPSULES (MASONRY 2-KOLOM INDEPENDEN) -->
+      <main id="capsulesView" class="flex flex-col md:flex-row gap-6 items-start w-full">
+        <div id="capsulesColLeft" class="flex-1 w-full flex flex-col gap-6"></div>
+        <div id="capsulesColRight" class="flex-1 w-full flex flex-col gap-6"></div>
+      </main>
+
+      <!-- VIEW 2: GANTT CHART -->
+      <div id="ganttView" class="hidden bg-white rounded-3xl shadow-sm border border-gray-200 p-6 overflow-x-auto">
+        <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
+          <div><h2 class="text-lg font-extrabold text-gray-900">Work Pace & Workload Timeline</h2><p class="text-xs text-gray-500">Estimasi jam pengerjaan harian (hours/day) dan durasi aktual</p></div>
+          <div id="teamCapacitySummary" class="flex items-center space-x-2 text-xs"></div>
+        </div>
+        <div id="ganttTimelineContent"></div>
+      </div>
+
+      <!-- VIEW 3: DEPT OVERVIEW -->
+      <div id="deptOverviewView" class="hidden space-y-6">
+        <div class="bg-white rounded-[32px] p-6 shadow-sm border border-gray-200 flex flex-wrap justify-between items-center gap-4">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">📈</div>
+            <div><h2 class="text-2xl font-black text-gray-900">Department Performance Tracker</h2><p class="text-xs text-gray-400">Track deliverables, streak, and team KPI goals</p></div>
+          </div>
+          <select id="overviewDeptSelector" onchange="renderDeptOverviewStats(this.value)" class="bg-white border border-gray-200 px-3.5 py-1.5 rounded-full text-xs font-bold text-gray-800 shadow-sm">
+            <option value="ALL">All Departments</option><option value="ABD">ABD</option><option value="DM">DM</option><option value="Production">Production</option><option value="Management">Management</option><option value="HRGA">HRGA</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-xs">
+          <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex flex-col justify-between">
+            <span class="text-[10px] text-gray-400 font-bold uppercase">Total Work Time</span><span id="ovTotalWorkHours" class="text-lg font-black text-gray-900">0h</span><span class="text-emerald-600 font-bold">↑ 18% vs sprint</span>
+          </div>
+          <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex flex-col justify-between">
+            <span class="text-[10px] text-gray-400 font-bold uppercase">Tasks Done</span><span id="ovTasksDone" class="text-lg font-black text-gray-900">0</span><span id="ovTasksRatio" class="text-emerald-600 font-bold">0/0</span>
+          </div>
+          <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex flex-col justify-between">
+            <span class="text-[10px] text-gray-400 font-bold uppercase">Deliverables</span><span id="ovDeliverables" class="text-lg font-black text-gray-900">0</span><span class="text-emerald-600 font-bold">↑ On-schedule</span>
+          </div>
+          <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex flex-col justify-between">
+            <span class="text-[10px] text-gray-400 font-bold uppercase">Streak</span><span id="ovStreakDays" class="text-lg font-black text-gray-900">14 Days</span><span class="text-amber-600 font-bold">🔥 Consistent</span>
+          </div>
+          <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex flex-col justify-between col-span-2 md:col-span-1">
+            <span class="text-[10px] text-gray-400 font-bold uppercase">Overall Score</span><span id="ovOverallScore" class="text-lg font-black text-indigo-600">0%</span><span class="text-emerald-600 font-bold">Live Dynamic</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 lg:col-span-2 flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-2"><span class="text-sm font-extrabold text-gray-900">Overall Performance Trend</span><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-600 text-white">Score</span></div>
+            <div id="dynamicLineChartWrapper" class="relative w-full h-44 mt-2"></div>
+            <div id="dynamicLineDatesRow" class="flex justify-between text-[10px] text-gray-400 font-bold pt-2 border-t border-gray-100"></div>
+          </div>
+          <div class="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
+            <span class="text-sm font-extrabold text-gray-900 mb-2">Project-wise Progress</span>
+            <div class="flex items-center justify-between gap-4 my-2">
+              <div id="dynamicDonutSvgBox" class="relative w-28 h-28 flex-shrink-0 flex items-center justify-center"></div>
+              <div id="dynamicDeptLegendBox" class="space-y-1.5 flex-1 text-xs"></div>
+            </div>
+            <button onclick="setViewMode('capsules')" class="w-full mt-2 py-2 text-center text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-2xl">View Detailed Breakdown →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed top-8 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-md text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-2xl transition-all opacity-0 pointer-events-none z-50"></div>
+
+  <script>
+    const DEPARTMENTS = {
+      HRGA: { name: 'HRGA', tint: '#C3C1FF', fill: '#4743C9', textOnTint: '#1A185A' },
+      DM: { name: 'DM', tint: '#FFD6DF', fill: '#E11D48', textOnTint: '#5C021E' },
+      Production: { name: 'Production', tint: '#8EE4E2', fill: '#0B7A75', textOnTint: '#032F2E' },
+      Management: { name: 'Management', tint: '#FFF0D4', fill: '#D97706', textOnTint: '#451A03' },
+      ABD: { name: 'ABD', tint: '#8AD5FF', fill: '#0284C7', textOnTint: '#082F49' }
+    };
+
+    const USER_PROFILES = {
+      Budi: { pin: "1111", role: "Lead / Manager", name: "Budi Santoso", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80", workStatus: "Reviewing Ads", statusType: "online" },
+      Siti: { pin: "2222", role: "Lead / Manager", name: "Siti Rahma", img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80", workStatus: "Closing Kas Q4", statusType: "idle" },
+      Andi: { pin: "3333", role: "Staff", name: "Andi Wijaya", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80", workStatus: "Deep Work CAPI", statusType: "idle" },
+      Dewi: { pin: "4444", role: "Staff", name: "Dewi Lestari", img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80", workStatus: "Legal Vendor SLA", statusType: "idle" }
+    };
+
+    let currentActiveUserKey = "Budi";
+    let activeDeptFilter = 'ALL';
+    let currentViewMode = 'capsules';
+    let expandedIds = new Set(['tsk-1', 'tsk-3']);
+
+    const timelineDays = [
+      { date: '02', week: 'W18' }, { date: '03' }, { date: '04' }, { date: '05' }, { date: '06' },
+      { date: '07', week: 'W19' }, { date: '08' }, { date: '09' }, { date: '10' }, { date: '11' },
+      { date: '12' }, { date: '13' }, { date: '14', week: 'W20' }, { date: '15' }
+    ];
+
+    const defaultData = [
+      {
+        id: "tsk-1", dept: "ABD", title: "Cherry Oaks", subTitle: "Website Design", pic: "Budi",
+        parentDailyHours: { 0: "0h", 2: "3.2h", 5: "3.2h", 6: "3.7h", 7: "3.7h", 8: "1.2h", 12: "0.7h" },
+        actions: [
+          { text: "Big Jet Plane (Design wireframe)", pic: "Budi", assigner: "Budi (Lead)", dueDate: "09 May 2026", durationTime: "3:43", done: true, link: "https://figma.com/@cherryoaks/wireframe", details: "Sudah disesuaikan dengan brand guidelines terbaru." },
+          { text: "Development & CAPI integration", pic: "Andi", assigner: "Budi (Lead)", dueDate: "11 May 2026", durationTime: "4:55", done: true, link: "https://github.com/cherryoaks-web", details: "Event purchase and checkout tracking ready." },
+          { text: "QA & Client handover", pic: "Siti", assigner: "Budi (Lead)", dueDate: "15 May 2026", durationTime: "2:44", done: false, isFlagged: true, link: "", details: "Menunggu approval dokumen serah terima." }
+        ]
+      },
+      {
+        id: "tsk-2", dept: "DM", title: "Social Media Update", subTitle: "Campaign Optimizations", pic: "Siti",
+        parentDailyHours: { 6: "0.5h", 7: "0.5h", 8: "0.5h", 9: "0.5h" },
+        actions: [
+          { text: "Crafting copy & Meta CTWA ads", pic: "Siti", assigner: "Budi (Lead)", dueDate: "10 May 2026", durationTime: "1:47", done: true, link: "", details: "Gunakan CTA direct-to-chat WA." },
+          { text: "Budget scaling analysis", pic: "Budi", assigner: "Siti (Manager)", dueDate: "14 May 2026", durationTime: "3:46", done: false, link: "", details: "Evaluasi ROAS harian target > 3.5x." }
+        ]
+      },
+      {
+        id: "tsk-3", dept: "Production", title: "Jake Peters", subTitle: "Product Design", pic: "Budi",
+        parentDailyHours: { 2: "0.5h", 5: "0.5h", 6: "0.5h", 7: "0.5h", 8: "0.3h", 12: "0.3h" },
+        actions: [
+          { text: "Copywriting headline & deck", pic: "Andi", assigner: "Budi (Lead)", dueDate: "08 May 2026", durationTime: "5:32", done: true, link: "", details: "Fokus diferensiasi produk." },
+          { text: "Blog editorial asset design", pic: "Siti", assigner: "Budi (Lead)", dueDate: "13 May 2026", durationTime: "2:47", done: true, link: "", details: "Format 1200x630px untuk banner website." }
+        ]
+      }
+    ];
+
+    function getData() {
+      try {
+        const stored = localStorage.getItem('apple_agency_upgrade_final_compact');
+        return stored ? JSON.parse(stored) : defaultData;
+      } catch { return defaultData; }
+    }
+
+    function saveData(data) {
+      localStorage.setItem('apple_agency_upgrade_final_compact', JSON.stringify(data));
+      renderAllViews();
+    }
+
+    function toggleSidebarCollapse() {
+      const sb = document.getElementById('mainSidebar');
+      sb.classList.toggle('is-collapsed');
+      renderOnlineMembersList();
+    }
+
+    function toggleMobileSidebar() {
+      document.getElementById('mainSidebar').classList.toggle('hidden');
+    }
+
+    function switchTabNav(type) {
+      if (type === 'home') { filterDept('ALL'); setViewMode('capsules'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    }
+
+    function renderOnlineMembersList() {
+      const container = document.getElementById('sidebarOnlineUsersList');
+      if (!container) return;
+      container.innerHTML = '';
+      const isCollapsed = document.getElementById('mainSidebar').classList.contains('is-collapsed');
+
+      Object.keys(USER_PROFILES).forEach(key => {
+        const u = USER_PROFILES[key];
+        const isCurrent = key === currentActiveUserKey;
+        const dotColor = isCurrent ? "bg-emerald-500 ring-2 ring-emerald-200 animate-pulse" : (u.statusType === 'idle' ? "bg-amber-400" : "bg-emerald-500");
+        const item = document.createElement('div');
+        item.onclick = () => openUserProfileModal(key);
+        item.className = "online-user-item flex items-center space-x-2.5 p-1.5 rounded-2xl hover:bg-gray-100 cursor-pointer w-full has-tooltip relative";
+        item.innerHTML = `
+          <div class="relative flex-shrink-0">
+            <img src="${u.img}" class="w-8 h-8 rounded-full object-cover">
+            <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${dotColor} border-2 border-white"></span>
+          </div>
+          <div class="sidebar-text truncate flex-1 min-w-0">
+            <div class="text-xs font-bold text-gray-900 leading-tight truncate">${u.name.split(' ')[0]}</div>
+            <div class="text-[10px] text-gray-400 font-medium leading-tight truncate">${isCurrent ? 'Active Now' : u.workStatus}</div>
+          </div>
+          <span class="sidebar-tooltip absolute left-14 bg-black text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg pointer-events-none whitespace-nowrap z-40">${u.name}</span>
+        `;
+        container.appendChild(item);
+      });
+      document.getElementById('onlineCounterText').innerText = Object.keys(USER_PROFILES).length;
+    }
+
+    function createCapsuleCard(item) {
+      const theme = DEPARTMENTS[item.dept] || DEPARTMENTS.ABD;
+      const total = item.actions?.length || 0;
+      const done = item.actions?.filter(a => a.done).length || 0;
+      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+      const isExpanded = expandedIds.has(item.id);
+
+      const col = document.createElement('div');
+      col.className = 'w-full flex flex-col';
+
+      const donutSvg = (strokeColor, textColor) => `
+        <div class="relative w-16 h-16 flex-shrink-0 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <path stroke="#e2e8f0" stroke-width="3.8" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path stroke="${strokeColor}" stroke-dasharray="${pct}, 100" stroke-width="4.2" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" class="transition-all duration-500" />
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center"><span class="text-[12px] font-black" style="color:${textColor};">${pct}%</span></div>
+        </div>`;
+
+      col.innerHTML = `
+        <div onclick="toggleCard('${item.id}')" class="progress-capsule" style="background-color: ${theme.tint};">
+          <div class="h-full transition-all duration-500" style="width: ${pct}%; background-color: ${theme.fill};"></div>
+          
+          <div class="absolute inset-0 px-6 py-4 flex items-center justify-between pointer-events-none overflow-hidden" style="clip-path: inset(0 ${100 - pct}% 0 0); transition: clip-path 0.5s;">
+            <div class="flex-1 min-w-0 pr-4">
+              <div class="flex items-center space-x-2"><span class="text-[17px] font-extrabold text-white truncate">${item.title}</span><span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/25 text-white">${item.dept}</span></div>
+              <div class="text-[13px] font-bold mt-1 text-white/95">${done} / ${total} Langkah Selesai</div>
+            </div>
+            <div class="flex items-center space-x-3">${donutSvg('#ffffff', '#ffffff')}<span class="text-xs text-white ${isExpanded ? 'rotate-180' : ''}">▼</span></div>
+          </div>
+
+          <div class="absolute inset-0 px-6 py-4 flex items-center justify-between pointer-events-none overflow-hidden" style="clip-path: inset(0 0 0 ${pct}%); transition: clip-path 0.5s;">
+            <div class="flex-1 min-w-0 pr-4">
+              <div class="flex items-center space-x-2"><span class="text-[17px] font-extrabold truncate" style="color: ${theme.textOnTint};">${item.title}</span><span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full" style="background:${theme.fill}22; color:${theme.textOnTint};">${item.dept}</span></div>
+              <div class="text-[13px] font-bold mt-1 opacity-90" style="color: ${theme.textOnTint};">${done} / ${total} Langkah Selesai</div>
+            </div>
+            <div class="flex items-center space-x-3">${donutSvg(theme.fill, theme.textOnTint)}<span class="text-xs ${isExpanded ? 'rotate-180' : ''}" style="color:${theme.textOnTint};">▼</span></div>
+          </div>
+        </div>
+
+        <div class="accordion-drawer ${isExpanded ? 'open' : ''} bg-white rounded-3xl p-5 border border-gray-200 shadow-sm space-y-4">
+          <div class="border border-gray-100 rounded-2xl overflow-hidden bg-white">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-gray-100 bg-gray-50/60 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th class="py-2.5 pl-3 w-8"></th><th class="py-2.5 px-3">Title</th><th class="py-2.5 px-3 w-24">Assignee</th><th class="py-2.5 px-3 w-28">Due Date</th><th class="py-2.5 px-3 text-center w-16">Time</th><th class="py-2.5 pr-3 text-right w-16">Flag</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                ${(item.actions || []).map((act, idx) => `
+                  <tr class="hover:bg-gray-50/70 transition cursor-pointer ${act.isFlagged ? 'bg-rose-50/40' : ''}" onclick="toggleActionPlanDetail('${item.id}',${idx})">
+                    <td class="py-3 pl-3 align-top" onclick="event.stopPropagation()">
+                      <input type="checkbox" ${act.done ? 'checked' : ''} onchange="toggleStep('${item.id}',${idx}, this.checked)" class="apple-check mt-0.5">
+                    </td>
+                    <td class="py-3 px-3 align-top">
+                      <div class="font-bold text-gray-900 leading-snug break-words ${act.done ? 'line-through text-gray-400 font-normal' : ''} ${act.isFlagged ? 'text-rose-800' : ''}">${act.text}</div>${act.link ? `<div class="text-[10px] text-blue-600 font-semibold mt-1 break-all">🔗 ${act.link}</div>` : ''}
+                    </td>
+                    <td class="py-3 px-3 align-top"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700">${act.pic}</span></td>
+                    <td class="py-3 px-3 align-top text-[11px] text-gray-500">${act.dueDate || '12 May 2026'}</td>
+                    <td class="py-3 px-3 align-top text-center font-mono font-bold ${act.done ? 'text-gray-400' : 'text-gray-800'}">${act.durationTime || '3:43'}</td>
+                    <td class="py-3 pr-3 align-top text-right" onclick="event.stopPropagation()">
+                      <button onclick="toggleFlagActionPlan('${item.id}', ${idx})" class="p-1 rounded-lg ${act.isFlagged ? 'bg-rose-600 text-white' : 'text-gray-300 hover:text-rose-600'}">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr id="act-detail-row-${item.id}-${idx}" class="hidden bg-gray-50/70 border-b border-gray-100">
+                    <td colspan="6" class="p-4 pt-2">
+                      <div class="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-sm space-y-3 text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div><label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Due Date:</label><input type="text" id="act-date-input-${item.id}-${idx}" value="${act.dueDate || '12 May 2026'}" class="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl"></div>
+                          <div><label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Duration Time:</label><input type="text" id="act-time-input-${item.id}-${idx}" value="${act.durationTime || '3:43'}" class="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl font-mono"></div>
+                        </div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Tautan Aset (Drive / Figma / Docs):</label><input type="url" id="act-link-input-${item.id}-${idx}" value="${act.link || ''}" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-mono"></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Catatan & Detail Brief:</label><textarea id="act-desc-input-${item.id}-${idx}" rows="2" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl">${act.details || ''}</textarea></div>
+                        <div class="flex justify-between items-center pt-1">
+                          <select id="act-pic-input-${item.id}-${idx}" class="px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-700">
+                            <option value="Budi" ${act.pic==='Budi'?'selected':''}>Budi</option><option value="Siti" ${act.pic==='Siti'?'selected':''}>Siti</option><option value="Andi" ${act.pic==='Andi'?'selected':''}>Andi</option><option value="Dewi" ${act.pic==='Dewi'?'selected':''}>Dewi</option>
+                          </select>
+                          <button onclick="saveActionPlanDetail('${item.id}',${idx})" class="px-4 py-1.5 bg-gray-900 hover:bg-black text-white font-bold rounded-xl text-xs active:scale-95 transition">Simpan Perubahan</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      return col;
+    }
+
+    function renderCapsules(list) {
+      const colLeft = document.getElementById('capsulesColLeft');
+      const colRight = document.getElementById('capsulesColRight');
+      if (!colLeft || !colRight) return;
+      colLeft.innerHTML = ''; colRight.innerHTML = '';
+      let filtered = (Array.isArray(list) ? list : defaultData).filter(item => activeDeptFilter === 'ALL' || item.dept === activeDeptFilter);
+      filtered.forEach((item, index) => {
+        (index % 2 === 0 ? colLeft : colRight).appendChild(createCapsuleCard(item));
+      });
+    }
+
+    function renderGantt(list) {
+      const container = document.getElementById('ganttTimelineContent');
+      if (!container) return;
+      let filtered = (Array.isArray(list) ? list : defaultData).filter(item => activeDeptFilter === 'ALL' || item.dept === activeDeptFilter);
+
+      let html = `<div class="min-w-[940px]"><div class="flex border-b border-gray-200 pb-2 text-xs"><div class="w-64 font-bold text-gray-400 pl-3">PROJECT / TASK</div><div class="flex-1 flex">` +
+        timelineDays.map(td => `<div class="gantt-col-cell">${td.week ? `<div class="text-[10px] text-gray-400">May <b>${td.week}</b></div>` : '<div>&nbsp;</div>'}<div class="font-bold text-gray-800 mt-1">${td.date}</div></div>`).join('') +
+        `</div></div>`;
+
+      filtered.forEach(item => {
+        html += `<div class="flex items-center py-2.5 border-b border-gray-100"><div class="w-64 pl-2 font-black text-xs text-gray-900 truncate">${item.title}</div><div class="flex-1 flex">` +
+          timelineDays.map((td, dIdx) => `<div class="gantt-col-cell py-1.5 text-[11px] ${item.parentDailyHours?.[dIdx] && item.parentDailyHours[dIdx]!=='0h' ? 'bg-emerald-200 text-emerald-950 font-bold' : 'text-gray-400'}">${item.parentDailyHours?.[dIdx] || '0h'}</div>`).join('') +
+          `</div></div>`;
+      });
+      container.innerHTML = html + `</div>`;
+    }
+
+    function renderDeptOverviewStats(selectedDept = 'ALL') {
+      const data = getData();
+      let filtered = selectedDept === 'ALL' ? data : data.filter(d => d.dept === selectedDept);
+      let totalTasks = 0, doneTasks = 0, totalMinutes = 0;
+
+      filtered.forEach(item => {
+        item.actions?.forEach(act => {
+          totalTasks++;
+          if (act.done) doneTasks++;
+          const parts = act.durationTime?.split(':') || [3, 0];
+          totalMinutes += (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+        });
+      });
+
+      const overallPct = totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
+      document.getElementById('ovTotalWorkHours').innerText = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+      document.getElementById('ovTasksDone').innerText = doneTasks;
+      document.getElementById('ovTasksRatio').innerText = `${doneTasks} / ${totalTasks} Completed`;
+      document.getElementById('ovDeliverables').innerText = filtered.length;
+      document.getElementById('ovScore').innerText = `${overallPct}%`;
+
+      const p1 = Math.max(10, Math.round(overallPct * 0.45));
+      const p5 = overallPct;
+      const yVal = val => Math.round(140 - (val / 100) * 110);
+      
+      document.getElementById('dynamicLineChartWrapper').innerHTML = `
+        <svg class="w-full h-full" viewBox="0 0 500 150" preserveAspectRatio="none">
+          <line x1="0" y1="20" x2="500" y2="20" stroke="#f1f5f9" /><line x1="0" y1="80" x2="500" y2="80" stroke="#f1f5f9" />
+          <path d="M 0,${yVal(p1)} L 500,${yVal(p5)} L 500,150 L 0,150 Z" fill="#8b5cf620" />
+          <path d="M 0,${yVal(p1)} L 500,${yVal(p5)}" fill="none" stroke="#6366f1" stroke-width="3" />
+          <circle cx="500" cy="${yVal(p5)}" r="5" fill="#4f46e5" />
+        </svg>
+        <div class="absolute right-0 bg-indigo-600 text-white text-[11px] font-black px-2 py-0.5 rounded-lg shadow" style="top: ${(yVal(p5)/150)*100}%;">${p5}%</div>
+      `;
+
+      document.getElementById('dynamicLineDatesRow').innerHTML = `<span>Sprint Start (${p1}%)</span><span class="text-indigo-600 font-extrabold">Current Sprint (${p5}%)</span>`;
+
+      document.getElementById('dynamicDonutSvgBox').innerHTML = `
+        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+          <path stroke="#e2e8f0" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path stroke="#6366f1" stroke-dasharray="${overallPct}, 100" stroke-width="4.2" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-center"><span class="text-base font-black text-gray-900">${overallPct}%</span><span class="text-[9px] text-gray-400 font-bold uppercase">Overall</span></div>
+      `;
+
+      document.getElementById('dynamicDeptLegendBox').innerHTML = Object.keys(DEPARTMENTS).map(k => {
+        const dTasks = data.filter(i => i.dept === k).flatMap(i => i.actions || []);
+        const dDone = dTasks.filter(a => a.done).length;
+        const dPct = dTasks.length ? Math.round((dDone / dTasks.length) * 100) : 0;
+        return `<div class="flex justify-between py-0.5"><span class="flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full" style="background:${DEPARTMENTS[k].fill}"></span><span>${k}</span></span><span class="font-bold">${dPct}%</span></div>`;
+      }).join('');
+    }
+
+    function toggleActionPlanDetail(taskId, actionIdx) {
+      document.getElementById(`act-detail-row-${taskId}-${actionIdx}`)?.classList.toggle('hidden');
+    }
+
+    function toggleFlagActionPlan(taskId, actionIdx) {
+      const data = getData();
+      const task = data.find(t => t.id === taskId);
+      if (!task || !task.actions[actionIdx]) return;
+      const act = task.actions[actionIdx];
+      act.isFlagged = !act.isFlagged;
+      if (act.isFlagged && confirm(`Kirim notifikasi WhatsApp ke ${act.assigner || 'Lead'} untuk task "${act.text}"?`)) {
+        window.open(`https://wa.me/?text=${encodeURIComponent('Halo, task ' + act.text + ' pada ' + task.title + ' butuh perhatian segera.')}`, '_blank');
+      }
+      saveData(data);
+      showToast(act.isFlagged ? "Task Flagged!" : "Flag Dihapus.");
+    }
+
+    function saveActionPlanDetail(taskId, actionIdx) {
+      const data = getData();
+      const task = data.find(t => t.id === taskId);
+      if (!task || !task.actions[actionIdx]) return;
+      task.actions[actionIdx].link = document.getElementById(`act-link-input-${taskId}-${actionIdx}`).value.trim();
+      task.actions[actionIdx].details = document.getElementById(`act-desc-input-${taskId}-${actionIdx}`).value.trim();
+      task.actions[actionIdx].pic = document.getElementById(`act-pic-input-${taskId}-${actionIdx}`).value;
+      task.actions[actionIdx].dueDate = document.getElementById(`act-date-input-${taskId}-${actionIdx}`).value.trim();
+      task.actions[actionIdx].durationTime = document.getElementById(`act-time-input-${taskId}-${actionIdx}`).value.trim();
+      saveData(data);
+      showToast("Detail berhasil disimpan!");
+    }
+
+    function toggleStep(taskId, actionIndex, isChecked) {
+      const data = getData();
+      const task = data.find(t => t.id === taskId);
+      if (task?.actions[actionIndex]) { task.actions[actionIndex].done = isChecked; saveData(data); }
+    }
+
+    function toggleCard(id) {
+      expandedIds.has(id) ? expandedIds.delete(id) : expandedIds.add(id);
+      renderAllViews();
+    }
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      ['capsules', 'gantt', 'dept-overview'].forEach(m => {
+        document.getElementById(`${m}View`)?.classList.toggle('hidden', m !== mode);
+      });
+      document.getElementById('deptFilterTabsRow')?.classList.toggle('hidden', mode === 'dept-overview');
+      if (mode === 'gantt') renderGantt(getData());
+      if (mode === 'dept-overview') renderDeptOverviewStats(document.getElementById('overviewDeptSelector')?.value || 'ALL');
+    }
+
+    function filterDept(dept) {
+      activeDeptFilter = dept;
+      document.querySelectorAll('.dept-filter-btn').forEach(btn => {
+        btn.className = btn.dataset.dept === dept ? "dept-filter-btn px-4 py-1.5 rounded-full bg-black text-white" : "dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200";
+      });
+      renderAllViews();
+    }
+
+    function applyUserSession() {
+      const u = USER_PROFILES[currentActiveUserKey] || USER_PROFILES.Budi;
+      document.getElementById('navAvatarImg').src = u.img;
+      document.getElementById('navUserName').innerText = u.name.split(' ')[0] + '.';
+      renderOnlineMembersList();
+    }
+
+    function copyWA() {
+      let msg = "*DAILY PROGRESS UPDATE*\n\n";
+      getData().forEach((p, idx) => {
+        const total = p.actions?.length || 0;
+        const done = p.actions?.filter(a => a.done).length || 0;
+        const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+        msg += `*${idx + 1}. [${p.dept}] ${p.title}* (${pct}%)\n`;
+      });
+      navigator.clipboard.writeText(msg).then(() => showToast("Standup disalin!"));
+    }
+
+    function showToast(text) {
+      const t = document.getElementById('toast');
+      t.innerText = text;
+      t.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2000);
+    }
+
+    function renderAllViews() {
+      renderCapsules(getData());
+      renderOnlineMembersList();
+      renderDeptOverviewStats(document.getElementById('overviewDeptSelector')?.value || 'ALL');
+    }
+
+    applyUserSession();
+    renderAllViews();
+  </script>
+</body>
+</html>
