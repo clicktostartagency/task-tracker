@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Operations & Progress Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --apple-spring: cubic-bezier(0.32, 0.72, 0, 1);
+      --apple-press: cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    body {
+      background-color: #f5f5f7;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      letter-spacing: -0.012em;
+      color: #1d1d1f;
+    }
+
+    /* macOS Window Glass Panel */
+    .apple-glass {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(32px) saturate(190%);
+      -webkit-backdrop-filter: blur(32px) saturate(190%);
+      border: 0.5px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
+    }
+
+    .apple-glass-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 0.5px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .apple-press {
+      transition: transform 0.16s var(--apple-press), opacity 0.16s ease;
+    }
+    .apple-press:active {
+      transform: scale(0.96);
+      opacity: 0.82;
+    }
+
+    /* Native Segmented Controller */
+    .apple-segmented-group {
+      display: inline-flex;
+      background: rgba(120, 120, 128, 0.12);
+      border-radius: 9999px;
+      padding: 2px;
+    }
+    .apple-segmented-btn {
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #86868b;
+      border-radius: 9999px;
+      transition: all 0.2s var(--apple-spring);
+    }
+    .apple-segmented-active {
+      background: #ffffff;
+      color: #1d1d1f !important;
+      font-weight: 600;
+      box-shadow: 0 1.5px 6px rgba(0, 0, 0, 0.1), 0 0.5px 1px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Native Capsule Cards */
+    .apple-capsule {
+      border-radius: 22px;
+      min-height: 104px;
+      transition: transform 0.25s var(--apple-spring), box-shadow 0.25s;
+    }
+    .apple-capsule:hover {
+      transform: translateY(-1.5px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .accordion-drawer {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.4s var(--apple-spring), opacity 0.25s;
+    }
+    .accordion-drawer.open {
+      max-height: 5000px;
+      opacity: 1;
+      margin-top: 10px;
+    }
+
+    .apple-checkbox {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid #d1d1d6;
+      border-radius: 50%;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s var(--apple-spring);
+      position: relative;
+    }
+    .apple-checkbox:checked {
+      background-color: #34c759;
+      border-color: #34c759;
+    }
+    .apple-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 2px;
+      width: 5px;
+      height: 9px;
+      border: solid white;
+      border-width: 0 1.8px 1.8px 0;
+      transform: rotate(45deg);
+    }
+
+    /* Gantt & Popovers */
+    .gantt-col-cell {
+      min-width: 44px;
+      max-width: 44px;
+      width: 44px;
+      text-align: center;
+      border-right: 0.5px solid rgba(0, 0, 0, 0.05);
+    }
+    .gantt-weekend { background-color: rgba(0, 0, 0, 0.015); }
+    .gantt-cell-container { position: relative; overflow: visible !important; }
+    .gantt-cell-container:hover { z-index: 99999 !important; }
+    
+    .gantt-popover {
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      width: 290px;
+      max-height: 280px;
+      overflow-y: auto;
+      transform: translateX(-50%) translateY(8px) scale(0.96);
+      transition: opacity 0.2s var(--apple-spring), transform 0.2s var(--apple-spring), visibility 0.2s;
+      z-index: 999999 !important;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.12);
+      border-radius: 18px;
+    }
+    .gantt-cell-container:hover .gantt-popover {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+    .apple-modal {
+      animation: appleSheetUp 0.35s var(--apple-spring) forwards;
+    }
+    @keyframes appleSheetUp {
+      from { opacity: 0; transform: scale(0.95) translateY(16px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen py-6 px-3 md:px-8 flex justify-center pb-28">
+
+  <div class="w-full max-w-7xl flex items-start gap-6">
+    
+    <!-- SIDEBAR MACOS -->
+    <aside id="mainSidebar" class="hidden md:flex flex-col apple-glass rounded-[28px] p-5 sticky top-6 w-60 max-h-[92vh]">
+      <!-- macOS Window Dots -->
+      <div class="flex items-center space-x-2 mb-6 px-1">
+        <span class="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]"></span>
+        <span class="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]"></span>
+        <span class="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]"></span>
+      </div>
+
+      <!-- Navigation List -->
+      <div class="space-y-1 mb-6 text-xs font-semibold">
+        <button onclick="setViewMode('capsules')" id="mBtn-capsules" class="w-full flex items-center space-x-3 px-3 py-2 rounded-2xl bg-black/5 text-[#1d1d1f] font-bold transition apple-press">
+          <span class="text-sm">📁</span><span>Projects</span>
+        </button>
+        <button onclick="setViewMode('gantt')" id="mBtn-gantt" class="w-full flex items-center space-x-3 px-3 py-2 rounded-2xl text-[#86868b] hover:bg-black/5 hover:text-[#1d1d1f] transition apple-press">
+          <span class="text-sm">📊</span><span>Timeline Gantt</span>
+        </button>
+        <button onclick="setViewMode('overview')" id="mBtn-overview" class="w-full flex items-center space-x-3 px-3 py-2 rounded-2xl text-[#86868b] hover:bg-black/5 hover:text-[#1d1d1f] transition apple-press">
+          <span class="text-sm">📈</span><span>Dept Overview</span>
+        </button>
+        <button onclick="openKpiScorecardModal()" class="w-full flex items-center space-x-3 px-3 py-2 rounded-2xl text-[#0071e3] hover:bg-blue-50/60 transition apple-press">
+          <span class="text-sm">🎯</span><span>Live KPI Sheet</span>
+        </button>
+      </div>
+
+      <!-- Team Workload List -->
+      <div class="pt-4 border-t border-black/5 text-xs flex-1 overflow-y-auto">
+        <span class="text-[10px] font-bold text-[#86868b] uppercase tracking-wider block mb-2 px-1">Team Weekly Hours</span>
+        <div id="sidebarUserList" class="space-y-1"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 w-full max-w-5xl flex flex-col">
+      <!-- HEADER -->
+      <header class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-black/5">
+        <div class="flex items-center space-x-3">
+          <h1 class="text-2xl font-bold tracking-tight text-[#1d1d1f]">Agency Operations</h1>
+          <button onclick="openCommandPalette()" class="apple-glass-card hover:bg-white px-3 py-1.5 rounded-full text-xs font-semibold text-[#86868b] hover:text-[#1d1d1f] transition apple-press flex items-center space-x-1">
+            <span>Search</span> <kbd class="font-mono text-[9px] ml-1 bg-black/5 px-1.5 py-0.5 rounded">⌘K</kbd>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openGeminiModal()" class="flex items-center space-x-1.5 bg-[#0071e3] hover:bg-[#0077ed] text-white px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-xs transition apple-press">
+            <span class="text-xs">✦</span>
+            <span>AI Copilot</span>
+          </button>
+
+          <div id="myWeeklyHoursBadge" class="apple-glass-card px-3 py-1.5 rounded-full text-xs font-bold text-[#0071e3]">
+            0.0h this week
+          </div>
+
+          <button onclick="toggleAudioMute()" id="btnAudioToggle" class="p-2 apple-glass-card hover:bg-white rounded-full text-xs apple-press">🔊</button>
+          <button onclick="copyWAStandup()" class="apple-glass-card hover:bg-white px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#1d1d1f] transition apple-press">Share WA</button>
+          <button onclick="openNewTaskModal()" class="bg-[#1d1d1f] hover:bg-black text-white px-4 py-1.5 rounded-full text-xs font-semibold shadow-xs transition apple-press">+ Task</button>
+          
+          <button onclick="openUserProfileModal(AppState.activeUserKey)" class="flex items-center space-x-2 apple-glass-card hover:bg-white px-3 py-1 rounded-full apple-press">
+            <span id="navAvatarSpan"></span>
+            <span id="navUserName" class="text-xs font-bold text-[#1d1d1f]"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- UNIFIED SEGMENTED CONTROLS -->
+      <section class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div id="deptFilterRow" class="apple-segmented-group">
+          <button onclick="setDeptFilter('ALL')" class="df-btn apple-segmented-btn apple-segmented-active" data-val="ALL">All Dept</button>
+          <button onclick="setDeptFilter('DM')" class="df-btn apple-segmented-btn" data-val="DM">DM</button>
+          <button onclick="setDeptFilter('Production')" class="df-btn apple-segmented-btn" data-val="Production">Production</button>
+          <button onclick="setDeptFilter('HRGA')" class="df-btn apple-segmented-btn" data-val="HRGA">HRGA</button>
+          <button onclick="setDeptFilter('ABD')" class="df-btn apple-segmented-btn" data-val="ABD">ABD</button>
+        </div>
+
+        <div id="statusFilterRow" class="apple-segmented-group">
+          <button onclick="setStatusFilter('ALL')" class="sf-btn apple-segmented-btn apple-segmented-active" data-val="ALL">Semua</button>
+          <button onclick="setStatusFilter('ACTIVE')" class="sf-btn apple-segmented-btn" data-val="ACTIVE">In-Progress</button>
+          <button onclick="setStatusFilter('COMPLETED')" class="sf-btn apple-segmented-btn" data-val="COMPLETED">Selesai</button>
+          <button onclick="setStatusFilter('BLOCKED')" class="sf-btn apple-segmented-btn text-[#ff3b30]" data-val="BLOCKED">Blocked</button>
+        </div>
+      </section>
+
+      <!-- VIEW 1: CAPSULES VIEW -->
+      <section id="capsulesView" class="space-y-4"></section>
+
+      <!-- VIEW 2: GANTT CHART -->
+      <section id="ganttView" class="hidden apple-glass rounded-[32px] p-6 pb-32">
+        <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-black/5 gap-3">
+          <div>
+            <h3 class="font-bold text-base text-[#1d1d1f]">Work Pace &amp; Timeline</h3>
+            <p class="text-xs text-[#86868b] mt-0.5">Arahkan kursor pada angka workload untuk rincian instan subtasks &amp; PIC</p>
+          </div>
+
+          <div class="flex items-center space-x-1.5 apple-segmented-group p-1">
+            <button onclick="changeGanttMonth(-1)" class="w-7 h-7 rounded-full bg-white flex items-center justify-center font-bold text-[#1d1d1f] shadow-xs apple-press">&lsaquo;</button>
+            <div id="ganttCurrentMonthLabel" class="text-xs font-bold text-[#1d1d1f] px-3 min-w-[120px] text-center">October 2026</div>
+            <button onclick="changeGanttMonth(1)" class="w-7 h-7 rounded-full bg-white flex items-center justify-center font-bold text-[#1d1d1f] shadow-xs apple-press">&rsaquo;</button>
+          </div>
+
+          <div id="ganttCapacityPills" class="flex flex-wrap items-center gap-1.5 text-xs"></div>
+        </div>
+
+        <div class="overflow-x-auto w-full pt-2" style="overflow-y: visible !important;">
+          <div id="ganttContent" class="min-w-max pb-8" style="overflow: visible !important;"></div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: DEPT OVERVIEW -->
+      <section id="overviewView" class="hidden space-y-6">
+        
+        <!-- Header Overview Card -->
+        <div class="apple-glass rounded-[28px] p-5 flex flex-wrap justify-between items-center gap-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-2xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center font-bold text-base">
+              📊
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-[#1d1d1f] tracking-tight">Department Performance Tracker</h2>
+              <p class="text-xs text-[#86868b]">Monitoring velocity, kapasitas tim, dan rekap pengerjaan sprint.</p>
+            </div>
+          </div>
+          <select id="ovDeptSelector" onchange="renderOverview()" class="apple-glass-card px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#1d1d1f] outline-none">
+            <option value="ALL">Semua Departemen</option>
+            <option value="DM">Digital Marketing (DM)</option>
+            <option value="Production">Creative Production</option>
+            <option value="HRGA">HRGA</option>
+            <option value="ABD">ABD</option>
+          </select>
+        </div>
+
+        <!-- 4 Metrics Overview -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="apple-glass-card rounded-[22px] p-5">
+            <span class="text-[10px] text-[#86868b] font-bold uppercase tracking-wider block">Total Subtasks</span>
+            <div id="ovTotal" class="text-3xl font-bold text-[#1d1d1f] my-1">0</div>
+            <span class="text-[11px] text-[#86868b]">Deliverables aktif</span>
+          </div>
+          <div class="apple-glass-card rounded-[22px] p-5">
+            <span class="text-[10px] text-[#34c759] font-bold uppercase tracking-wider block">Completed</span>
+            <div id="ovDone" class="text-3xl font-bold text-[#34c759] my-1">0</div>
+            <span id="ovDoneSubtext" class="text-[11px] text-[#34c759] font-medium">0% dari target</span>
+          </div>
+          <div class="apple-glass-card rounded-[22px] p-5">
+            <span class="text-[10px] text-[#ff3b30] font-bold uppercase tracking-wider block">Active Blockers</span>
+            <div id="ovBlockers" class="text-3xl font-bold text-[#ff3b30] my-1">0</div>
+            <span class="text-[11px] text-[#ff3b30] font-medium">Perlu tindakan</span>
+          </div>
+          <div class="apple-glass-card rounded-[22px] p-5">
+            <span class="text-[10px] text-[#0071e3] font-bold uppercase tracking-wider block">Completion Velocity</span>
+            <div id="ovScore" class="text-3xl font-bold text-[#0071e3] my-1">0%</div>
+            <div class="w-full bg-black/5 rounded-full h-1 mt-2 overflow-hidden">
+              <div id="ovScoreBar" class="bg-[#0071e3] h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Talent Dossier -->
+        <div class="apple-glass rounded-[28px] p-6 space-y-5">
+          <div class="flex flex-wrap justify-between items-center pb-3 border-b border-black/5 gap-3">
+            <div>
+              <h3 class="font-bold text-sm text-[#1d1d1f]">Weekly Talent Workload &amp; Task Dossier</h3>
+              <p class="text-[11px] text-[#86868b]">Rekap jam kerja terverifikasi dan item pengerjaan sejak awal minggu berjalan.</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-[#86868b] font-medium">Pilih Talent:</span>
+              <select id="ovTalentSelect" onchange="renderTalentWeeklyDossier(this.value)" class="apple-glass-card px-3 py-1.5 rounded-full text-xs font-semibold text-[#1d1d1f] outline-none"></select>
+            </div>
+          </div>
+
+          <div id="talentDossierSummaryBar" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center"></div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-2xl bg-black/[0.02] border border-black/5 space-y-3">
+              <div class="flex justify-between items-center pb-2 border-b border-black/5">
+                <span class="text-xs font-bold text-[#1d1d1f]">Tugas Selesai Minggu Ini</span>
+                <span id="talentDoneCountBadge" class="text-[10px] font-bold bg-[#34c759]/10 text-[#34c759] px-2 py-0.5 rounded-full">0 Task</span>
+              </div>
+              <div id="talentDoneTasksList" class="space-y-2 max-h-56 overflow-y-auto pr-1 text-xs"></div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-black/[0.02] border border-black/5 space-y-3">
+              <div class="flex justify-between items-center pb-2 border-b border-black/5">
+                <span class="text-xs font-bold text-[#1d1d1f]">Tugas Sedang Berjalan (In-Progress)</span>
+                <span id="talentProgressCountBadge" class="text-[10px] font-bold bg-[#0071e3]/10 text-[#0071e3] px-2 py-0.5 rounded-full">0 Task</span>
+              </div>
+              <div id="talentProgressTasksList" class="space-y-2 max-h-56 overflow-y-auto pr-1 text-xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Apple Activity Rings & Trophies -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="apple-glass rounded-[28px] p-6 flex flex-col items-center justify-between text-center">
+            <span class="text-[10px] font-bold text-[#86868b] uppercase tracking-wider block mb-1">Sprint Activity Rings</span>
+
+            <div class="relative w-44 h-44 flex items-center justify-center my-2">
+              <svg class="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="68" stroke="rgba(255, 59, 48, 0.12)" stroke-width="9" fill="none" />
+                <circle id="ringExecution" cx="80" cy="80" r="68" stroke="#ff3b30" stroke-width="9" stroke-linecap="round" stroke-dasharray="427.26" stroke-dashoffset="427.26" fill="none" class="transition-all duration-1000" />
+                <circle cx="80" cy="80" r="52" stroke="rgba(52, 199, 89, 0.12)" stroke-width="9" fill="none" />
+                <circle id="ringQuality" cx="80" cy="80" r="52" stroke="#34c759" stroke-width="9" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73" fill="none" class="transition-all duration-1000" />
+                <circle cx="80" cy="80" r="36" stroke="rgba(0, 113, 227, 0.12)" stroke-width="9" fill="none" />
+                <circle id="ringHours" cx="80" cy="80" r="36" stroke="#0071e3" stroke-width="9" stroke-linecap="round" stroke-dasharray="226.19" stroke-dashoffset="226.19" fill="none" class="transition-all duration-1000" />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span id="ringOverallScoreText" class="text-2xl font-bold text-[#1d1d1f] leading-none">0%</span>
+                <span class="text-[9px] font-semibold text-[#86868b] uppercase mt-0.5 tracking-wider">Pace</span>
+              </div>
+            </div>
+
+            <div class="w-full grid grid-cols-3 gap-2 pt-2 border-t border-black/5 text-[10px] font-semibold text-[#86868b]">
+              <div class="flex items-center space-x-1 justify-center"><span class="w-2 h-2 rounded-full bg-[#ff3b30]"></span><span id="legExec">Exec 0%</span></div>
+              <div class="flex items-center space-x-1 justify-center"><span class="w-2 h-2 rounded-full bg-[#34c759]"></span><span id="legQual">OTD 0%</span></div>
+              <div class="flex items-center space-x-1 justify-center"><span class="w-2 h-2 rounded-full bg-[#0071e3]"></span><span id="legHours">Hours 0%</span></div>
+            </div>
+          </div>
+
+          <div class="apple-glass rounded-[28px] p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-[10px] font-bold text-[#86868b] uppercase tracking-wider">Trophies &amp; Awards</span>
+              <span id="unlockedBadgesText" class="text-[10px] font-semibold text-[#ff9500]">0/3 Unlocked</span>
+            </div>
+
+            <div class="space-y-2.5">
+              <div id="badgeSprintFinisher" class="p-3 rounded-2xl border transition-all flex items-center space-x-3 bg-black/[0.02] border-black/5 opacity-40">
+                <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-lg flex-shrink-0">🏆</div>
+                <div class="flex-1 min-w-0">
+                  <span class="font-bold text-xs text-[#1d1d1f] block truncate">Sprint Crusher</span>
+                  <span class="text-[10px] text-[#86868b] block truncate">&ge; 70% deliverable sprint tuntas</span>
+                </div>
+              </div>
+
+              <div id="badgeZeroBlocker" class="p-3 rounded-2xl border transition-all flex items-center space-x-3 bg-black/[0.02] border-black/5 opacity-40">
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-lg flex-shrink-0">🛡️</div>
+                <div class="flex-1 min-w-0">
+                  <span class="font-bold text-xs text-[#1d1d1f] block truncate">Zero-Blocker Shield</span>
+                  <span class="text-[10px] text-[#86868b] block truncate">0 blocker operasional aktif</span>
+                </div>
+              </div>
+
+              <div id="badgeDeepWork" class="p-3 rounded-2xl border transition-all flex items-center space-x-3 bg-black/[0.02] border-black/5 opacity-40">
+                <div class="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center text-lg flex-shrink-0">⚡</div>
+                <div class="flex-1 min-w-0">
+                  <span class="font-bold text-xs text-[#1d1d1f] block truncate">Deep Work Master</span>
+                  <span class="text-[10px] text-[#86868b] block truncate">&ge; 20 jam kerja tervalidasi</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="apple-glass rounded-[28px] p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-[10px] font-bold text-[#86868b] uppercase tracking-wider">Top Performers</span>
+              <span class="text-[10px] font-semibold text-[#86868b]">This Week</span>
+            </div>
+            <div id="mvpLeaderboardList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+        <!-- Dept Cards & Capacity Breakdown -->
+        <div class="apple-glass rounded-[28px] p-6 space-y-4">
+          <div class="flex justify-between items-center pb-2 border-b border-black/5">
+            <h3 class="font-bold text-xs text-[#1d1d1f] uppercase tracking-wider">Division Health &amp; Execution Pace</h3>
+            <span class="text-xs text-[#86868b]">Status Sprint</span>
+          </div>
+          <div id="ovDeptCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="apple-glass rounded-[28px] p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-black/5 pb-2">
+              <h3 class="font-bold text-xs text-[#1d1d1f] uppercase tracking-wider">Workload Distribution</h3>
+              <span class="text-[10px] font-semibold text-[#86868b]">&le; 6 Hari/Sprint</span>
+            </div>
+            <div id="ovTeamWorkloadList" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
+          </div>
+
+          <div class="apple-glass rounded-[28px] p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-black/5 pb-2">
+              <h3 class="font-bold text-xs text-[#1d1d1f] uppercase tracking-wider">Critical Blockers</h3>
+              <span id="ovBlockerCountBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/5 text-[#86868b]">0 Isu</span>
+            </div>
+            <div id="ovBlockersList" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- APPLE-STYLE GEMINI COPILOT MODAL -->
+  <div id="geminiAiModal" class="fixed inset-0 bg-black/25 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-[32px] w-full max-w-xl p-6 shadow-2xl border border-white/60 flex flex-col max-h-[88vh] apple-modal">
+      <div class="flex justify-between items-center pb-3 border-b border-black/5">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-[#0071e3] flex items-center justify-center text-white font-bold text-sm">
+            ✦
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-[#1d1d1f] leading-tight">Gemini Copilot</h3>
+            <span class="text-[10px] text-[#86868b]">Operations &amp; Task Assistant</span>
+          </div>
+        </div>
+        <button onclick="closeGeminiModal()" class="w-7 h-7 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center text-sm font-bold text-[#86868b] apple-press">&times;</button>
+      </div>
+
+      <div class="flex items-center space-x-2 py-3 border-b border-black/5 overflow-x-auto text-[11px] font-semibold">
+        <button onclick="setAiPromptPreset('breakdown')" class="px-3 py-1.5 rounded-full bg-black/5 hover:bg-black/10 text-[#1d1d1f] transition apple-press whitespace-nowrap">
+          ⚡ Auto-Breakdown Project
+        </button>
+        <button onclick="setAiPromptPreset('blocker')" class="px-3 py-1.5 rounded-full bg-black/5 hover:bg-black/10 text-[#ff3b30] transition apple-press whitespace-nowrap">
+          🚨 Solusi Blocker
+        </button>
+        <button onclick="setAiPromptPreset('angles')" class="px-3 py-1.5 rounded-full bg-black/5 hover:bg-black/10 text-[#0071e3] transition apple-press whitespace-nowrap">
+          🎯 Ide Hook Iklan
+        </button>
+      </div>
+
+      <div id="geminiResponseBox" class="flex-1 overflow-y-auto py-3 space-y-3 text-xs leading-relaxed text-[#1d1d1f]">
+        <div class="p-4 rounded-2xl bg-black/[0.02] border border-black/5 text-[#86868b] italic text-[11px]">
+          Tuliskan brief proyek atau klik salah satu tombol preset di atas untuk mulai menganalisis.
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-black/5 space-y-2">
+        <div class="flex items-center space-x-2">
+          <input type="text" id="geminiUserInput" placeholder="Instruksi untuk Gemini..." onkeydown="if(event.key === 'Enter') submitGeminiQuery()" class="flex-1 p-3 bg-black/5 rounded-2xl text-xs font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-[#0071e3]">
+          <button id="btnSendGemini" onclick="submitGeminiQuery()" class="px-4 py-3 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-2xl font-bold text-xs transition apple-press">
+            Kirim ↵
+          </button>
+        </div>
+        <div class="flex justify-between items-center text-[10px] text-[#86868b] px-1">
+          <span>Gemini 1.5 Flash</span>
+          <button onclick="configureGeminiKey()" class="text-[#0071e3] hover:underline font-bold">API Key Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLE-STYLE COMMAND PALETTE (CMD+K) -->
+  <div id="cmdPaletteModal" class="fixed inset-0 bg-black/25 backdrop-blur-md hidden flex items-start justify-center pt-24 p-4 z-50">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-[28px] w-full max-w-lg shadow-2xl border border-white/60 overflow-hidden apple-modal">
+      <div class="p-3.5 border-b border-black/5 flex items-center space-x-2.5">
+        <span class="text-[#86868b] text-sm">🔍</span>
+        <input type="text" id="cmdInput" placeholder="Cari task, ganti tampilan, atau panggil Copilot..." oninput="renderCommandResults(this.value)" class="w-full text-xs font-semibold outline-none bg-transparent text-[#1d1d1f]">
+        <kbd class="text-[9px] bg-black/5 px-1.5 py-0.5 rounded text-[#86868b]">ESC</kbd>
+      </div>
+      <div id="cmdResults" class="max-h-72 overflow-y-auto p-2 space-y-1 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- APPLE MODAL: TASK BARU -->
+  <div id="newTaskModal" class="fixed inset-0 bg-black/25 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[32px] w-full max-w-md p-6 shadow-2xl border border-black/5 space-y-4 apple-modal">
+      <div class="flex justify-between items-center border-b border-black/5 pb-2">
+        <h3 class="font-bold text-sm text-[#1d1d1f]">Task Baru</h3>
+        <button onclick="closeNewTaskModal()" class="w-7 h-7 rounded-full bg-black/5 flex items-center justify-center text-sm font-bold text-[#86868b] apple-press">&times;</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-[#86868b] block mb-1">Departemen</label>
+          <select id="npDept" class="w-full p-2.5 bg-black/5 rounded-xl font-semibold outline-none text-[#1d1d1f]">
+            <option value="DM">Digital Marketing (DM)</option>
+            <option value="Production">Production</option>
+            <option value="HRGA">HRGA</option>
+            <option value="ABD">ABD</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold text-[#86868b] block mb-1">Project Name</label>
+          <input type="text" id="npTitle" placeholder="Misal: Launching Kampanye Q4" class="w-full p-2.5 bg-black/5 rounded-xl font-semibold outline-none text-[#1d1d1f]">
+        </div>
+        <div>
+          <label class="font-bold text-[#86868b] block mb-1">Lead PIC</label>
+          <select id="npPic" class="w-full p-2.5 bg-black/5 rounded-xl font-semibold outline-none text-[#1d1d1f]"></select>
+        </div>
+      </div>
+      <div class="flex space-x-2 pt-2">
+        <button onclick="closeNewTaskModal()" class="w-1/2 py-2 bg-black/5 text-[#1d1d1f] font-bold rounded-xl text-xs apple-press">Batal</button>
+        <button onclick="submitNewTask()" class="w-1/2 py-2 bg-[#0071e3] text-white font-bold rounded-xl text-xs apple-press">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLE MODAL: USER PROFILE & SCORECARD -->
+  <div id="userModal" class="fixed inset-0 bg-black/25 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[32px] w-full max-w-3xl p-6 shadow-2xl border border-black/5 max-h-[90vh] overflow-y-auto space-y-4 apple-modal">
+      <div class="flex justify-between items-center pb-3 border-b border-black/5">
+        <div class="flex items-center space-x-3">
+          <div id="uModalAvatar"></div>
+          <div>
+            <h3 id="uModalName" class="font-bold text-base text-[#1d1d1f] leading-tight"></h3>
+            <span id="uModalRole" class="text-xs text-[#0071e3] font-semibold"></span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span id="uModalWeeklyHoursPill" class="px-3 py-1 bg-[#34c759]/10 text-[#34c759] font-bold text-xs rounded-full">0h this week</span>
+          <button onclick="promptUserPinLogin()" class="px-3 py-1 bg-black/5 text-[#0071e3] font-bold text-xs rounded-full apple-press">Switch PIN</button>
+          <button onclick="closeUserModal()" class="w-7 h-7 rounded-full bg-black/5 flex items-center justify-center text-sm font-bold text-[#86868b] apple-press">&times;</button>
+        </div>
+      </div>
+      
+      <div class="border-b border-black/5 pb-3">
+        <h4 class="text-xs font-bold text-[#86868b] uppercase tracking-wider mb-2">Live KPI (<span id="kpiRoleBadge"></span>)</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="text-[#86868b] border-b border-black/5 text-[10px] uppercase">
+                <th class="py-2">Indikator</th><th class="py-2">Bobot</th><th class="py-2">Target</th><th class="py-2">Actual</th><th class="py-2">Capaian</th>
+              </tr>
+            </thead>
+            <tbody id="kpiTableBody" class="divide-y divide-black/5"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-bold text-[#86868b] uppercase tracking-wider mb-2">Tugas yang Ditugaskan</h4>
+        <div id="uSubtaskList" class="space-y-1.5 max-h-48 overflow-y-auto text-xs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-[#1d1d1f]/90 backdrop-blur-md text-white text-xs font-semibold px-4 py-2 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50"></div>
+
+  <script>
+    const KPI_SHEET_URL = "https://docs.google.com/spreadsheets/d/1J7qOn6NbqfFPd2WaWNUyj1HET6ykuF9E_STu7I8cTpw";
+    const TEAM_DB_URL = "https://docs.google.com/spreadsheets/d/1Qv23qUxzUOiqiGiSeHiGnodBfTUkEC0HIUI38LHujbg";
+
+    const USER_ROLE_SHEET_MAP = {
+      Mike: "PROJECT MANAGER", Selin: "PROJECT MANAGER", Anggun: "HRGA", Razaan: "DM", Nicho: "DM",
+      Jireh: "CREATIVE DIRECTOR", Arif: "GRAPHIC DESIGN", Giza: "VIDEO EDITOR", Dzaky: "FINANCE"
+    };
+
+    let teamNicknames = ["Mike", "Selin", "Jireh", "Anggun", "Razaan", "Nicho", "Arif", "Giza", "Dzaky"];
+
+    // Apple Tone Palettes
+    const DEPARTMENTS = {
+      DM: { tint: '#ffe9ec', fill: '#ff2d55', text: '#5c0017' },
+      Production: { tint: '#e5f8f8', fill: '#00c7be', text: '#003e3b' },
+      HRGA: { tint: '#efedff', fill: '#5856d6', text: '#1c1b54' },
+      ABD: { tint: '#e5f2ff', fill: '#0071e3', text: '#002f6c' }
+    };
+
+    const initialTasks = [
+      {
+        id: "tsk-1", dept: "ABD", title: "Cherry Oaks", pic: "Mike", launchDate: "2026-09-28", handoverSla: "2026-10-20",
+        assets: { drive: "https://drive.google.com", figma: "https://figma.com", ads: "" },
+        feedbackLogs: [{ text: "Wireframe layout disetujui, naikkan kontras tombol.", sentiment: "Positive", date: "15 Oct" }],
+        approval: { copy: true, visual: true, tech: false },
+        actions: [
+          { text: "Design wireframe", pic: "Arif", dueDate: "2026-10-09", duration: 3, done: true, isFlagged: false, revisions: 1, running: false, link: "https://figma.com", workSessions: [{ start: 1791850000000, end: 1791864400000, durationSeconds: 14400 }] },
+          { text: "Development & CAPI", pic: "Razaan", dueDate: "2026-10-15", duration: 4, done: true, isFlagged: false, revisions: 0, running: false, link: "", workSessions: [{ start: 1791850000000, end: 1791857200000, durationSeconds: 7200 }] },
+          { text: "QA & Client handover", pic: "Selin", dueDate: "2026-10-20", duration: 2, done: false, isFlagged: true, blocker: "Menunggu sign-off dokumen", revisions: 3, running: false, link: "", workSessions: [{ start: 1791850000000, end: 1791851800000, durationSeconds: 1800 }] }
+        ]
+      },
+      {
+        id: "tsk-2", dept: "DM", title: "Social Media Campaigns", pic: "Razaan", launchDate: "2026-10-10", handoverSla: "2026-10-22",
+        assets: { drive: "", figma: "", ads: "https://adsmanager.facebook.com" },
+        feedbackLogs: [{ text: "Copywriting disetujui.", sentiment: "Positive", date: "16 Oct" }],
+        approval: { copy: true, visual: false, tech: false },
+        actions: [
+          { text: "Meta CTWA ads setup", pic: "Nicho", dueDate: "2026-10-08", duration: 2, done: true, isFlagged: false, revisions: 0, running: false, link: "", workSessions: [{ start: 1791850000000, end: 1791855600000, durationSeconds: 5600 }] },
+          { text: "Budget scaling analysis", pic: "Mike", dueDate: "2026-10-28", duration: 3, done: false, isFlagged: false, revisions: 1, running: false, link: "", workSessions: [{ start: 1791850000000, end: 1791853600000, durationSeconds: 3600 }] }
+        ]
+      }
+    ];
+
+    let ganttTargetDate = new Date(2026, 9, 1);
+
+    let AppState = {
+      activeUserKey: "Mike",
+      deptFilter: "ALL",
+      statusFilter: "ALL",
+      viewMode: "capsules",
+      expandedCardIds: new Set(["tsk-1"]),
+      tasks: JSON.parse(localStorage.getItem('agency_apple_ui_v2')) || initialTasks
+    };
+
+    function commitState() {
+      localStorage.setItem('agency_apple_ui_v2', JSON.stringify(AppState.tasks));
+      renderActiveView();
+    }
+
+    // --- GEMINI COPILOT ---
+    let GEMINI_API_KEY = localStorage.getItem('agency_gemini_api_key') || '';
+
+    function configureGeminiKey() {
+      const key = prompt("Masukkan Google Gemini API Key Anda:", GEMINI_API_KEY);
+      if (key !== null) {
+        GEMINI_API_KEY = key.trim();
+        localStorage.setItem('agency_gemini_api_key', GEMINI_API_KEY);
+        showToast("Gemini API Key tersimpan.");
+      }
+    }
+
+    function openGeminiModal() {
+      playSound('tick');
+      document.getElementById('geminiAiModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('geminiUserInput').focus(), 50);
+    }
+
+    function closeGeminiModal() {
+      playSound('tick');
+      document.getElementById('geminiAiModal').classList.add('hidden');
+    }
+
+    function setAiPromptPreset(type) {
+      const input = document.getElementById('geminiUserInput');
+      if (type === 'breakdown') {
+        input.value = "Tolong breakdown proyek: 'Scale Campaign Meta Ads & UGC Video' menjadi 4 subtask teknis lengkap dengan PIC dan durasi estimasi.";
+      } else if (type === 'blocker') {
+        input.value = "Berikan solusi teknis untuk blocker: Akun Meta Ads terkena pembatasan payment gateway dan event CAPI Purchase belum ter-verifikasi.";
+      } else if (type === 'angles') {
+        input.value = "Buatkan 3 angle copywriting Direct-to-Chat (CTWA) untuk brand fashion pria dengan fokus CTA ke WhatsApp CS.";
+      }
+      input.focus();
+    }
+
+    async function submitGeminiQuery() {
+      const input = document.getElementById('geminiUserInput');
+      const query = input.value.trim();
+      if (!query) return;
+
+      if (!GEMINI_API_KEY) {
+        configureGeminiKey();
+        if (!GEMINI_API_KEY) return alert("Gemini API Key dibutuhkan.");
+      }
+
+      const box = document.getElementById('geminiResponseBox');
+      const btn = document.getElementById('btnSendGemini');
+
+      box.innerHTML += `
+        <div class="flex justify-end">
+          <div class="max-w-[85%] p-3 bg-[#0071e3] text-white rounded-2xl rounded-tr-none text-xs font-medium">
+            ${query}
+          </div>
+        </div>
+      `;
+
+      input.value = '';
+      btn.disabled = true;
+      btn.innerText = "Thinking...";
+      box.scrollTop = box.scrollHeight;
+
+      const loadingId = 'loading-' + Date.now();
+      box.innerHTML += `
+        <div id="${loadingId}" class="flex justify-start">
+          <div class="p-3 bg-black/5 text-[#86868b] rounded-2xl rounded-tl-none text-xs italic">
+            ✦ Gemini sedang menganalisis alur kerja...
+          </div>
+        </div>
+      `;
+      box.scrollTop = box.scrollHeight;
+
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Anda adalah Operations AI Consultant untuk Digital Marketing & Creative Agency. Berikan respon yang sangat ringkas, terstruktur (bullet points), actionable, dan profesional dalam Bahasa Indonesia.\n\nPermintaan: ${query}`
+              }]
+            }]
+          })
+        });
+
+        const data = await response.json();
+        document.getElementById(loadingId)?.remove();
+
+        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+          let aiText = data.candidates[0].content.parts[0].text;
+          aiText = aiText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+
+          box.innerHTML += `
+            <div class="flex justify-start">
+              <div class="max-w-[90%] p-3.5 bg-black/[0.03] border border-black/5 text-[#1d1d1f] rounded-2xl rounded-tl-none text-xs leading-relaxed">
+                ${aiText}
+              </div>
+            </div>
+          `;
+          playSound('done');
+        } else {
+          throw new Error(data.error?.message || "Format respon tidak sesuai");
+        }
+      } catch (err) {
+        document.getElementById(loadingId)?.remove();
+        box.innerHTML += `
+          <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs">
+            Gagal memproses permintaan: ${err.message}.
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Kirim ↵";
+        box.scrollTop = box.scrollHeight;
+      }
+    }
+
+    // --- GANTT CALENDAR ENGINE ---
+    function changeGanttMonth(delta) {
+      ganttTargetDate.setMonth(ganttTargetDate.getMonth() + delta);
+      playSound('tick');
+      renderGantt();
+    }
+
+    function getDaysInSelectedMonth(year, month) {
+      const days = [];
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+      for (let d = 1; d <= totalDays; d++) {
+        const cur = new Date(year, month, d);
+        const dayIdx = cur.getDay();
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        days.push({
+          dateNum: String(d).padStart(2, '0'),
+          dayName: dayNames[dayIdx],
+          isWeekend: (dayIdx === 0 || dayIdx === 6),
+          dateStr
+        });
+      }
+      return days;
+    }
+
+    function renderGantt() {
+      const container = document.getElementById('ganttContent');
+      const pillBox = document.getElementById('ganttCapacityPills');
+      const monthLabel = document.getElementById('ganttCurrentMonthLabel');
+
+      const year = ganttTargetDate.getFullYear();
+      const month = ganttTargetDate.getMonth();
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      monthLabel.innerText = `${monthNames[month]} ${year}`;
+
+      const load = {};
+      teamNicknames.forEach(n => load[n] = 0);
+      AppState.tasks.forEach(t => t.actions.forEach(a => { if (!a.done) load[a.pic] = (load[a.pic] || 0) + (a.duration || 2); }));
+
+      pillBox.innerHTML = Object.keys(load).filter(n => load[n] > 0).map(n => `
+        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${load[n] >= 7 ? 'bg-[#ff3b30]/10 text-[#ff3b30]' : 'bg-[#34c759]/10 text-[#34c759]'}">
+          ${n}: ${load[n]}d ${load[n] >= 7 ? '⚠️' : ''}
+        </span>
+      `).join('');
+
+      const daysInMonth = getDaysInSelectedMonth(year, month);
+      let filteredTasks = AppState.tasks;
+      if (AppState.deptFilter !== 'ALL') filteredTasks = filteredTasks.filter(t => t.dept === AppState.deptFilter);
+
+      let html = `<div class="text-xs">
+        <div class="flex border-b border-black/5 pb-2.5 font-bold text-[#86868b]">
+          <div class="w-60 min-w-[240px] pl-3 sticky left-0 bg-[#fbfbfd] z-20">PROJECT</div>
+          <div class="flex">
+            ${daysInMonth.map(d => `
+              <div class="gantt-col-cell ${d.isWeekend ? 'gantt-weekend' : ''}">
+                <span class="block text-[9px] text-[#86868b] font-medium">${d.dayName}</span>
+                <span class="font-bold text-[#1d1d1f] text-[11px]">${d.dateNum}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+
+      filteredTasks.forEach(t => {
+        const totalActs = t.actions.length;
+        const doneActs = t.actions.filter(a => a.done).length;
+        const pct = totalActs ? Math.round((doneActs / totalActs) * 100) : 0;
+
+        html += `
+          <div class="flex items-center py-3.5 border-b border-black/5 hover:bg-black/[0.015] transition-colors">
+            <div class="w-60 min-w-[240px] pl-3 pr-2 sticky left-0 bg-[#fbfbfd] z-20">
+              <span class="font-bold text-[#1d1d1f] block truncate text-xs">${t.title}</span>
+              <span class="text-[10px] text-[#86868b] font-medium">[${t.dept}] • ${doneActs}/${totalActs} Selesai</span>
+            </div>
+
+            <div class="flex items-center">
+              ${daysInMonth.map(d => {
+                const matchingActions = t.actions.filter(a => a.dueDate === d.dateStr);
+                const hasTask = matchingActions.length > 0;
+                const totalHours = matchingActions.reduce((sum, a) => sum + (a.duration || 2), 0);
+
+                return `
+                  <div class="gantt-col-cell gantt-cell-container py-1 ${d.isWeekend ? 'gantt-weekend' : ''}">
+                    <span class="inline-block px-1.5 py-0.5 rounded-lg font-bold text-[10px] transition-transform ${hasTask ? 'bg-[#0071e3]/10 text-[#0071e3] cursor-pointer hover:scale-105' : 'text-[#86868b]/30'}">
+                      ${hasTask ? `${totalHours}h` : '·'}
+                    </span>
+
+                    ${hasTask ? `
+                      <div class="gantt-popover bg-[#1d1d1f]/95 backdrop-blur-xl text-white p-4 text-left border border-white/10">
+                        <div class="flex items-center justify-between pb-2 border-b border-white/10 mb-2">
+                          <span class="text-[10px] font-bold uppercase text-[#34c759]">${t.dept} • ${d.dateNum} ${monthNames[month].slice(0,3)}</span>
+                          <span class="text-[10px] font-mono bg-white/15 px-2 py-0.5 rounded-full text-white font-bold">${totalHours}h Load</span>
+                        </div>
+                        
+                        <div class="font-bold text-xs text-white mb-0.5 truncate">${t.title}</div>
+                        <div class="text-[10px] text-[#86868b] mb-2.5">Progres: <b class="text-white">${pct}%</b> (${doneActs}/${totalActs})</div>
+
+                        <div class="text-[9px] font-bold uppercase tracking-wider text-[#86868b] mb-1">Subtasks:</div>
+                        <div class="space-y-1">
+                          ${matchingActions.map(act => `
+                            <div class="p-1.5 rounded-lg ${act.done ? 'bg-white/5 line-through text-[#86868b]' : 'bg-white/10 text-gray-100'} text-[10px] flex justify-between items-center gap-2">
+                              <span class="truncate flex-1 font-medium">${act.text}</span>
+                              <span class="px-1.5 py-0.2 rounded bg-[#34c759]/20 text-[#34c759] font-bold text-[8px]">${act.pic}</span>
+                            </div>
+                          `).join('')}
+                        </div>
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    // --- WEEKLY TALENT DOSSIER ---
+    function getMondayCurrentWeek() {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      const mon = new Date(d.setDate(diff));
+      mon.setHours(0, 0, 0, 0);
+      return mon.getTime();
+    }
+
+    function renderTalentWeeklyDossier(talentNick) {
+      if (!talentNick) talentNick = AppState.activeUserKey;
+      const startOfWeek = getMondayCurrentWeek();
+
+      let totalWeeklySeconds = 0;
+      let doneCount = 0;
+      let progressCount = 0;
+      const doneItems = [];
+      const progressItems = [];
+
+      AppState.tasks.forEach(t => {
+        t.actions.forEach(a => {
+          if (a.pic === talentNick) {
+            let taskSeconds = 0;
+            if (Array.isArray(a.workSessions)) {
+              a.workSessions.forEach(s => {
+                if (s.start >= startOfWeek) {
+                  const dur = s.durationSeconds || (s.end ? Math.round((s.end - s.start) / 1000) : 0);
+                  taskSeconds += Math.min(dur, 7200);
+                }
+              });
+            }
+            totalWeeklySeconds += taskSeconds;
+
+            const itemObj = {
+              project: t.title,
+              dept: t.dept,
+              actionText: a.text,
+              dueDate: a.dueDate || '-',
+              hoursText: (taskSeconds / 3600).toFixed(1) + ' jam',
+              isFlagged: a.isFlagged,
+              blocker: a.blocker || ''
+            };
+
+            if (a.done) {
+              doneCount++;
+              doneItems.push(itemObj);
+            } else {
+              progressCount++;
+              progressItems.push(itemObj);
+            }
+          }
+        });
+      });
+
+      const weeklyHours = (totalWeeklySeconds / 3600).toFixed(1);
+
+      document.getElementById('talentDossierSummaryBar').innerHTML = `
+        <div class="p-4 bg-black/[0.02] border border-black/5 rounded-2xl">
+          <span class="text-[10px] text-[#86868b] font-bold uppercase block">Jam Kerja Minggu Ini</span>
+          <div class="text-2xl font-bold text-[#0071e3] my-0.5">${weeklyHours} Jam</div>
+          <span class="text-[10px] font-semibold ${weeklyHours >= 40 ? 'text-[#ff3b30]' : 'text-[#34c759]'}">${weeklyHours >= 40 ? '⚠️ Over-Cap (Review)' : 'Kapasitas Normal'}</span>
+        </div>
+        <div class="p-4 bg-black/[0.02] border border-black/5 rounded-2xl">
+          <span class="text-[10px] text-[#86868b] font-bold uppercase block">Tugas Selesai</span>
+          <div class="text-2xl font-bold text-[#34c759] my-0.5">${doneCount} Task</div>
+          <span class="text-[10px] font-medium text-[#86868b]">Output tuntas</span>
+        </div>
+        <div class="p-4 bg-black/[0.02] border border-black/5 rounded-2xl">
+          <span class="text-[10px] text-[#86868b] font-bold uppercase block">Sedang Berjalan</span>
+          <div class="text-2xl font-bold text-[#ff9500] my-0.5">${progressCount} Task</div>
+          <span class="text-[10px] font-medium text-[#86868b]">Dalam sprint berjalan</span>
+        </div>
+      `;
+
+      document.getElementById('talentDoneCountBadge').innerText = `${doneCount} Task`;
+      document.getElementById('talentDoneTasksList').innerHTML = doneItems.length ? doneItems.map(item => `
+        <div class="p-2.5 bg-white rounded-xl border border-black/5 flex items-start justify-between gap-2 shadow-xs">
+          <div>
+            <span class="font-bold text-[#1d1d1f] block text-xs">[${item.dept}] ${item.actionText}</span>
+            <span class="text-[10px] text-[#86868b] block">${item.project} • Due: ${item.dueDate}</span>
+          </div>
+          <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-[#34c759]/10 text-[#34c759] flex-shrink-0">${item.hoursText}</span>
+        </div>
+      `).join('') : `<div class="p-3 text-center text-[#86868b] italic">Belum ada tugas selesai minggu ini.</div>`;
+
+      document.getElementById('talentProgressCountBadge').innerText = `${progressCount} Task`;
+      document.getElementById('talentProgressTasksList').innerHTML = progressItems.length ? progressItems.map(item => `
+        <div class="p-2.5 bg-white rounded-xl border ${item.isFlagged ? 'border-[#ff3b30]/30 bg-[#ff3b30]/5' : 'border-black/5'} flex items-start justify-between gap-2 shadow-xs">
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="font-bold text-[#1d1d1f] block text-xs">[${item.dept}] ${item.actionText}</span>
+              ${item.isFlagged ? '<span class="text-[9px] bg-[#ff3b30] text-white font-bold px-1.5 py-0.2 rounded">BLOCKER</span>' : ''}
+            </div>
+            <span class="text-[10px] text-[#86868b] block">${item.project} • Due: ${item.dueDate}</span>
+            ${item.isFlagged ? `<span class="text-[10px] text-[#ff3b30] font-medium block mt-0.5">⚠️ ${item.blocker}</span>` : ''}
+          </div>
+          <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-[#0071e3]/10 text-[#0071e3] flex-shrink-0">${item.hoursText}</span>
+        </div>
+      `).join('') : `<div class="p-3 text-center text-[#86868b] italic">Tidak ada tugas aktif berjalan.</div>`;
+    }
+
+    // --- OVERVIEW VIEW RENDERING ---
+    function renderOverview() {
+      const selectedDept = document.getElementById('ovDeptSelector')?.value || 'ALL';
+      let tasks = AppState.tasks;
+
+      if (selectedDept !== 'ALL') tasks = tasks.filter(t => t.dept === selectedDept);
+
+      let total = 0, done = 0, blockers = 0;
+      const deptStats = {
+        DM: { total: 0, done: 0, blockers: 0 },
+        Production: { total: 0, done: 0, blockers: 0 },
+        HRGA: { total: 0, done: 0, blockers: 0 },
+        ABD: { total: 0, done: 0, blockers: 0 }
+      };
+
+      const picWorkload = {};
+      const activeBlockerItems = [];
+
+      tasks.forEach(t => {
+        t.actions.forEach(a => {
+          total++;
+          if (deptStats[t.dept]) deptStats[t.dept].total++;
+
+          if (a.done) {
+            done++;
+            if (deptStats[t.dept]) deptStats[t.dept].done++;
+          } else {
+            picWorkload[a.pic] = (picWorkload[a.pic] || 0) + (a.duration || 2);
+          }
+
+          if (a.isFlagged) {
+            blockers++;
+            if (deptStats[t.dept]) deptStats[t.dept].blockers++;
+            activeBlockerItems.push({
+              project: t.title, dept: t.dept, actionText: a.text, pic: a.pic,
+              note: a.blocker || 'Membutuhkan penanganan Lead'
+            });
+          }
+        });
+      });
+
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById('ovTotal').innerText = total;
+      document.getElementById('ovDone').innerText = done;
+      document.getElementById('ovDoneSubtext').innerText = `${pct}% target`;
+      document.getElementById('ovBlockers').innerText = blockers;
+      document.getElementById('ovScore').innerText = `${pct}%`;
+      document.getElementById('ovScoreBar').style.width = `${pct}%`;
+
+      // Apple Rings
+      const execPct = total ? Math.min(100, Math.round((done / total) * 100)) : 0;
+      const c1 = 427.26;
+      document.getElementById('ringExecution').style.strokeDashoffset = c1 - (execPct / 100) * c1;
+      document.getElementById('legExec').innerText = `Exec ${execPct}%`;
+
+      const qualPct = total ? Math.min(100, Math.round(((total - blockers) / total) * 100)) : 100;
+      const c2 = 326.73;
+      document.getElementById('ringQuality').style.strokeDashoffset = c2 - (qualPct / 100) * c2;
+      document.getElementById('legQual').innerText = `OTD ${qualPct}%`;
+
+      let totalSprintSeconds = 0;
+      AppState.tasks.forEach(t => t.actions.forEach(a => {
+        if (Array.isArray(a.workSessions)) a.workSessions.forEach(s => totalSprintSeconds += (s.durationSeconds || 0));
+      }));
+      const totalSprintHours = totalSprintSeconds / 3600;
+      const hoursPct = Math.min(100, Math.round((totalSprintHours / 25) * 100));
+      const c3 = 226.19;
+      document.getElementById('ringHours').style.strokeDashoffset = c3 - (hoursPct / 100) * c3;
+      document.getElementById('legHours').innerText = `Hours ${hoursPct}%`;
+
+      const healthScore = Math.round((execPct + qualPct + hoursPct) / 3);
+      document.getElementById('ringOverallScoreText').innerText = `${healthScore}%`;
+
+      // Badges
+      let unlockedCount = 0;
+      const updateBadge = (id, condition) => {
+        const el = document.getElementById(id);
+        if (condition) {
+          el.className = "p-3 rounded-2xl border transition-all flex items-center space-x-3 bg-[#ff9500]/10 border-[#ff9500]/30 opacity-100";
+          unlockedCount++;
+        } else {
+          el.className = "p-3 rounded-2xl border transition-all flex items-center space-x-3 bg-black/[0.02] border-black/5 opacity-40";
+        }
+      };
+
+      updateBadge('badgeSprintFinisher', execPct >= 70);
+      updateBadge('badgeZeroBlocker', blockers === 0 && done > 0);
+      updateBadge('badgeDeepWork', totalSprintHours >= 20);
+      document.getElementById('unlockedBadgesText').innerText = `${unlockedCount}/3 Unlocked`;
+
+      // MVP List
+      const mvpStats = {};
+      teamNicknames.forEach(n => mvpStats[n] = { done: 0, hours: 0 });
+      AppState.tasks.forEach(t => t.actions.forEach(a => {
+        if (!mvpStats[a.pic]) mvpStats[a.pic] = { done: 0, hours: 0 };
+        if (a.done) mvpStats[a.pic].done++;
+        if (Array.isArray(a.workSessions)) a.workSessions.forEach(s => mvpStats[a.pic].hours += ((s.durationSeconds || 0) / 3600));
+      }));
+
+      const sortedMvp = Object.keys(mvpStats).map(n => ({ name: n, ...mvpStats[n] })).sort((a, b) => b.done - a.done || b.hours - a.hours).slice(0, 3);
+      const rankBadges = ['🥇', '🥈', '🥉'];
+      document.getElementById('mvpLeaderboardList').innerHTML = sortedMvp.map((m, idx) => `
+        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-black/[0.02] border border-black/5 text-xs">
+          <div class="flex items-center space-x-2.5">
+            <span class="text-sm">${rankBadges[idx]}</span>
+            <div>
+              <span class="font-bold text-[#1d1d1f] block leading-tight">${m.name}</span>
+              <span class="text-[10px] text-[#86868b] font-medium">${m.hours.toFixed(1)} jam</span>
+            </div>
+          </div>
+          <span class="font-bold text-xs text-[#0071e3] bg-[#0071e3]/10 px-2.5 py-0.5 rounded-full">${m.done} Done</span>
+        </div>
+      `).join('');
+
+      // Cards Per Dept
+      document.getElementById('ovDeptCardsGrid').innerHTML = Object.keys(deptStats).map(d => {
+        const s = deptStats[d];
+        const dPct = s.total ? Math.round((s.done / s.total) * 100) : 0;
+        const theme = DEPARTMENTS[d] || DEPARTMENTS.DM;
+
+        return `
+          <div class="p-4 rounded-2xl bg-black/[0.02] border border-black/5 flex flex-col justify-between space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-xs text-[#1d1d1f]">${d}</span>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${s.blockers > 0 ? 'bg-[#ff3b30]/10 text-[#ff3b30]' : 'bg-[#34c759]/10 text-[#34c759]'}">
+                ${s.blockers > 0 ? `${s.blockers} Blocker` : 'On-Track'}
+              </span>
+            </div>
+            <div>
+              <div class="flex justify-between text-[11px] font-medium text-[#86868b] mb-1">
+                <span>${s.done}/${s.total} Task</span>
+                <span class="font-bold text-[#1d1d1f]">${dPct}%</span>
+              </div>
+              <div class="w-full bg-black/5 rounded-full h-1.5 overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500" style="width: ${dPct}%; background-color: ${theme.fill}"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Workload PIC
+      const wlContainer = document.getElementById('ovTeamWorkloadList');
+      const picKeys = Object.keys(picWorkload);
+      wlContainer.innerHTML = picKeys.length ? picKeys.map(n => {
+        const days = picWorkload[n];
+        const isOver = days >= 7;
+        return `
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between items-center font-semibold">
+              <span class="text-[#1d1d1f]">${n}</span>
+              <span class="${isOver ? 'text-[#ff3b30] font-bold' : 'text-[#86868b]'}">${days}d load ${isOver ? '⚠️' : ''}</span>
+            </div>
+            <div class="w-full bg-black/5 rounded-full h-1.5 overflow-hidden">
+              <div class="h-full rounded-full ${isOver ? 'bg-[#ff3b30]' : 'bg-[#0071e3]'}" style="width: ${Math.min(100, (days/10)*100)}%;"></div>
+            </div>
+          </div>
+        `;
+      }).join('') : `<div class="p-4 text-center text-[#86868b] text-xs italic">Semua tugas sprint telah selesai.</div>`;
+
+      // Blockers
+      document.getElementById('ovBlockerCountBadge').innerText = `${activeBlockerItems.length} Isu`;
+      document.getElementById('ovBlockersList').innerHTML = activeBlockerItems.length ? activeBlockerItems.map(b => `
+        <div class="p-3 bg-[#ff3b30]/5 rounded-2xl border border-[#ff3b30]/15 text-xs space-y-1">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-[#ff3b30] truncate">[${b.dept}] ${b.project}</span>
+            <span class="px-2 py-0.5 rounded-full bg-[#ff3b30]/15 text-[#ff3b30] font-bold text-[9px]">${b.pic}</span>
+          </div>
+          <p class="text-[#1d1d1f] text-[11px] leading-relaxed">${b.note}</p>
+        </div>
+      `).join('') : `
+        <div class="p-6 text-center text-[#34c759] bg-[#34c759]/5 rounded-2xl border border-[#34c759]/15 text-xs font-semibold">
+          ✨ Tidak ada hambatan aktif. Seluruh divisi beroperasi normal.
+        </div>
+      `;
+
+      const tSelect = document.getElementById('ovTalentSelect');
+      if (tSelect) {
+        const curVal = tSelect.value || AppState.activeUserKey;
+        tSelect.innerHTML = teamNicknames.map(n => `<option value="${n}" ${n === curVal ? 'selected' : ''}>${n}</option>`).join('');
+        renderTalentWeeklyDossier(curVal);
+      }
+    }
+
+    function calculateWeeklyHours(nick) {
+      let totalSeconds = 0;
+      AppState.tasks.forEach(t => t.actions.forEach(a => {
+        if (a.pic === nick && Array.isArray(a.workSessions)) a.workSessions.forEach(s => totalSeconds += (s.durationSeconds || 0));
+      }));
+      const hours = (totalSeconds / 3600).toFixed(1);
+      return { hours: parseFloat(hours), isOverCap: hours > 40, status: hours > 40 ? "Over-Cap" : "Normal" };
+    }
+
+    function getAvatarBadge(name, size = "w-7 h-7 text-xs") {
+      const emojis = ['😀', '😎', '🥳', '🤓', '🤩', '😄', '🤠', '😊'];
+      const colors = ['#E0F2FE', '#FEF3C7', '#DCFCE7', '#FCE7F3', '#EDE9FE'];
+      let h = 0; for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+      return `<div class="${size} rounded-full flex items-center justify-center font-bold select-none" style="background:${colors[Math.abs(h) % colors.length]}">${emojis[Math.abs(h) % emojis.length]}</div>`;
+    }
+
+    function createProgressRingSvg(pct, color) {
+      const r = 24, c = 2 * Math.PI * r;
+      const offset = c - (pct / 100) * c;
+      return `
+        <div class="relative w-14 h-14 flex items-center justify-center flex-shrink-0">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="${r}" stroke="rgba(255,255,255,0.3)" stroke-width="5" fill="none" />
+            <circle cx="30" cy="30" r="${r}" stroke="${color}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}" fill="none" class="transition-all duration-500" />
+          </svg>
+          <span class="absolute font-bold text-[11px] text-white">${pct}%</span>
+        </div>
+      `;
+    }
+
+    function renderActiveView() {
+      renderNavAndSidebar();
+      if (AppState.viewMode === 'capsules') renderCapsules();
+      if (AppState.viewMode === 'gantt') renderGantt();
+      if (AppState.viewMode === 'overview') renderOverview();
+    }
+
+    function renderNavAndSidebar() {
+      document.getElementById('navAvatarSpan').innerHTML = getAvatarBadge(AppState.activeUserKey, "w-6 h-6 text-xs");
+      document.getElementById('navUserName').innerText = AppState.activeUserKey;
+
+      const myHours = calculateWeeklyHours(AppState.activeUserKey);
+      const myBadge = document.getElementById('myWeeklyHoursBadge');
+      if (myBadge) {
+        myBadge.innerText = `${myHours.hours}h this week`;
+        myBadge.className = myHours.isOverCap 
+          ? "apple-glass-card px-3 py-1.5 rounded-full text-xs font-bold text-[#ff3b30]"
+          : "apple-glass-card px-3 py-1.5 rounded-full text-xs font-bold text-[#0071e3]";
+      }
+
+      document.getElementById('sidebarUserList').innerHTML = teamNicknames.slice(0, 8).map(n => {
+        const wh = calculateWeeklyHours(n);
+        return `
+          <div onclick="openUserProfileModal('${n}')" class="flex items-center justify-between p-1.5 rounded-xl hover:bg-black/5 cursor-pointer apple-press">
+            <div class="flex items-center space-x-2 min-w-0">
+              ${getAvatarBadge(n, "w-6 h-6 text-xs")}
+              <span class="font-bold text-[#1d1d1f] truncate text-[11px] ${n === AppState.activeUserKey ? 'text-[#0071e3]' : ''}">${n}</span>
+            </div>
+            <span class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md ${wh.isOverCap ? 'bg-[#ff3b30]/10 text-[#ff3b30]' : 'bg-black/5 text-[#86868b]'}">${wh.hours}h</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderCapsules() {
+      const container = document.getElementById('capsulesView');
+      let tasks = AppState.tasks;
+
+      if (AppState.deptFilter !== 'ALL') tasks = tasks.filter(t => t.dept === AppState.deptFilter);
+      if (AppState.statusFilter !== 'ALL') {
+        tasks = tasks.filter(t => {
+          const done = t.actions.filter(a => a.done).length === t.actions.length;
+          if (AppState.statusFilter === 'COMPLETED') return done;
+          if (AppState.statusFilter === 'ACTIVE') return !done && !t.actions.some(a => a.isFlagged);
+          if (AppState.statusFilter === 'BLOCKED') return t.actions.some(a => a.isFlagged);
+          return true;
+        });
+      }
+
+      if (!tasks.length) {
+        container.innerHTML = `<div class="p-8 text-center text-[#86868b] apple-glass rounded-[28px] text-xs italic">Tidak ada proyek yang sesuai filter.</div>`;
+        return;
+      }
+
+      container.innerHTML = tasks.map(t => {
+        const theme = DEPARTMENTS[t.dept] || DEPARTMENTS.DM;
+        const done = t.actions.filter(a => a.done).length;
+        const total = t.actions.length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const isOpen = AppState.expandedCardIds.has(t.id);
+        const hasBlocker = t.actions.some(a => a.isFlagged);
+
+        return `
+          <div class="w-full flex flex-col">
+            <div onclick="toggleCapsule('${t.id}')" class="apple-capsule cursor-pointer relative overflow-hidden flex items-center justify-between px-6 py-4" style="background-color:${theme.tint};">
+              <div class="absolute inset-y-0 left-0 transition-all duration-500" style="width:${pct}%; background-color:${theme.fill};"></div>
+              <div class="relative z-10 flex-1 min-w-0 pr-3" style="color:${pct > 40 ? '#fff' : theme.text}">
+                <div class="flex items-center space-x-2">
+                  <h4 class="font-bold text-base truncate">${t.title}</h4>
+                  <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-white/30 backdrop-blur-xs">${t.dept}</span>
+                  ${hasBlocker ? `<span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#ff3b30] text-white">BLOCKER</span>` : ''}
+                </div>
+                <div class="text-xs font-medium opacity-90 mt-0.5">${done}/${total} Selesai</div>
+              </div>
+              <div class="relative z-10 flex items-center space-x-3">
+                ${createProgressRingSvg(pct, pct > 40 ? '#fff' : theme.fill)}
+                <span class="text-xs font-bold transition-transform ${isOpen ? 'rotate-180' : ''}" style="color:${pct > 40 ? '#fff' : theme.text}">▼</span>
+              </div>
+            </div>
+
+            <div class="accordion-drawer ${isOpen ? 'open' : ''} apple-glass rounded-[28px] p-5 space-y-4">
+              <div class="flex flex-wrap justify-between items-center pb-3 border-b border-black/5 text-xs gap-2">
+                <span class="font-bold text-[#1d1d1f]">Lead PIC: ${t.pic} • SLA: ${t.handoverSla || 'H-2'}</span>
+                <div class="flex items-center space-x-1.5">
+                  ${t.assets?.drive ? `<a href="${t.assets.drive}" target="_blank" class="px-2.5 py-1 bg-black/5 hover:bg-black/10 text-[#0071e3] font-bold rounded-lg text-[10px] apple-press">Drive ↗</a>` : ''}
+                  ${t.assets?.figma ? `<a href="${t.assets.figma}" target="_blank" class="px-2.5 py-1 bg-black/5 hover:bg-black/10
