@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress & Gantt Timeline Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #f2f2f7;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* Kapsul Progres */
+    .progress-capsule {
+      position: relative;
+      border-radius: 28px;
+      overflow: hidden;
+      cursor: pointer;
+      min-height: 110px;
+      display: flex;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      transition: transform 0.24s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.24s ease;
+    }
+    .progress-capsule:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
+    }
+    .progress-capsule:active {
+      transform: scale(0.985);
+    }
+
+    .accordion-drawer {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: scaleY(0.96);
+      transform-origin: top;
+      transition: max-height 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.28s ease,
+                  transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                  margin-top 0.32s ease;
+    }
+    .accordion-drawer.open {
+      max-height: 650px;
+      opacity: 1;
+      transform: scaleY(1);
+      margin-top: 12px;
+    }
+
+    .apple-check {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #c7c7cc;
+      border-radius: 50%;
+      outline: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .apple-check:checked {
+      background-color: #34c759;
+      border-color: #34c759;
+      transform: scale(1.05);
+    }
+    .apple-check:checked::after {
+      content: '';
+      width: 6px;
+      height: 11px;
+      border: solid white;
+      border-width: 0 2.5px 2.5px 0;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    /* Gantt Timeline Styling */
+    .gantt-table {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .gantt-day-col {
+      min-width: 44px;
+      max-width: 44px;
+      text-align: center;
+      border-right: 1px solid #f1f5f9;
+    }
+    .gantt-weekend {
+      background-color: #f8fafc;
+    }
+    .gantt-bar-pill {
+      border-radius: 9999px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: all 0.2s ease;
+    }
+    .gantt-bar-pill:hover {
+      filter: brightness(0.97);
+      transform: translateY(-1px);
+    }
+
+    /* Profile Modal Glass Elements */
+    .modal-glass-card {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+      border-radius: 24px;
+    }
+    .modal-dark-glass {
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.25);
+      border-radius: 24px;
+    }
+  </style>
+</head>
+<body class="min-h-screen py-8 px-4 md:px-8 lg:px-12 flex justify-center pb-24">
+
+  <div class="w-full max-w-6xl flex flex-col">
+
+    <!-- Top Bar Navigation -->
+    <header class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200/70">
+      
+      <!-- Logo / Title -->
+      <div class="flex items-center space-x-3">
+        <div class="hidden md:flex items-center space-x-2 mr-2">
+          <span class="w-3.5 h-3.5 rounded-full bg-[#ff5f56] border border-[#e0443e]"></span>
+          <span class="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] border border-[#dea123]"></span>
+          <span class="w-3.5 h-3.5 rounded-full bg-[#27c93f] border border-[#1aab29]"></span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <svg class="w-6 h-6 text-purple-600 fill-current" viewBox="0 0 24 24">
+            <path d="M9.5 16.5l-4-4 1.4-1.4 2.6 2.6 7.6-7.6 1.4 1.4z"/>
+          </svg>
+          <h1 class="text-3xl font-extrabold text-black tracking-tight">
+            Tasks & Timeline
+          </h1>
+        </div>
+      </div>
+
+      <!-- Controls, View Switcher & Role -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        
+        <!-- View Toggle (Desktop Only) -->
+        <div class="hidden md:flex bg-gray-200/80 p-1 rounded-full text-xs font-semibold">
+          <button onclick="setViewMode('capsules')" id="btnViewCapsules" class="px-3.5 py-1.5 rounded-full bg-white text-gray-900 shadow-sm transition">
+            Capsules View
+          </button>
+          <button onclick="setViewMode('gantt')" id="btnViewGantt" class="px-3.5 py-1.5 rounded-full text-gray-600 hover:text-black transition flex items-center space-x-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+            <span>Gantt Chart</span>
+          </button>
+        </div>
+
+        <!-- Role Indicator & Toggle -->
+        <div class="bg-white px-3.5 py-1.5 rounded-full border border-gray-200/80 shadow-sm flex items-center space-x-2 text-xs">
+          <span class="text-gray-500 font-medium">Role:</span>
+          <button onclick="toggleRole()" id="roleBadge" class="font-bold text-blue-600 hover:underline">
+            Lead / Manager
+          </button>
+        </div>
+
+        <button onclick="copyWA()" class="bg-white text-gray-800 hover:text-emerald-600 font-semibold text-xs md:text-sm px-4 py-2 rounded-full shadow-sm border border-gray-200/60 transition">
+          Share WA
+        </button>
+
+        <button onclick="handleNewTaskClick()" id="btnNewTask" class="bg-[#0071e3] hover:bg-[#0062c4] text-white font-semibold text-xs md:text-sm px-4 md:px-5 py-2 rounded-full shadow-sm flex items-center space-x-1.5 active:scale-95 transition">
+          <span class="text-base font-bold leading-none">+</span>
+          <span>Task Baru</span>
+        </button>
+
+        <!-- User Profile Quick Access Button (Kanan Atas) -->
+        <button onclick="openUserProfileModal('Budi')" title="Buka User Profile & KPI Dashboard" class="flex items-center space-x-2 bg-white hover:bg-gray-50 border border-gray-200/90 pl-1.5 pr-3.5 py-1 rounded-full shadow-sm transition active:scale-95 ml-1">
+          <img id="navAvatarImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80" alt="Avatar" class="w-7 h-7 rounded-full object-cover ring-2 ring-blue-500/30">
+          <div class="text-left">
+            <span id="navUserName" class="text-xs font-bold text-gray-900 block leading-tight">Budi S.</span>
+            <span class="text-[9px] text-gray-400 block leading-tight font-medium">Profile &amp; KPI</span>
+          </div>
+        </button>
+      </div>
+
+    </header>
+
+    <!-- Department Filter Tabs -->
+    <div class="flex items-center space-x-2 overflow-x-auto pb-3 mb-6 text-xs font-semibold">
+      <button onclick="filterDept('ALL')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-black text-white" data-dept="ALL">
+        Semua
+      </button>
+      <button onclick="filterDept('HRGA')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="HRGA">
+        HRGA
+      </button>
+      <button onclick="filterDept('DM')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="DM">
+        DM
+      </button>
+      <button onclick="filterDept('Production')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="Production">
+        Production
+      </button>
+      <button onclick="filterDept('Management')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="Management">
+        Management
+      </button>
+      <button onclick="filterDept('ABD')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="ABD">
+        ABD
+      </button>
+    </div>
+
+    <!-- VIEW 1: CAPSULES VIEW -->
+    <main id="capsulesView" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      <!-- Injected by JavaScript -->
+    </main>
+
+    <!-- VIEW 2: GANTT CHART TIMELINE -->
+    <div id="ganttView" class="hidden bg-white rounded-3xl shadow-sm border border-gray-200/80 p-6 overflow-x-auto">
+      
+      <!-- Gantt Header Title -->
+      <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
+        <div>
+          <h2 class="text-lg font-extrabold text-gray-900 flex items-center space-x-2">
+            <span>Completed & Active Progress Timeline</span>
+          </h2>
+          <p class="text-xs text-gray-500 mt-0.5">Semua action plans yang done otomatis masuk ke timeline timeline bar berikut</p>
+        </div>
+        <div class="flex items-center space-x-3 text-xs font-medium">
+          <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400"></span><span>Done Sub-Tasks</span></span>
+          <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-blue-400"></span><span>In Progress</span></span>
+        </div>
+      </div>
+
+      <!-- Gantt Timeline Canvas Container -->
+      <div id="ganttTimelineContent">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-8 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-md text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50">
+    Laporan standup disalin ke clipboard!
+  </div>
+
+  <!-- MODAL: Task Baru (Lead / Manager Only) -->
+  <div id="taskModal" class="fixed inset-0 bg-black/35 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[32px] w-full max-w-md p-7 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-5">
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900">Task Baru</h3>
+          <p class="text-xs text-gray-500 font-medium">Akses Khusus Lead / Manager</p>
+        </div>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-3xl font-light">&times;</button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Departemen</label>
+          <select id="inpDept" class="w-full mt-1.5 px-3.5 py-2.5 bg-gray-100 rounded-2xl text-sm font-semibold focus:outline-none">
+            <option value="HRGA">HRGA (#C3C1FF)</option>
+            <option value="DM">DM (#FF6584)</option>
+            <option value="Production">Production (#8EE4E2)</option>
+            <option value="Management">Management (#FFF0D4)</option>
+            <option value="ABD">ABD (#8AD5FF)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Judul / Brand</label>
+          <input type="text" id="inpTitle" placeholder="Misal: Payroll Q4 / Scale Meta Ads" class="w-full mt-1.5 px-4 py-2.5 bg-gray-100 rounded-2xl text-sm focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Lead PIC</label>
+            <input type="text" id="inpPic" placeholder="Misal: Budi" class="w-full mt-1.5 px-3.5 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Satuan Unit</label>
+            <input type="text" id="inpUnit" placeholder="Tasks / Books / $" class="w-full mt-1.5 px-3.5 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Action Plans, Assignee & Durasi</label>
+            <button onclick="addField()" class="text-xs font-bold text-blue-600 hover:underline">+ Tambah</button>
+          </div>
+          <div id="fieldsBox" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+            <div class="flex space-x-2">
+              <input type="text" placeholder="Langkah 1" class="step-txt flex-1 px-3 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+              <input type="text" placeholder="Assignee" class="step-pic w-20 px-2 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+              <input type="number" placeholder="Hari (1-14)" min="1" max="14" value="3" class="step-days w-16 px-2 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none text-center">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex space-x-3">
+        <button onclick="closeModal()" class="w-1/2 py-2.5 rounded-2xl bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-gray-200 transition">Batal</button>
+        <button onclick="saveTask()" class="w-1/2 py-2.5 rounded-2xl bg-[#0071e3] text-white font-bold text-sm shadow-md hover:bg-[#0062c4] transition">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: USER PROFILE DASHBOARD (REFERENSI IPAD UI) ==================== -->
+  <div id="userProfileModal" class="fixed inset-0 bg-black/45 backdrop-blur-md hidden flex items-center justify-center p-4 md:p-6 z-50">
+    <div class="w-full max-w-5xl bg-[#f1f5f9] rounded-[36px] p-6 md:p-8 shadow-2xl border border-white/80 max-h-[92vh] overflow-y-auto">
+      
+      <!-- Top Navigation Sub-Bar (Profil) -->
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div class="flex items-center space-x-3">
+          <nav class="flex items-center bg-gray-200/70 p-1 rounded-full text-xs font-bold text-gray-600">
+            <button onclick="switchProfileSection('dashboard')" id="pNav-dashboard" class="px-4 py-1.5 rounded-full bg-black text-white shadow-sm transition">
+              Dashboard
+            </button>
+            <button onclick="switchProfileSection('contract')" id="pNav-contract" class="px-4 py-1.5 rounded-full hover:text-black transition">
+              Benefits &amp; Kontrak
+            </button>
+            <button onclick="switchProfileSection('performance')" id="pNav-performance" class="px-4 py-1.5 rounded-full hover:text-black transition">
+              Performance (KPI)
+            </button>
+            <button onclick="switchProfileSection('settings')" id="pNav-settings" class="px-4 py-1.5 rounded-full hover:text-black transition">
+              Settings
+            </button>
+          </nav>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <select id="profileUserSwitcher" onchange="switchProfileUser(this.value)" class="bg-white border border-gray-200 text-xs font-bold text-gray-800 px-3 py-1.5 rounded-full shadow-sm focus:outline-none">
+            <option value="Budi">Budi Santoso (ABD)</option>
+            <option value="Siti">Siti Rahma (Management)</option>
+            <option value="Andi">Andi Wijaya (DM)</option>
+            <option value="Dewi">Dewi Lestari (HRGA)</option>
+          </select>
+          <button onclick="closeProfileDashboard()" class="w-9 h-9 rounded-full bg-white text-gray-400 hover:text-gray-800 flex items-center justify-center text-xl font-light shadow-sm transition">
+            &times;
+          </button>
+        </div>
+      </div>
+
+      <!-- Welcome Title -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-extrabold text-gray-900">
+          Welcome back, <span id="mWelcomeName" class="text-blue-600">Budi</span>
+        </h2>
+        <p class="text-xs text-gray-400 font-medium">Rangkuman kinerja, skor KPI, status kehadiran, dan masa kontrak kerja Anda.</p>
+      </div>
+
+      <!-- SECTION 1: DASHBOARD UTAMA -->
+      <div id="pSecDashboard" class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+        
+        <!-- Left 3 Columns -->
+        <div class="lg:col-span-3 space-y-6">
+          
+          <!-- Row 1: Profile Photo Card, Vacation Bar, Performance Dial -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- User Photo Card -->
+            <div class="modal-glass-card p-5 flex flex-col justify-between items-center text-center">
+              <div class="relative mb-3">
+                <img id="mUserPhoto" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Avatar" class="w-24 h-24 rounded-full object-cover shadow-inner ring-4 ring-blue-50">
+                <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-blue-600 text-white font-extrabold text-[10px] flex items-center justify-center border-2 border-white shadow">
+                  <span id="mUserCrBadge">83%</span>
+                </div>
+              </div>
+              <h3 id="mUserFullName" class="font-bold text-base text-gray-900">Budi Santoso</h3>
+              <p id="mUserNipTitle" class="text-[11px] text-gray-500 font-semibold mt-0.5">ABD Lead (NIP: 2024-089)</p>
+              
+              <div class="mt-4 pt-3 border-t border-gray-100 w-full flex justify-between items-center text-xs">
+                <span class="text-gray-400 font-medium">Sisa Kontrak</span>
+                <span id="mUserContractBadge" class="font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full">8 Bulan</span>
+              </div>
+            </div>
+
+            <!-- Vacation / Activity Bar Chart -->
+            <div class="modal-glass-card p-5 flex flex-col justify-between">
+              <div class="flex justify-between items-center mb-1">
+                <div>
+                  <span class="text-xs font-bold text-gray-900 block">Activity Log</span>
+                  <span class="text-[10px] text-gray-400">Weekly Task Done</span>
+                </div>
+                <span class="text-xs text-gray-400">•••</span>
+              </div>
+
+              <div class="h-28 flex items-end justify-between gap-1.5 px-2 pt-2">
+                <div class="flex flex-col items-center flex-1"><div class="w-full bg-blue-500 rounded-full" style="height: 45%;"></div><span class="text-[9px] text-gray-400 mt-1">M</span></div>
+                <div class="flex flex-col items-center flex-1"><div class="w-full bg-blue-600 rounded-full" style="height: 80%;"></div><span class="text-[9px] text-gray-400 mt-1">T</span></div>
+                <div class="flex flex-col items-center flex-1"><div class="w-full bg-blue-400 rounded-full" style="height: 35%;"></div><span class="text-[9px] text-gray-400 mt-1">W</span></div>
+                <div class="flex flex-col items-center flex-1"><div class="w-full bg-amber-500 rounded-full" style="height: 100%;"></div><span class="text-[9px] text-amber-700 font-bold mt-1">T</span></div>
+                <div class="flex flex-col items-center flex-1"><div class="w-full bg-blue-500 rounded-full" style="height: 65%;"></div><span class="text-[9px] text-gray-400 mt-1">F</span></div>
+                <div class="flex flex-col items-center flex-1"><div class="w-full bg-gray-300 rounded-full" style="height: 20%;"></div><span class="text-[9px] text-gray-400 mt-1">S</span></div>
+                <div class="flex flex-col items-center flex-1"><div class="w-full bg-gray-300 rounded-full" style="height: 10%;"></div><span class="text-[9px] text-gray-400 mt-1">S</span></div>
+              </div>
+
+              <button onclick="switchProfileSection('contract')" class="mt-3 text-[11px] font-bold text-blue-600 flex items-center justify-between hover:underline">
+                <span>Lihat Detail Kontrak &amp; Cuti</span>
+                <span>&rarr;</span>
+              </button>
+            </div>
+
+            <!-- Performance Dial Gauge (350 Excellent) -->
+            <div class="modal-glass-card p-5 flex flex-col justify-between">
+              <div class="flex justify-between items-center mb-1">
+                <div>
+                  <span class="text-xs font-bold text-gray-900 block">My Performance</span>
+                  <span class="text-[10px] text-gray-400">Scorecard KPI</span>
+                </div>
+                <span class="text-xs text-gray-400">•••</span>
+              </div>
+
+              <div class="flex flex-col items-center justify-center my-2">
+                <div class="relative w-24 h-24 flex items-center justify-center">
+                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path class="text-gray-100" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path id="mKpiCircleDash" class="text-blue-600" stroke-dasharray="83, 100" stroke-width="3.2" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div class="absolute flex flex-col items-center text-center">
+                    <span id="mKpiScoreVal" class="text-xl font-extrabold text-gray-900">350</span>
+                    <span id="mKpiRatingText" class="text-[9px] font-extrabold uppercase text-emerald-600 tracking-wider">Excellent</span>
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="switchProfileSection('performance')" class="text-[11px] font-bold text-blue-600 flex items-center justify-between hover:underline">
+                <span>Rincian Diagnosa KPI</span>
+                <span>&rarr;</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Row 2: Mini Calendar + Tasks Detailed Table -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Calendar Widget -->
+            <div class="modal-glass-card p-5">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-xs font-bold text-gray-900">October 2026</span>
+                <div class="flex space-x-1 text-xs text-gray-400"><span>&lsaquo;</span><span>&rsaquo;</span></div>
+              </div>
+              <div class="grid grid-cols-7 text-center text-[10px] text-gray-400 mb-2 font-bold">
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+              </div>
+              <div class="grid grid-cols-7 text-center text-[11px] gap-y-1.5 font-medium text-gray-700">
+                <span class="text-gray-300">27</span><span class="text-gray-300">28</span><span class="text-gray-300">29</span><span class="text-gray-300">30</span>
+                <span>1</span><span>2</span><span>3</span>
+                <span>4</span><span>5</span><span class="p-1 rounded-full bg-blue-100 text-blue-800 font-bold">6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                <span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span class="p-1 rounded-full bg-blue-600 text-white font-bold">17</span>
+                <span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span>
+                <span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span>
+              </div>
+            </div>
+
+            <!-- Task Table Panel -->
+            <div class="modal-glass-card p-5 md:col-span-2">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-xs font-bold text-gray-900">Action Tasks &amp; Status</span>
+                <span class="text-xs text-gray-400">•••</span>
+              </div>
+              <div id="mTaskTableBody" class="space-y-2 text-xs">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Right Side Dark Panel: Attendance & Priority Tasks -->
+        <div class="space-y-6">
+          <div class="modal-dark-glass p-5 text-white">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-xs font-bold tracking-wider">Attendance &amp; Departure</span>
+              <span class="text-xs text-gray-400">•••</span>
+            </div>
+            <div class="space-y-3 text-xs">
+              <div class="p-3 rounded-2xl bg-white/5 border border-white/10 flex justify-between items-center">
+                <div>
+                  <span class="text-[10px] text-gray-400 block font-medium">CHECKED IN</span>
+                  <span class="font-bold text-white text-sm">07:32 AM</span>
+                </div>
+                <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">On-Time</span>
+              </div>
+              <div class="p-3 rounded-2xl bg-white/5 border border-white/10 flex justify-between items-center">
+                <div>
+                  <span class="text-[10px] text-gray-400 block font-medium">SCHEDULED OUT</span>
+                  <span class="font-bold text-white text-sm">05:00 PM</span>
+                </div>
+                <span class="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-500/20 cursor-pointer">Check Out</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-dark-glass p-5 text-white">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-xs font-bold tracking-wider">Priority Tasks</span>
+              <span class="text-xs text-gray-400">•••</span>
+            </div>
+            <div id="mPriorityListBody" class="space-y-2 text-xs">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SECTION 2: BENEFITS & KONTRAK KERJA -->
+      <div id="pSecContract" class="hidden space-y-5">
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50/70 border border-blue-200/60 p-6 rounded-3xl">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">Masa Berlaku Kontrak Kerja</span>
+            <span id="cStatusBadge" class="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">Aktif</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div class="text-xs text-gray-500 font-medium">Sisa Waktu Berlaku:</div>
+              <div id="cRemainingText" class="text-2xl font-extrabold text-blue-950 mt-1">8 Bulan 14 Hari</div>
+            </div>
+            <div class="md:text-right">
+              <div class="text-xs text-gray-500 font-medium">Periode Ikatan Kontrak:</div>
+              <div id="cPeriodText" class="text-sm font-bold text-gray-800 mt-1">01 Jul 2025 – 30 Jun 2027</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl space-y-3 text-xs">
+          <h4 class="font-bold text-gray-900 text-sm mb-2">Informasi Kepegawaian (HRGA Verified)</h4>
+          <div class="flex justify-between py-2 border-b border-gray-100"><span class="text-gray-500 font-medium">Nomor Induk Pegawai (NIP):</span><span id="cNipVal" class="font-bold text-gray-900"></span></div>
+          <div class="flex justify-between py-2 border-b border-gray-100"><span class="text-gray-500 font-medium">Tanggal Bergabung:</span><span id="cJoinVal" class="font-bold text-gray-900"></span></div>
+          <div class="flex justify-between py-2 border-b border-gray-100"><span class="text-gray-500 font-medium">Tipe Ikatan Kerja:</span><span id="cTypeVal" class="font-bold text-gray-900"></span></div>
+          <div class="flex justify-between py-2 border-b border-gray-100"><span class="text-gray-500 font-medium">Atasan / Evaluator:</span><span id="cManagerVal" class="font-bold text-gray-900"></span></div>
+          <div class="flex justify-between py-2"><span class="text-gray-500 font-medium">Kontak WhatsApp:</span><span id="cPhoneVal" class="font-bold text-emerald-700"></span></div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: PERFORMANCE (DIAGNOSA KPI & REKOMENDASI) -->
+      <div id="pSecPerformance" class="hidden space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-5 rounded-3xl bg-blue-50/70 border border-blue-200/70 text-center">
+            <span class="text-[10px] font-bold text-blue-700 uppercase">Completion Rate (CR%)</span>
+            <div id="kpiBigCr" class="text-3xl font-extrabold text-blue-900 my-1">83%</div>
+            <span id="kpiSubRatioText" class="text-xs text-blue-700 font-semibold">5/6 Sub-tasks</span>
+          </div>
+          <div class="p-5 rounded-3xl bg-emerald-50/70 border border-emerald-200/70 text-center">
+            <span class="text-[10px] font-bold text-emerald-700 uppercase">On-Time Delivery (OTD)</span>
+            <div id="kpiBigOtd" class="text-3xl font-extrabold text-emerald-900 my-1">94%</div>
+            <span class="text-xs text-emerald-700 font-semibold">SLA Target &ge; 90%</span>
+          </div>
+          <div class="p-5 rounded-3xl bg-rose-50/70 border border-rose-200/70 text-center">
+            <span class="text-[10px] font-bold text-rose-700 uppercase">Active Blockers</span>
+            <div id="kpiBigBlockers" class="text-3xl font-extrabold text-rose-900 my-1">0</div>
+            <span class="text-xs text-rose-700 font-semibold">Hambatan Aktif</span>
+          </div>
+        </div>
+
+        <div class="p-6 rounded-3xl bg-amber-50/90 border border-amber-200">
+          <h4 class="text-xs font-bold text-amber-950 uppercase tracking-wider flex items-center space-x-2 mb-2">
+            <svg class="w-4 h-4 fill-amber-700" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <span>Analisis Status &amp; Hal yang Perlu Di-Improve:</span>
+          </h4>
+          <p id="kpiImprovementText" class="text-xs text-amber-950 font-medium leading-relaxed"></p>
+        </div>
+      </div>
+
+      <!-- SECTION 4: SETTINGS -->
+      <div id="pSecSettings" class="hidden space-y-5">
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl space-y-4 text-xs">
+          <h4 class="font-bold text-gray-900 text-sm mb-2">Preferensi Pengguna</h4>
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-bold text-gray-900 block">Notifikasi WhatsApp Standup</span>
+              <span class="text-gray-400 text-[11px]">Kirim otomatis ringkasan harian sebelum jam 17:00</span>
+            </div>
+            <input type="checkbox" checked class="apple-check">
+          </div>
+          <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+            <div>
+              <span class="font-bold text-gray-900 block">Animasi Pulse Kritis</span>
+              <span class="text-gray-400 text-[11px]">Efek berdenyut lembut pada tugas mendekati deadline</span>
+            </div>
+            <input type="checkbox" checked class="apple-check">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Palet Kontras Ekstrim: Sisi Kiri (Fill) pakai PUTIH tebal, Sisi Kanan (Tint) menggunakan warna departemen yang sangat digelapkan agar keterbacaan mencapai 100% saat teks bertabrakan dengan batas fill progress.
+    const DEPARTMENTS = {
+      HRGA: { 
+        name: 'HRGA', 
+        tint: '#C3C1FF', 
+        fill: '#4743C9', 
+        textOnFill: '#FFFFFF', 
+        textOnTint: '#1A185A', // Ungu tua gelap
+        badgeBg: '#6C68EB', 
+        iconBg: '#6C68EB' 
+      },
+      DM: { 
+        name: 'DM', 
+        tint: '#FFD6DF', 
+        fill: '#E11D48', 
+        textOnFill: '#FFFFFF', 
+        textOnTint: '#5C021E', // Rose/merah gelap pekat
+        badgeBg: '#FF6584', 
+        iconBg: '#FF6584' 
+      },
+      Production: { 
+        name: 'Production', 
+        tint: '#8EE4E2', 
+        fill: '#0B7A75', 
+        textOnFill: '#FFFFFF', 
+        textOnTint: '#032F2E', // Teal pekat mirip hitam
+        badgeBg: '#0F9F9C', 
+        iconBg: '#0F9F9C' 
+      },
+      Management: { 
+        name: 'Management', 
+        tint: '#FFF0D4', 
+        fill: '#D97706', 
+        textOnFill: '#FFFFFF', 
+        textOnTint: '#451A03', // Coklat tua gelap
+        badgeBg: '#E09B19', 
+        iconBg: '#E09B19' 
+      },
+      ABD: { 
+        name: 'ABD', 
+        tint: '#8AD5FF', 
+        fill: '#0284C7', 
+        textOnFill: '#FFFFFF', 
+        textOnTint: '#082F49', // Biru navy gelap
+        badgeBg: '#0087D6', 
+        iconBg: '#0087D6' 
+      }
+    };
+
+    // Database Detail Anggota Tim Lengkap
+    const USER_PROFILES = {
+      Budi: {
+        name: "Budi Santoso",
+        title: "ABD Lead (NIP: 2024-089)",
+        img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+        nip: "EMP-2024-089",
+        dept: "ABD",
+        joinDate: "01 Juli 2024 (2 Tahun 3 Bulan)",
+        contractType: "PKWT Tahunan (Full-Time)",
+        contractPeriod: "01 Jul 2025 – 30 Jun 2027",
+        contractRemaining: "8 Bulan 14 Hari",
+        contractStatus: "Aktif",
+        manager: "Board of Directors",
+        phone: "+62 812-3456-7890",
+        crRate: 83,
+        kpiScore: 350,
+        otdRate: 94,
+        blockers: 0,
+        tasks: [
+          { name: "Setup Tracking Meta CAPI", time: "7D 24H", status: "In Progress", color: "text-blue-600 bg-blue-50" },
+          { name: "Pitching F&B Brand Deck", time: "2D 12H", status: "Overdue", color: "text-rose-600 bg-rose-50" },
+          { name: "Wireframe Landing Page", time: "Done", status: "Completed", color: "text-emerald-600 bg-emerald-50" }
+        ],
+        priority: [
+          "Follow up akses Business Manager klien",
+          "Kirim penawaran paket retainer Q4",
+          "Approval draft MoU bersama Legal"
+        ],
+        improvement: "Tingkat penyelesaian sangat tinggi (83%), namun memegang 6 sub-task lintas departemen. Direkomendasikan delegasi pengerjaan teknis ke tim junior agar fokus strategi lead tetap terjaga."
+      },
+      Siti: {
+        name: "Siti Rahma",
+        title: "Finance & Mgmt (NIP: 2023-042)",
+        img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80",
+        nip: "EMP-2023-042",
+        dept: "Management",
+        joinDate: "15 Maret 2023 (3 Tahun 7 Bulan)",
+        contractType: "Karyawan Tetap (PKWTT)",
+        contractPeriod: "Permanen",
+        contractRemaining: "Permanen",
+        contractStatus: "Tetap",
+        manager: "Managing Partner",
+        phone: "+62 813-8901-2345",
+        crRate: 90,
+        kpiScore: 380,
+        otdRate: 95,
+        blockers: 0,
+        tasks: [
+          { name: "Alokasi Budget Q4 Semua Dept", time: "4D 08H", status: "In Progress", color: "text-blue-600 bg-blue-50" },
+          { name: "Review Cashflow Operasional", time: "Done", status: "Completed", color: "text-emerald-600 bg-emerald-50" }
+        ],
+        priority: [
+          "Closing buku kas operasional akhir bulan",
+          "Persetujuan pengajuan software tracking"
+        ],
+        improvement: "Alokasi anggaran efektif dan minim hambatan. Pertahankan kepatuhan SLA review invoice maksimal 1x24 jam."
+      },
+      Andi: {
+        name: "Andi Wijaya",
+        title: "DM Specialist (NIP: 2025-112)",
+        img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
+        nip: "EMP-2025-112",
+        dept: "DM",
+        joinDate: "05 Januari 2025 (1 Tahun 9 Bulan)",
+        contractType: "PKWT 2 (Renewal Tahunan)",
+        contractPeriod: "05 Jan 2026 – 04 Jan 2027",
+        contractRemaining: "2 Bulan 18 Hari",
+        contractStatus: "Mendekati Renewal",
+        manager: "Budi Santoso (Lead ABD)",
+        phone: "+62 821-4567-8901",
+        crRate: 65,
+        kpiScore: 290,
+        otdRate: 80,
+        blockers: 0,
+        tasks: [
+          { name: "Optimasi Iklan Direct-to-WA", time: "1D 04H", status: "In Progress", color: "text-blue-600 bg-blue-50" },
+          { name: "Testing Creative Video Hook", time: "Done", status: "Completed", color: "text-emerald-600 bg-emerald-50" }
+        ],
+        priority: [
+          "Scaling kampanye iklan produk fashion",
+          "Perbaiki event conversion CAPI Meta"
+        ],
+        improvement: "Eksekusi implementasi cepat, namun tahap serah terima (handover) cenderung tertahan. Buat checklist standar agar output penutup tuntas tepat waktu."
+      },
+      Dewi: {
+        name: "Dewi Lestari",
+        title: "HRGA Officer (NIP: 2024-098)",
+        img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80",
+        nip: "EMP-2024-098",
+        dept: "HRGA",
+        joinDate: "10 Agustus 2024 (2 Tahun 2 Bulan)",
+        contractType: "PKWT Tahunan",
+        contractPeriod: "10 Agu 2025 – 09 Agu 2027",
+        contractRemaining: "9 Bulan 23 Hari",
+        contractStatus: "Aktif",
+        manager: "Siti Rahma (Operations)",
+        phone: "+62 819-0123-4567",
+        crRate: 40,
+        kpiScore: 210,
+        otdRate: 70,
+        blockers: 1,
+        tasks: [
+          { name: "SLA Kontrak Vendor Kantor", time: "Blocked", status: "Overdue", color: "text-rose-600 bg-rose-50" },
+          { name: "Pembaruan Form Absensi", time: "Done", status: "Completed", color: "text-emerald-600 bg-emerald-50" }
+        ],
+        priority: [
+          "Eskalasi persetujuan draft kontrak legal",
+          "Rekap absensi mingguan tim operasional"
+        ],
+        improvement: "Ditemukan 1 Blocker aktif terkait persetujuan legal. Terapkan batas review maksimal 3 hari kerja dan lakukan eskalasi langsung via WhatsApp."
+      }
+    };
+
+    let activeProfileKey = "Budi";
+    let currentRole = 'Lead / Manager';
+    let activeDeptFilter = 'ALL';
+    let currentViewMode = 'capsules';
+    let expandedIds = new Set(['tsk-1', 'tsk-3']);
+    let isEditMode = false;
+
+    const timelineDays = [
+      { date: '02', day: 'Fri', week: 'W18', isWeekend: false },
+      { date: '03', day: 'Sat', week: '', isWeekend: true },
+      { date: '04', day: 'Sun', week: '', isWeekend: true },
+      { date: '05', day: 'Mon', week: '', isWeekend: false },
+      { date: '06', day: 'Tue', week: '', isWeekend: false },
+      { date: '07', day: 'Wed', week: 'W19', isWeekend: false },
+      { date: '08', day: 'Thu', week: '', isWeekend: false },
+      { date: '09', day: 'Fri', week: '', isWeekend: false },
+      { date: '10', day: 'Sat', week: '', isWeekend: true },
+      { date: '11', day: 'Sun', week: '', isWeekend: true },
+      { date: '12', day: 'Mon', week: '', isWeekend: false },
+      { date: '13', day: 'Tue', week: '', isWeekend: false },
+      { date: '14', day: 'Wed', week: 'W20', isWeekend: false },
+      { date: '15', day: 'Thu', week: '', isWeekend: false }
+    ];
+
+    const defaultData = [
+      {
+        id: "tsk-1",
+        dept: "ABD",
+        title: "Cherry Oaks (Website Design)",
+        pic: "Budi Santoso",
+        unit: "Books",
+        actions: [
+          { text: "Design wireframe & UI visual", pic: "Budi", done: true, startDay: 2, duration: 7, hours: "5h over 7 days", badge: "42 min Design", badgeBg: "bg-pink-100 text-pink-700 border-pink-300" },
+          { text: "Development & CAPI integration", pic: "Andi", done: true, startDay: 4, duration: 4, hours: "10h over 4 days", badge: "2h 30 min Devel...", badgeBg: "bg-rose-100 text-rose-700 border-rose-300" },
+          { text: "QA & Client handover", pic: "Siti", done: false, startDay: 8, duration: 4, hours: "4h over 4 days", badge: "1h QA Test", badgeBg: "bg-blue-100 text-blue-700 border-blue-300" }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      },
+      {
+        id: "tsk-2",
+        dept: "DM",
+        title: "Social Media Update",
+        pic: "Siti Rahma",
+        unit: "Campaigns",
+        actions: [
+          { text: "Crafting copy & Meta CTWA ads", pic: "Siti", done: true, startDay: 6, duration: 4, hours: "2h over 4 days", badge: "30 min Craft...", badgeBg: "bg-amber-100 text-amber-800 border-amber-300" },
+          { text: "Budget scaling analysis", pic: "Budi", done: false, startDay: 10, duration: 3, hours: "3h over 3 days", badge: "45 min Budget", badgeBg: "bg-purple-100 text-purple-700 border-purple-300" }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      },
+      {
+        id: "tsk-3",
+        dept: "Production",
+        title: "Jake Peters (Product Design)",
+        pic: "Jake Peters",
+        unit: "Assets",
+        actions: [
+          { text: "Copywriting headline & deck", pic: "Jake", done: true, startDay: 4, duration: 4, hours: "2h over 4 days", badge: "30min Copy", badgeBg: "bg-sky-100 text-sky-800 border-sky-300" },
+          { text: "Blog editorial asset design", pic: "Rian", done: true, startDay: 8, duration: 4, hours: "1h over 4 days", badge: "15min Blog", badgeBg: "bg-cyan-100 text-cyan-800 border-cyan-300" }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      },
+      {
+        id: "tsk-4",
+        dept: "HRGA",
+        title: "Weight Lost & Vendor SLA",
+        pic: "Dewi Lestari",
+        unit: "lb",
+        actions: [
+          { text: "Draft klausul kontrak kerjasama", pic: "Dewi", done: true, startDay: 1, duration: 5, hours: "3h over 5 days", badge: "Legal Draft", badgeBg: "bg-indigo-100 text-indigo-700 border-indigo-300" },
+          { text: "Persetujuan vendor office", pic: "GA", done: false, startDay: 7, duration: 4, hours: "2h over 4 days", badge: "SLA Vendor", badgeBg: "bg-gray-100 text-gray-700 border-gray-300" }
+        ],
+        hasBlocker: true,
+        blockerDesc: "Persetujuan tertahan di bagian Legal"
+      },
+      {
+        id: "tsk-5",
+        dept: "Management",
+        title: "Budget & Cashflow Q4",
+        pic: "Siti Rahma",
+        unit: "$",
+        actions: [
+          { text: "Alokasi budget semua departemen", pic: "Siti", done: true, startDay: 3, duration: 6, hours: "8h over 6 days", badge: "Budget Plan", badgeBg: "bg-amber-100 text-amber-800 border-amber-300" }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      }
+    ];
+
+    function getData() {
+      const stored = localStorage.getItem('apple_gantt_tracker_v5');
+      if (!stored) {
+        localStorage.setItem('apple_gantt_tracker_v5', JSON.stringify(defaultData));
+        return defaultData;
+      }
+      return JSON.parse(stored);
+    }
+
+    function saveData(data) {
+      localStorage.setItem('apple_gantt_tracker_v5', JSON.stringify(data));
+      render();
+    }
+
+    // Modal Profile Controller
+    function openUserProfileModal(userKey) {
+      activeProfileKey = userKey;
+      const u = USER_PROFILES[userKey] || USER_PROFILES.Budi;
+
+      // Header Info
+      document.getElementById('mWelcomeName').innerText = u.name.split(' ')[0];
+      document.getElementById('mUserFullName').innerText = u.name;
+      document.getElementById('mUserNipTitle').innerText = u.title;
+      document.getElementById('mUserPhoto').src = u.img;
+      document.getElementById('mUserCrBadge').innerText = `${u.crRate}%`;
+      document.getElementById('mUserContractBadge').innerText = u.contractRemaining;
+      
+      // Dial Score
+      document.getElementById('mKpiScoreVal').innerText = u.kpiScore;
+      document.getElementById('mKpiCircleDash').setAttribute('stroke-dasharray', `${u.crRate}, 100`);
+
+      // Section Benefits & Kontrak
+      document.getElementById('cStatusBadge').innerText = u.contractStatus;
+      document.getElementById('cRemainingText').innerText = u.contractRemaining;
+      document.getElementById('cPeriodText').innerText = u.contractPeriod;
+      document.getElementById('cNipVal').innerText = u.nip;
+      document.getElementById('cJoinVal').innerText = u.joinDate;
+      document.getElementById('cTypeVal').innerText = u.contractType;
+      document.getElementById('cManagerVal').innerText = u.manager;
+      document.getElementById('cPhoneVal').innerText = u.phone;
+
+      // Section KPI Scorecard
+      document.getElementById('kpiBigCr').innerText = `${u.crRate}%`;
+      document.getElementById('kpiBigOtd').innerText = `${u.otdRate}%`;
+      document.getElementById('kpiBigBlockers').innerText = u.blockers;
+      document.getElementById('kpiImprovementText').innerText = u.improvement;
+
+      // Render Task Table
+      const taskTbl = document.getElementById('mTaskTableBody');
+      taskTbl.innerHTML = '';
+      u.tasks.forEach(t => {
+        const row = document.createElement('div');
+        row.className = "flex justify-between items-center p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition";
+        row.innerHTML = `
+          <div class="truncate mr-2">
+            <span class="font-bold text-gray-800">${t.name}</span>
+            <span class="text-[10px] text-gray-400 block">Lead Task</span>
+          </div>
+          <div class="flex items-center space-x-3 text-right">
+            <span class="text-[10px] text-gray-500 font-semibold">${t.time}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${t.color}">${t.status}</span>
+          </div>
+        `;
+        taskTbl.appendChild(row);
+      });
+
+      // Render Priority Tasks Panel
+      const priorityPnl = document.getElementById('mPriorityListBody');
+      priorityPnl.innerHTML = '';
+      u.priority.forEach(p => {
+        const item = document.createElement('div');
+        item.className = "p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between";
+        item.innerHTML = `
+          <div class="flex items-center space-x-2 truncate">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span class="text-[11px] text-gray-200 truncate">${p}</span>
+          </div>
+          <span class="text-[10px] text-gray-400">&rsaquo;</span>
+        `;
+        priorityPnl.appendChild(item);
+      });
+
+      // Update Nav bar avatar
+      document.getElementById('navAvatarImg').src = u.img;
+      document.getElementById('navUserName').innerText = u.name.split(' ')[0];
+      document.getElementById('profileUserSwitcher').value = userKey;
+
+      switchProfileSection('dashboard');
+      document.getElementById('userProfileModal').classList.remove('hidden');
+    }
+
+    function switchProfileUser(userKey) {
+      openUserProfileModal(userKey);
+    }
+
+    function closeProfileDashboard() {
+      document.getElementById('userProfileModal').classList.add('hidden');
+    }
+
+    function switchProfileSection(sec) {
+      const sDash = document.getElementById('pSecDashboard');
+      const sCont = document.getElementById('pSecContract');
+      const sPerf = document.getElementById('pSecPerformance');
+      const sSett = document.getElementById('pSecSettings');
+
+      [sDash, sCont, sPerf, sSett].forEach(el => el.classList.add('hidden'));
+
+      document.querySelectorAll('#userProfileModal nav button').forEach(b => {
+        b.className = "px-4 py-1.5 rounded-full hover:text-black transition";
+      });
+
+      const activeBtn = document.getElementById(`pNav-${sec}`);
+      if (activeBtn) {
+        activeBtn.className = "px-4 py-1.5 rounded-full bg-black text-white shadow-sm transition";
+      }
+
+      if (sec === 'dashboard') sDash.classList.remove('hidden');
+      if (sec === 'contract') sCont.classList.remove('hidden');
+      if (sec === 'performance') sPerf.classList.remove('hidden');
+      if (sec === 'settings') sSett.classList.remove('hidden');
+    }
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      const btnC = document.getElementById('btnViewCapsules');
+      const btnG = document.getElementById('btnViewGantt');
+      const viewC = document.getElementById('capsulesView');
+      const viewG = document.getElementById('ganttView');
+
+      if (mode === 'capsules') {
+        btnC.className = "px-3.5 py-1.5 rounded-full bg-white text-gray-900 shadow-sm transition";
+        btnG.className = "px-3.5 py-1.5 rounded-full text-gray-600 hover:text-black transition flex items-center space-x-1";
+        viewC.classList.remove('hidden');
+        viewG.classList.add('hidden');
+      } else {
+        btnG.className = "px-3.5 py-1.5 rounded-full bg-white text-gray-900 shadow-sm transition flex items-center space-x-1";
+        btnC.className = "px-3.5 py-1.5 rounded-full text-gray-600 hover:text-black transition";
+        viewC.classList.add('hidden');
+        viewG.classList.remove('hidden');
+        renderGantt();
+      }
+    }
+
+    function toggleRole() {
+      if (currentRole === 'Lead / Manager') {
+        currentRole = 'Staff';
+      } else {
+        const pin = prompt("Masukkan PIN Lead / Manager (Default: 1234):");
+        if (pin === "1234") {
+          currentRole = 'Lead / Manager';
+        } else {
+          alert("PIN salah.");
+          return;
+        }
+      }
+      updateRoleUI();
+    }
+
+    function updateRoleUI() {
+      const badge = document.getElementById('roleBadge');
+      const btnNew = document.getElementById('btnNewTask');
+
+      badge.innerText = currentRole;
+      if (currentRole === 'Lead / Manager') {
+        badge.className = "font-bold text-blue-600 hover:underline";
+        btnNew.classList.remove('opacity-40', 'cursor-not-allowed');
+      } else {
+        badge.className = "font-bold text-gray-600 hover:underline";
+        btnNew.classList.add('opacity-40', 'cursor-not-allowed');
+      }
+    }
+
+    function handleNewTaskClick() {
+      if (currentRole !== 'Lead / Manager') {
+        alert("Akses dibatasi. Hanya Lead atau Manager yang memiliki wewenang membuat task baru.");
+        return;
+      }
+      openModal();
+    }
+
+    function filterDept(dept) {
+      activeDeptFilter = dept;
+      document.querySelectorAll('.dept-filter-btn').forEach(btn => {
+        if (btn.dataset.dept === dept) {
+          btn.className = "dept-filter-btn px-4 py-1.5 rounded-full bg-black text-white";
+        } else {
+          btn.className = "dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200";
+        }
+      });
+      render();
+    }
+
+    function toggleCard(id) {
+      if (isEditMode) return;
+      if (expandedIds.has(id)) {
+        expandedIds.delete(id);
+      } else {
+        expandedIds.add(id);
+      }
+      render();
+    }
+
+    function toggleEdit() {
+      isEditMode = !isEditMode;
+      document.getElementById('editBtn').innerText = isEditMode ? 'Done' : 'Edit';
+      document.getElementById('editBtn').classList.toggle('text-blue-600', isEditMode);
+      render();
+    }
+
+    function render() {
+      const list = getData();
+      renderCapsules(list);
+      if (currentViewMode === 'gantt') {
+        renderGantt(list);
+      }
+    }
+
+    function renderCapsules(list) {
+      const container = document.getElementById('capsulesView');
+      container.innerHTML = '';
+
+      let filtered = list;
+      if (activeDeptFilter !== 'ALL') {
+        filtered = list.filter(item => item.dept === activeDeptFilter);
+      }
+
+      filtered.forEach(item => {
+        const theme = DEPARTMENTS[item.dept] || DEPARTMENTS.ABD;
+        const total = item.actions.length;
+        const done = item.actions.filter(a => a.done).length;
+        const pct = total === 0 ? 0 : (done / total) * 100;
+        const pctText = pct.toFixed(2) + '%';
+        const isExpanded = expandedIds.has(item.id);
+
+        const col = document.createElement('div');
+        col.className = 'w-full flex flex-col';
+
+        // Logika Dynamic Layer untuk Keterbacaan Kontras Ganda
+        col.innerHTML = `
+          <div onclick="toggleCard('${item.id}')" class="progress-capsule" style="background-color: ${theme.tint};">
+            
+            <!-- Sisi Solid Progress Fill -->
+            <div class="h-full transition-all duration-500" style="width: ${pct}%; background-color: ${theme.fill};"></div>
+            
+            <!-- 1. Layer Teks atas Progress Fill (Kontras Putih Terang) -->
+            <div class="absolute inset-0 px-6 py-4 flex flex-col justify-center pointer-events-none overflow-hidden" style="clip-path: inset(0 ${100 - pct}% 0 0); transition: clip-path 0.5s;">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                  <span class="text-[17px] font-extrabold tracking-tight text-white">${item.title}</span>
+                  <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/25 text-white backdrop-blur-sm">${item.dept}</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  ${item.hasBlocker ? `<span class="bg-white text-red-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">BLOCKER</span>` : ''}
+                  <span class="text-xs font-black text-white ${isExpanded ? 'rotate-180' : ''}">▼</span>
+                </div>
+              </div>
+              <span class="text-[13px] font-bold mt-0.5 text-white/95">${done} / ${total} Langkah Selesai</span>
+              <span class="text-[14px] font-black text-white">${pctText}</span>
+            </div>
+
+            <!-- 2. Layer Teks atas Tint Background (Warna Gelap Kontras Tinggi) -->
+            <div class="absolute inset-0 px-6 py-4 flex flex-col justify-center pointer-events-none overflow-hidden" style="clip-path: inset(0 0 0 ${pct}%); transition: clip-path 0.5s;">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                  <span class="text-[17px] font-extrabold tracking-tight" style="color: ${theme.textOnTint};">${item.title}</span>
+                  <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full" style="background-color: ${theme.fill}22; color: ${theme.textOnTint};">${item.dept}</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  ${item.hasBlocker ? `<span class="bg-rose-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">BLOCKER</span>` : ''}
+                  <span class="text-xs font-black ${isExpanded ? 'rotate-180' : ''}" style="color: ${theme.textOnTint};">▼</span>
+                </div>
+              </div>
+              <span class="text-[13px] font-bold mt-0.5 opacity-90" style="color: ${theme.textOnTint};">${done} / ${total} Langkah Selesai</span>
+              <span class="text-[14px] font-black" style="color: ${theme.textOnTint};">${pctText}</span>
+            </div>
+
+          </div>
+
+          <div class="accordion-drawer ${isExpanded ? 'open' : ''} bg-white rounded-3xl p-5 border border-gray-200/60 shadow-sm space-y-3">
+            <div class="flex justify-between items-center text-xs text-gray-500 pb-2 border-b border-gray-100">
+              <span class="cursor-pointer hover:underline" onclick="openUserProfileModal('Budi')">
+                Lead PIC: <b class="text-blue-600 font-bold">${item.pic}</b> (Lihat Profil &amp; KPI)
+              </span>
+              ${item.hasBlocker ? `<span class="text-rose-600 font-bold">🚨 Blocker: ${item.blockerDesc}</span>` : ''}
+            </div>
+            <div class="space-y-2">
+              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Action Plans &amp; Timeline Bar:</span>
+              ${item.actions.map((act, idx) => `
+                <div class="flex items-center justify-between p-2.5 rounded-2xl border ${act.done ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-200/70'}">
+                  <label class="flex items-center space-x-3 flex-1 cursor-pointer">
+                    <input type="checkbox" ${act.done ? 'checked' : ''} onchange="toggleStep('${item.id}',${idx}, this.checked)" class="apple-check">
+                    <span class="text-xs ${act.done ? 'line-through text-gray-400 font-normal' : 'text-gray-800 font-semibold'}">${act.text}</span>
+                  </label>
+                  <button onclick="openUserProfileModal('Budi')" class="text-[9px] font-bold px-2.5 py-0.5 rounded-full ${act.done ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'} hover:scale-105 transition">
+                    ${act.pic || item.pic}
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        container.appendChild(col);
+      });
+    }
+
+    // Render Gantt Timeline Identik dengan Foto Referensi
+    function renderGantt(list = getData()) {
+      const container = document.getElementById('ganttTimelineContent');
+      let filtered = list;
+      if (activeDeptFilter !== 'ALL') {
+        filtered = list.filter(item => item.dept === activeDeptFilter);
+      }
+
+      let html = `
+        <div class="min-w-[880px]">
+          <div class="flex border-b border-gray-200 pb-2 text-xs">
+            <div class="w-64 font-bold text-gray-400 pl-2">TASK / PROJECT</div>
+            <div class="flex-1 flex">
+      `;
+
+      timelineDays.forEach((td, i) => {
+        html += `
+          <div class="gantt-day-col flex-1 ${td.isWeekend ? 'gantt-weekend' : ''}">
+            ${td.week ? `<div class="text-[10px] font-bold text-gray-400 text-left pl-1">May <b>${td.week}</b></div>` : '<div class="text-[10px]">&nbsp;</div>'}
+            <div class="text-[13px] font-bold text-gray-700 mt-1">${td.date}</div>
+          </div>
+        `;
+      });
+
+      html += `
+            </div>
+          </div>
+      `;
+
+      filtered.forEach(item => {
+        const doneActions = item.actions ? item.actions.filter(a => a.done) : [];
+        const theme = DEPARTMENTS[item.dept] || DEPARTMENTS.ABD;
+
+        html += `
+          <div class="flex items-center py-3 border-b border-gray-100 hover:bg-gray-50/50 transition">
+            <div class="w-64 flex items-center space-x-2 pl-2">
+              <span class="w-7 h-7 rounded-xl flex items-center justify-center text-white text-xs font-bold" style="background-color: ${theme.fill};">
+                ${item.dept.substring(0,2)}
+              </span>
+              <div class="truncate">
+                <div class="text-xs font-extrabold text-gray-900 truncate">${item.title}</div>
+                <div class="text-[10px] text-gray-400 font-medium">Lead: ${item.pic}</div>
+              </div>
+            </div>
+
+            <div class="flex-1 flex">
+              ${timelineDays.map((td, dIdx) => {
+                const hasDoneActivity = doneActions.some(a => dIdx >= (a.startDay || 0) && dIdx <= (a.startDay || 0) + (a.duration || 2));
+                return `
+                  <div class="gantt-day-col flex-1 py-1 ${td.isWeekend ? 'gantt-weekend' : ''}">
+                    ${hasDoneActivity ? `<span class="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-800">Done</span>` : `<span class="text-[10px] text-gray-300">0h</span>`}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+        if (doneActions.length > 0) {
+          doneActions.forEach(act => {
+            const start = act.startDay || 1;
+            const dur = Math.min(act.duration || 4, 14 - start);
+            const leftPct = (start / 14) * 100;
+            const widthPct = (dur / 14) * 100;
+
+            html += `
+              <div class="flex items-center py-2 relative border-b border-gray-50">
+                <div class="w-64 pl-10 pr-2 text-xs text-gray-600 font-medium truncate flex items-center space-x-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span class="truncate">${act.text}</span>
+                </div>
+
+                <div class="flex-1 flex relative h-8 items-center">
+                  ${timelineDays.map(td => `<div class="gantt-day-col flex-1 h-full ${td.isWeekend ? 'gantt-weekend' : ''}"></div>`).join('')}
+                  
+                  <div class="absolute h-7 rounded-full border border-pink-300 bg-pink-50/90 text-pink-900 flex items-center px-2 shadow-sm gantt-bar-pill text-[11px]" style="left: ${leftPct}%; width: ${Math.max(widthPct, 18)}%;">
+                    <span class="px-2 py-0.5 rounded-full bg-pink-500 text-white font-extrabold text-[9px] mr-2 whitespace-nowrap">
+                      ${act.badge || 'Done'}
+                    </span>
+                    <span class="font-bold truncate mr-1">${act.pic}</span>
+                    <span class="text-[10px] text-gray-500 truncate hidden lg:inline">${act.hours || '4h over 4 days'}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+        }
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    function toggleStep(id, idx, isDone) {
+      const data = getData();
+      const item = data.find(c => c.id === id);
+      if (!item) return;
+
+      item.actions[idx].done = isDone;
+      saveData(data);
+    }
+
+    function openModal() {
+      document.getElementById('inpTitle').value = '';
+      document.getElementById('inpPic').value = '';
+      document.getElementById('taskModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('taskModal').classList.add('hidden');
+    }
+
+    function addField() {
+      const box = document.getElementById('fieldsBox');
+      const div = document.createElement('div');
+      div.className = 'flex space-x-2';
+      div.innerHTML = `
+        <input type="text" placeholder="Langkah ${box.children.length + 1}" class="step-txt flex-1 px-3 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+        <input type="text" placeholder="Assignee" class="step-pic w-20 px-2 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+        <input type="number" placeholder="Hari" min="1" max="14" value="3" class="step-days w-16 px-2 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none text-center">
+      `;
+      box.appendChild(div);
+    }
+
+    function saveTask() {
+      const dept = document.getElementById('inpDept').value;
+      const title = document.getElementById('inpTitle').value.trim();
+      const pic = document.getElementById('inpPic').value.trim() || 'Unassigned';
+      const unit = document.getElementById('inpUnit').value.trim() || 'Tasks';
+
+      const txts = document.querySelectorAll('.step-txt');
+      const pics = document.querySelectorAll('.step-pic');
+      const days = document.querySelectorAll('.step-days');
+      const actions = [];
+
+      txts.forEach((t, i) => {
+        const val = t.value.trim();
+        const p = pics[i]?.value.trim() || pic;
+        const d = parseInt(days[i]?.value || 3);
+        if (val) {
+          actions.push({
+            text: val,
+            pic: p,
+            done: false,
+            startDay: (i * 2) % 10,
+            duration: d,
+            hours: `${d * 2}h over ${d} days`,
+            badge: `${d} Hari`
+          });
+        }
+      });
+
+      if (!title) {
+        alert("Mohon isi judul.");
+        return;
+      }
+
+      if (actions.length === 0) {
+        actions.push({ text: "Eksekusi utama", pic, done: false, startDay: 2, duration: 4, hours: "4h over 4 days", badge: "Task" });
+      }
+
+      const data = getData();
+      const newId = "tsk-" + Date.now();
+      data.unshift({
+        id: newId,
+        dept,
+        title,
+        pic,
+        unit,
+        actions,
+        hasBlocker: false,
+        blockerDesc: ""
+      });
+
+      expandedIds.add(newId);
+      saveData(data);
+      closeModal();
+    }
+
+    function copyWA() {
+      const list = getData();
+      let msg = `*DAILY PROGRESS UPDATE*\n\n`;
+      list.forEach((p, idx) => {
+        const total = p.actions.length;
+        const done = p.actions.filter(a => a.done).length;
+        const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+        msg += `*${idx + 1}. [${p.dept}] ${p.title}*\n• Progress: ${pct}%\n• Lead: ${p.pic}\n`;
+        if (p.hasBlocker) msg += `• 🚨 *BLOCKER:* ${p.blockerDesc}\n`;
+        msg += `\n`;
+      });
+
+      navigator.clipboard.writeText(msg).then(() => {
+        const t = document.getElementById('toast');
+        t.classList.remove('opacity-0', 'pointer-events-none');
+        setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2000);
+      });
+    }
+
+    updateRoleUI();
+    render();
+  </script>
+
+</body>
+</html>
