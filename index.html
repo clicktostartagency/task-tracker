@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress Tracker - User Profile & KPI Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #f2f2f7;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .progress-capsule {
+      position: relative;
+      border-radius: 28px;
+      overflow: hidden;
+      cursor: pointer;
+      min-height: 110px;
+      display: flex;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      transition: transform 0.24s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.24s ease;
+    }
+    .progress-capsule:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
+    }
+    .progress-capsule:active {
+      transform: scale(0.985);
+    }
+
+    .accordion-drawer {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: scaleY(0.96);
+      transform-origin: top;
+      transition: max-height 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.28s ease,
+                  transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                  margin-top 0.32s ease;
+    }
+    .accordion-drawer.open {
+      max-height: 650px;
+      opacity: 1;
+      transform: scaleY(1);
+      margin-top: 12px;
+    }
+
+    .apple-check {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #c7c7cc;
+      border-radius: 50%;
+      outline: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .apple-check:checked {
+      background-color: #34c759;
+      border-color: #34c759;
+      transform: scale(1.05);
+    }
+    .apple-check:checked::after {
+      content: '';
+      width: 6px;
+      height: 11px;
+      border: solid white;
+      border-width: 0 2.5px 2.5px 0;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    .gantt-day-col {
+      min-width: 44px;
+      max-width: 44px;
+      text-align: center;
+      border-right: 1px solid #f1f5f9;
+    }
+    .gantt-weekend {
+      background-color: #f8fafc;
+    }
+    .gantt-bar-pill {
+      border-radius: 9999px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: all 0.2s ease;
+    }
+    .gantt-bar-pill:hover {
+      filter: brightness(0.97);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body class="min-h-screen py-8 px-4 md:px-8 lg:px-12 flex justify-center pb-24">
+
+  <div class="w-full max-w-6xl flex flex-col">
+
+    <!-- Top Bar Navigation -->
+    <header class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200/70">
+      
+      <!-- Logo / Title -->
+      <div class="flex items-center space-x-3">
+        <div class="hidden md:flex items-center space-x-2 mr-2">
+          <span class="w-3.5 h-3.5 rounded-full bg-[#ff5f56]"></span>
+          <span class="w-3.5 h-3.5 rounded-full bg-[#ffbd2e]"></span>
+          <span class="w-3.5 h-3.5 rounded-full bg-[#27c93f]"></span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <svg class="w-6 h-6 text-purple-600 fill-current" viewBox="0 0 24 24">
+            <path d="M9.5 16.5l-4-4 1.4-1.4 2.6 2.6 7.6-7.6 1.4 1.4z"/>
+          </svg>
+          <h1 class="text-3xl font-extrabold text-black tracking-tight">
+            Tasks & Timeline
+          </h1>
+        </div>
+      </div>
+
+      <!-- Controls, View Switcher & User Profile Trigger -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        
+        <!-- View Toggle (Desktop Only) -->
+        <div class="hidden md:flex bg-gray-200/80 p-1 rounded-full text-xs font-semibold">
+          <button onclick="setViewMode('capsules')" id="btnViewCapsules" class="px-3.5 py-1.5 rounded-full bg-white text-gray-900 shadow-sm transition">
+            Capsules View
+          </button>
+          <button onclick="setViewMode('gantt')" id="btnViewGantt" class="px-3.5 py-1.5 rounded-full text-gray-600 hover:text-black transition flex items-center space-x-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+            <span>Gantt Chart</span>
+          </button>
+        </div>
+
+        <!-- Tombol Buka User Profile Lengkap -->
+        <button onclick="openCurrentUserProfile()" class="bg-white text-gray-800 hover:text-blue-600 font-semibold text-xs md:text-sm px-3.5 py-2 rounded-full shadow-sm border border-gray-200/70 flex items-center space-x-2 transition">
+          <span id="activeUserAvatarMini" class="w-5 h-5 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px]">BS</span>
+          <span id="activeUserNameMini">Budi Santoso</span>
+        </button>
+
+        <!-- Role Indicator & Toggle -->
+        <div class="bg-white px-3.5 py-1.5 rounded-full border border-gray-200/80 shadow-sm flex items-center space-x-2 text-xs">
+          <span class="text-gray-500 font-medium">Role:</span>
+          <button onclick="toggleRole()" id="roleBadge" class="font-bold text-blue-600 hover:underline">
+            Lead / Manager
+          </button>
+        </div>
+
+        <button onclick="copyWA()" class="bg-white text-gray-800 hover:text-emerald-600 font-semibold text-xs md:text-sm px-4 py-2 rounded-full shadow-sm border border-gray-200/60 transition">
+          Share WA
+        </button>
+
+        <button onclick="handleNewTaskClick()" id="btnNewTask" class="bg-[#0071e3] hover:bg-[#0062c4] text-white font-semibold text-xs md:text-sm px-4 md:px-5 py-2 rounded-full shadow-sm flex items-center space-x-1.5 active:scale-95 transition">
+          <span class="text-base font-bold leading-none">+</span>
+          <span>Task Baru</span>
+        </button>
+      </div>
+
+    </header>
+
+    <!-- Department Filter Tabs -->
+    <div class="flex items-center space-x-2 overflow-x-auto pb-3 mb-6 text-xs font-semibold">
+      <button onclick="filterDept('ALL')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-black text-white" data-dept="ALL">
+        Semua
+      </button>
+      <button onclick="filterDept('HRGA')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="HRGA">
+        HRGA
+      </button>
+      <button onclick="filterDept('DM')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="DM">
+        DM
+      </button>
+      <button onclick="filterDept('Production')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="Production">
+        Production
+      </button>
+      <button onclick="filterDept('Management')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="Management">
+        Management
+      </button>
+      <button onclick="filterDept('ABD')" class="dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200" data-dept="ABD">
+        ABD
+      </button>
+    </div>
+
+    <!-- VIEW 1: CAPSULES VIEW -->
+    <main id="capsulesView" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      <!-- Injected by JavaScript -->
+    </main>
+
+    <!-- VIEW 2: GANTT CHART TIMELINE -->
+    <div id="ganttView" class="hidden bg-white rounded-3xl shadow-sm border border-gray-200/80 p-6 overflow-x-auto">
+      <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
+        <div>
+          <h2 class="text-lg font-extrabold text-gray-900 flex items-center space-x-2">
+            <span>Completed & Active Progress Timeline</span>
+          </h2>
+          <p class="text-xs text-gray-500 mt-0.5">Klik nama PIC pada baris timeline untuk melihat Detail Profil, Kontrak & KPI</p>
+        </div>
+        <div class="flex items-center space-x-3 text-xs font-medium">
+          <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400"></span><span>Done Sub-Tasks</span></span>
+          <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-blue-400"></span><span>In Progress</span></span>
+        </div>
+      </div>
+
+      <div id="ganttTimelineContent">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-8 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-md text-white text-xs font-semibold px-5 py-2.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50">
+    Laporan standup disalin ke clipboard!
+  </div>
+
+  <!-- MODAL: Comprehensive User Profile (Settings, KPI, Contract Details) -->
+  <div id="userProfileModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[32px] w-full max-w-xl p-7 md:p-8 shadow-2xl border border-gray-100 max-h-[92vh] overflow-y-auto">
+      
+      <!-- Profile Header -->
+      <div class="flex justify-between items-start mb-6 pb-5 border-b border-gray-100">
+        <div class="flex items-center space-x-4">
+          <div id="uAvatar" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-extrabold text-2xl shadow-md">
+            BS
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 id="uFullName" class="text-2xl font-bold text-gray-900">Budi Santoso</h3>
+              <span id="uDeptBadge" class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">ABD</span>
+            </div>
+            <p id="uPosition" class="text-xs text-gray-500 font-semibold mt-0.5">Account & Business Development Lead</p>
+            <p id="uEmail" class="text-xs text-gray-400 font-normal">budi.santoso@company.id</p>
+          </div>
+        </div>
+        <button onclick="closeUserProfileModal()" class="text-gray-400 hover:text-gray-600 text-3xl font-light leading-none">&times;</button>
+      </div>
+
+      <!-- Segmented Tabs: 1. Detail & Kontrak | 2. KPI Scorecard | 3. Settings -->
+      <div class="flex bg-gray-100/90 p-1.5 rounded-2xl mb-6 text-xs font-bold text-gray-600">
+        <button onclick="switchProfileTab('contract')" id="pTabContract" class="flex-1 py-2 rounded-xl bg-white text-black shadow-sm transition">
+          1. Detail & Kontrak
+        </button>
+        <button onclick="switchProfileTab('kpi')" id="pTabKpi" class="flex-1 py-2 rounded-xl text-gray-500 hover:text-black transition">
+          2. Scorecard KPI
+        </button>
+        <button onclick="switchProfileTab('settings')" id="pTabSettings" class="flex-1 py-2 rounded-xl text-gray-500 hover:text-black transition">
+          3. Settings
+        </button>
+      </div>
+
+      <!-- TAB 1: DETAILS & CONTRACT INFORMATION -->
+      <div id="sectionContract" class="space-y-4">
+        
+        <!-- Contract Card Summary -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50/60 border border-blue-100/80 p-4 rounded-2xl">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">Status Masa Kontrak</span>
+            <span id="uContractStatusBadge" class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Aktif (PKWT)</span>
+          </div>
+          <div class="flex justify-between items-baseline">
+            <div>
+              <div class="text-[11px] text-gray-500 font-medium">Sisa Masa Berlaku:</div>
+              <div id="uContractRemaining" class="text-lg font-extrabold text-blue-950 mt-0.5">8 Bulan 14 Hari</div>
+            </div>
+            <div class="text-right">
+              <div class="text-[11px] text-gray-500 font-medium">Periode Kontrak:</div>
+              <div id="uContractPeriod" class="text-xs font-bold text-gray-700 mt-0.5">01 Jul 2025 – 30 Jun 2027</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail Spesifik User -->
+        <div class="bg-gray-50/80 border border-gray-200/70 p-4 rounded-2xl space-y-2.5 text-xs">
+          <div class="flex justify-between py-1 border-b border-gray-200/50">
+            <span class="text-gray-500 font-medium">Nomor Induk Pegawai (NIP):</span>
+            <span id="uNip" class="font-bold text-gray-900">EMP-2024-089</span>
+          </div>
+          <div class="flex justify-between py-1 border-b border-gray-200/50">
+            <span class="text-gray-500 font-medium">Tanggal Mulai Bergabung:</span>
+            <span id="uJoinDate" class="font-bold text-gray-900">01 Juli 2024 (2 Tahun 3 Bulan)</span>
+          </div>
+          <div class="flex justify-between py-1 border-b border-gray-200/50">
+            <span class="text-gray-500 font-medium">Tipe Ikatan Kerja:</span>
+            <span id="uContractType" class="font-bold text-gray-900">Full-time Contract (PKWT Tahunan)</span>
+          </div>
+          <div class="flex justify-between py-1 border-b border-gray-200/50">
+            <span class="text-gray-500 font-medium">Divisi & Atasan Langsung:</span>
+            <span id="uManager" class="font-bold text-gray-900">ABD & DM (Direct: Managing Partner)</span>
+          </div>
+          <div class="flex justify-between py-1">
+            <span class="text-gray-500 font-medium">Nomor WhatsApp / Koordinasi:</span>
+            <span id="uPhone" class="font-bold text-emerald-700">+62 812-3456-7890</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 2: KPI SCORECARD & PERFORMANCE DIAGNOSIS -->
+      <div id="sectionKpi" class="space-y-4 hidden">
+        
+        <!-- Scorecard Metric Matrix -->
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-blue-50/70 border border-blue-200/60 p-3.5 rounded-2xl text-center">
+            <div class="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Completion (CR%)</div>
+            <div id="uKpiCr" class="text-2xl font-extrabold text-blue-900 mt-1">83%</div>
+            <div id="uKpiSubRatio" class="text-[10px] text-blue-700 font-semibold mt-0.5">5/6 Sub-tasks</div>
+          </div>
+          <div class="bg-emerald-50/70 border border-emerald-200/60 p-3.5 rounded-2xl text-center">
+            <div class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">On-Time (OTD)</div>
+            <div id="uKpiOtd" class="text-2xl font-extrabold text-emerald-900 mt-1">94%</div>
+            <div class="text-[10px] text-emerald-700 font-semibold mt-0.5">Target: &ge;90%</div>
+          </div>
+          <div class="bg-rose-50/70 border border-rose-200/60 p-3.5 rounded-2xl text-center">
+            <div class="text-[10px] font-bold text-rose-700 uppercase tracking-wider">Active Blockers</div>
+            <div id="uKpiBlockers" class="text-2xl font-extrabold text-rose-900 mt-1">0</div>
+            <div class="text-[10px] text-rose-700 font-semibold mt-0.5">Kendala Aktif</div>
+          </div>
+        </div>
+
+        <!-- Diagnosa Area to Improve -->
+        <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80">
+          <div class="flex items-center space-x-2 text-xs font-bold text-amber-900 mb-1.5">
+            <svg class="w-4 h-4 fill-amber-700" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <span>Analisis KPI & Rekomendasi Improvement:</span>
+          </div>
+          <p id="uImprovementAdvice" class="text-xs text-amber-950 font-medium leading-relaxed"></p>
+        </div>
+
+        <!-- Daftar Log Riwayat Tugas User -->
+        <div>
+          <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Track Record Pekerjaan Selesai</h4>
+          <div id="uTaskListContainer" class="space-y-2 max-h-44 overflow-y-auto pr-1"></div>
+        </div>
+
+      </div>
+
+      <!-- TAB 3: USER PREFERENCE & SYSTEM SETTINGS -->
+      <div id="sectionSettings" class="space-y-4 hidden">
+        
+        <div class="bg-gray-50/80 border border-gray-200/70 p-4 rounded-2xl space-y-3.5">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold text-gray-900">Notifikasi WA Standup Harian</div>
+              <div class="text-[11px] text-gray-500">Kirim format rekap otomatis sebelum jam 17:00</div>
+            </div>
+            <input type="checkbox" checked class="apple-check">
+          </div>
+
+          <div class="flex items-center justify-between border-t border-gray-200/60 pt-3">
+            <div>
+              <div class="text-xs font-bold text-gray-900">Animasi Pulse Kritis (Pill Bar)</div>
+              <div class="text-[11px] text-gray-500">Kedap-kedip visual saat mendekati deadline / blocker</div>
+            </div>
+            <input type="checkbox" checked class="apple-check">
+          </div>
+
+          <div class="flex items-center justify-between border-t border-gray-200/60 pt-3">
+            <div>
+              <div class="text-xs font-bold text-gray-900">Ganti User Aktif / Switch Account</div>
+              <div class="text-[11px] text-gray-500">Pilih identitas profil yang sedang login</div>
+            </div>
+            <select id="switchUserSelect" onchange="changeActiveUser(this.value)" class="text-xs px-2.5 py-1.5 bg-white border border-gray-300 rounded-xl font-semibold">
+              <option value="Budi">Budi Santoso</option>
+              <option value="Siti">Siti Rahma</option>
+              <option value="Andi">Andi Wijaya</option>
+              <option value="Dewi">Dewi Lestari</option>
+              <option value="Jake">Jake Peters</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Sistem -->
+        <div class="space-y-2 pt-2">
+          <button onclick="exportUserDataJson()" class="w-full py-2.5 rounded-2xl bg-white border border-gray-200 text-gray-700 font-semibold text-xs hover:bg-gray-50 transition">
+            Ekspor Data Profil & KPI (.JSON)
+          </button>
+        </div>
+
+      </div>
+
+      <div class="mt-7">
+        <button onclick="closeUserProfileModal()" class="w-full py-2.5 rounded-2xl bg-gray-100 text-gray-800 font-semibold text-xs hover:bg-gray-200 transition">
+          Selesai & Tutup
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: Task Baru (Lead / Manager Only) -->
+  <div id="taskModal" class="fixed inset-0 bg-black/35 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-[32px] w-full max-w-md p-7 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-5">
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900">Task Baru</h3>
+          <p class="text-xs text-gray-500 font-medium">Akses Khusus Lead / Manager</p>
+        </div>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-3xl font-light">&times;</button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Departemen</label>
+          <select id="inpDept" class="w-full mt-1.5 px-3.5 py-2.5 bg-gray-100 rounded-2xl text-sm font-semibold focus:outline-none">
+            <option value="HRGA">HRGA (#C3C1FF)</option>
+            <option value="DM">DM (#FF6584)</option>
+            <option value="Production">Production (#8EE4E2)</option>
+            <option value="Management">Management (#FFF0D4)</option>
+            <option value="ABD">ABD (#8AD5FF)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Judul / Brand</label>
+          <input type="text" id="inpTitle" placeholder="Misal: Payroll Q4 / Scale Meta Ads" class="w-full mt-1.5 px-4 py-2.5 bg-gray-100 rounded-2xl text-sm focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Lead PIC</label>
+            <input type="text" id="inpPic" placeholder="Misal: Budi" class="w-full mt-1.5 px-3.5 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Satuan Unit</label>
+            <input type="text" id="inpUnit" placeholder="Tasks / Books / $" class="w-full mt-1.5 px-3.5 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Action Plans, Assignee & Durasi</label>
+            <button onclick="addField()" class="text-xs font-bold text-blue-600 hover:underline">+ Tambah</button>
+          </div>
+          <div id="fieldsBox" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+            <div class="flex space-x-2">
+              <input type="text" placeholder="Langkah 1" class="step-txt flex-1 px-3 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+              <input type="text" placeholder="Assignee" class="step-pic w-20 px-2 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+              <input type="number" placeholder="Hari (1-14)" min="1" max="14" value="3" class="step-days w-16 px-2 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none text-center">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex space-x-3">
+        <button onclick="closeModal()" class="w-1/2 py-2.5 rounded-2xl bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-gray-200 transition">Batal</button>
+        <button onclick="saveTask()" class="w-1/2 py-2.5 rounded-2xl bg-[#0071e3] text-white font-bold text-sm shadow-md hover:bg-[#0062c4] transition">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEPARTMENTS = {
+      HRGA: { name: 'HRGA', tint: '#C3C1FF', fill: '#4743C9', textOnFill: '#FFFFFF', textOnTint: '#1A185A' },
+      DM: { name: 'DM', tint: '#FFD6DF', fill: '#E11D48', textOnFill: '#FFFFFF', textOnTint: '#5C021E' },
+      Production: { name: 'Production', tint: '#8EE4E2', fill: '#0B7A75', textOnFill: '#FFFFFF', textOnTint: '#032F2E' },
+      Management: { name: 'Management', tint: '#FFF0D4', fill: '#D97706', textOnFill: '#FFFFFF', textOnTint: '#451A03' },
+      ABD: { name: 'ABD', tint: '#8AD5FF', fill: '#0284C7', textOnFill: '#FFFFFF', textOnTint: '#082F49' }
+    };
+
+    // Database Detail Anggota Tim Lengkap (Profil, Kontrak, & Jabatan)
+    const MEMBER_PROFILES = {
+      "Budi": {
+        fullName: "Budi Santoso",
+        nip: "EMP-2024-089",
+        dept: "ABD",
+        position: "Account & Business Development Lead",
+        email: "budi.santoso@company.id",
+        phone: "+62 812-3456-7890",
+        joinDate: "01 Juli 2024 (2 Tahun 3 Bulan)",
+        contractType: "Full-time Contract (PKWT Tahunan)",
+        contractPeriod: "01 Jul 2025 – 30 Jun 2027",
+        contractRemaining: "8 Bulan 14 Hari",
+        contractStatus: "Aktif (PKWT)",
+        manager: "ABD & DM (Direct: Managing Partner)"
+      },
+      "Siti": {
+        fullName: "Siti Rahma",
+        nip: "EMP-2023-042",
+        dept: "Management",
+        position: "Finance & Operational Manager",
+        email: "siti.rahma@company.id",
+        phone: "+62 813-8901-2345",
+        joinDate: "15 Maret 2023 (3 Tahun 7 Bulan)",
+        contractType: "Permanent Employee (PKWTT)",
+        contractPeriod: "Karyawan Tetap",
+        contractRemaining: "Permanen (PKWTT)",
+        contractStatus: "Aktif (Tetap)",
+        manager: "Board of Directors"
+      },
+      "Andi": {
+        fullName: "Andi Wijaya",
+        nip: "EMP-2025-112",
+        dept: "DM",
+        position: "Digital Marketing & Tracking Specialist",
+        email: "andi.wijaya@company.id",
+        phone: "+62 821-4567-8901",
+        joinDate: "05 Januari 2025 (1 Tahun 9 Bulan)",
+        contractType: "Contract Employee (PKWT 2)",
+        contractPeriod: "05 Jan 2026 – 04 Jan 2027",
+        contractRemaining: "2 Bulan 18 Hari (Perlu Evaluasi)",
+        contractStatus: "Mendekati Renewal",
+        manager: "Budi Santoso (Lead ABD)"
+      },
+      "Dewi": {
+        fullName: "Dewi Lestari",
+        nip: "EMP-2024-098",
+        dept: "HRGA",
+        position: "HR & General Affairs Officer",
+        email: "dewi.lestari@company.id",
+        phone: "+62 819-0123-4567",
+        joinDate: "10 Agustus 2024 (2 Tahun 2 Bulan)",
+        contractType: "Full-time Contract (PKWT)",
+        contractPeriod: "10 Agu 2025 – 09 Agu 2027",
+        contractRemaining: "9 Bulan 23 Hari",
+        contractStatus: "Aktif (PKWT)",
+        manager: "Siti Rahma (Operations)"
+      },
+      "Jake": {
+        fullName: "Jake Peters",
+        nip: "EMP-2025-130",
+        dept: "Production",
+        position: "Creative Lead & Senior Product Designer",
+        email: "jake.peters@company.id",
+        phone: "+62 878-9012-3456",
+        joinDate: "01 Juni 2025 (1 Tahun 4 Bulan)",
+        contractType: "Specialist Contract",
+        contractPeriod: "01 Jun 2026 – 31 Mei 2027",
+        contractRemaining: "7 Bulan 14 Hari",
+        contractStatus: "Aktif (Specialist)",
+        manager: "Managing Director"
+      }
+    };
+
+    let activeUserKey = "Budi";
+    let currentRole = 'Lead / Manager';
+    let activeDeptFilter = 'ALL';
+    let currentViewMode = 'capsules';
+    let expandedIds = new Set(['tsk-1', 'tsk-3']);
+    let isEditMode = false;
+
+    const timelineDays = [
+      { date: '02', day: 'Fri', week: 'W18', isWeekend: false },
+      { date: '03', day: 'Sat', week: '', isWeekend: true },
+      { date: '04', day: 'Sun', week: '', isWeekend: true },
+      { date: '05', day: 'Mon', week: '', isWeekend: false },
+      { date: '06', day: 'Tue', week: '', isWeekend: false },
+      { date: '07', day: 'Wed', week: 'W19', isWeekend: false },
+      { date: '08', day: 'Thu', week: '', isWeekend: false },
+      { date: '09', day: 'Fri', week: '', isWeekend: false },
+      { date: '10', day: 'Sat', week: '', isWeekend: true },
+      { date: '11', day: 'Sun', week: '', isWeekend: true },
+      { date: '12', day: 'Mon', week: '', isWeekend: false },
+      { date: '13', day: 'Tue', week: '', isWeekend: false },
+      { date: '14', day: 'Wed', week: 'W20', isWeekend: false },
+      { date: '15', day: 'Thu', week: '', isWeekend: false }
+    ];
+
+    const defaultData = [
+      {
+        id: "tsk-1",
+        dept: "ABD",
+        title: "Cherry Oaks (Website Design)",
+        pic: "Budi",
+        unit: "Books",
+        actions: [
+          { text: "Design wireframe & UI visual", pic: "Budi", done: true, startDay: 2, duration: 7, hours: "5h over 7 days", badge: "42 min Design", badgeBg: "bg-pink-100 text-pink-700 border-pink-300" },
+          { text: "Development & CAPI integration", pic: "Andi", done: true, startDay: 4, duration: 4, hours: "10h over 4 days", badge: "2h 30 min Devel...", badgeBg: "bg-rose-100 text-rose-700 border-rose-300" },
+          { text: "QA & Client handover", pic: "Siti", done: false, startDay: 8, duration: 4, hours: "4h over 4 days", badge: "1h QA Test", badgeBg: "bg-blue-100 text-blue-700 border-blue-300" }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      },
+      {
+        id: "tsk-2",
+        dept: "DM",
+        title: "Social Media Update",
+        pic: "Siti",
+        unit: "Campaigns",
+        actions: [
+          { text: "Crafting copy & Meta CTWA ads", pic: "Siti", done: true, startDay: 6, duration: 4, hours: "2h over 4 days", badge: "30 min Craft...", badgeBg: "bg-amber-100 text-amber-800 border-amber-300" },
+          { text: "Budget scaling analysis", pic: "Budi", done: true, startDay: 10, duration: 3, hours: "3h over 3 days", badge: "45 min Budget", badgeBg: "bg-purple-100 text-purple-700 border-purple-300" }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      },
+      {
+        id: "tsk-3",
+        dept: "Production",
+        title: "Jake Peters (Product Design)",
+        pic: "Jake",
+        unit: "Assets",
+        actions: [
+          { text: "Copywriting headline & deck", pic: "Jake", done: true, startDay: 4, duration: 4, hours: "2h over 4 days", badge: "30min Copy", badgeBg: "bg-sky-100 text-sky-800 border-sky-300" },
+          { text: "Blog editorial asset design", pic: "Rian", done: true, startDay: 8, duration: 4, hours: "1h over 4 days", badge: "15min Blog", badgeBg: "bg-cyan-100 text-cyan-800 border-cyan-300" }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      },
+      {
+        id: "tsk-4",
+        dept: "HRGA",
+        title: "Weight Lost & Vendor SLA",
+        pic: "Dewi",
+        unit: "lb",
+        actions: [
+          { text: "Draft klausul kontrak kerjasama", pic: "Dewi", done: true, startDay: 1, duration: 5, hours: "3h over 5 days", badge: "Legal Draft", badgeBg: "bg-indigo-100 text-indigo-700 border-indigo-300" },
+          { text: "Persetujuan vendor office", pic: "Dewi", done: false, startDay: 7, duration: 4, hours: "2h over 4 days", badge: "SLA Vendor", badgeBg: "bg-gray-100 text-gray-700 border-gray-300" }
+        ],
+        hasBlocker: true,
+        blockerDesc: "Persetujuan tertahan di bagian Legal"
+      },
+      {
+        id: "tsk-5",
+        dept: "Management",
+        title: "Budget & Cashflow Q4",
+        pic: "Siti",
+        unit: "$",
+        actions: [
+          { text: "Alokasi budget semua departemen", pic: "Siti", done: true, startDay: 3, duration: 6, hours: "8h over 6 days", badge: "Budget Plan", badgeBg: "bg-amber-100 text-amber-800 border-amber-300" }
+        ],
+        hasBlocker: false,
+        blockerDesc: ""
+      }
+    ];
+
+    function getData() {
+      const stored = localStorage.getItem('apple_gantt_tracker_v3');
+      if (!stored) {
+        localStorage.setItem('apple_gantt_tracker_v3', JSON.stringify(defaultData));
+        return defaultData;
+      }
+      return JSON.parse(stored);
+    }
+
+    function saveData(data) {
+      localStorage.setItem('apple_gantt_tracker_v3', JSON.stringify(data));
+      render();
+    }
+
+    // Modal User Profile Open
+    function openUserProfile(userKey) {
+      const user = MEMBER_PROFILES[userKey] || MEMBER_PROFILES["Budi"];
+      activeUserKey = userKey;
+
+      // Populate Header
+      document.getElementById('uAvatar').innerText = user.fullName.split(' ').map(n=>n[0]).join('').substring(0,2);
+      document.getElementById('uFullName').innerText = user.fullName;
+      document.getElementById('uPosition').innerText = user.position;
+      document.getElementById('uEmail').innerText = user.email;
+      document.getElementById('uDeptBadge').innerText = user.dept;
+
+      // Populate Tab 1: Contract Details
+      document.getElementById('uNip').innerText = user.nip;
+      document.getElementById('uJoinDate').innerText = user.joinDate;
+      document.getElementById('uContractType').innerText = user.contractType;
+      document.getElementById('uContractPeriod').innerText = user.contractPeriod;
+      document.getElementById('uContractRemaining').innerText = user.contractRemaining;
+      document.getElementById('uContractStatusBadge').innerText = user.contractStatus;
+      document.getElementById('uManager').innerText = user.manager;
+      document.getElementById('uPhone').innerText = user.phone;
+
+      // Calculate Real-Time KPI
+      calculateUserKpi(userKey);
+
+      // Default to Contract Tab
+      switchProfileTab('contract');
+
+      document.getElementById('switchUserSelect').value = userKey;
+      document.getElementById('userProfileModal').classList.remove('hidden');
+    }
+
+    function openCurrentUserProfile() {
+      openUserProfile(activeUserKey);
+    }
+
+    function closeUserProfileModal() {
+      document.getElementById('userProfileModal').classList.add('hidden');
+    }
+
+    function switchProfileTab(tab) {
+      const sCont = document.getElementById('sectionContract');
+      const sKpi = document.getElementById('sectionKpi');
+      const sSet = document.getElementById('sectionSettings');
+
+      const bCont = document.getElementById('pTabContract');
+      const bKpi = document.getElementById('pTabKpi');
+      const bSet = document.getElementById('pTabSettings');
+
+      // Reset
+      [sCont, sKpi, sSet].forEach(el => el.classList.add('hidden'));
+      [bCont, bKpi, bSet].forEach(el => {
+        el.className = "flex-1 py-2 rounded-xl text-gray-500 hover:text-black transition";
+      });
+
+      if (tab === 'contract') {
+        sCont.classList.remove('hidden');
+        bCont.className = "flex-1 py-2 rounded-xl bg-white text-black shadow-sm font-bold transition";
+      } else if (tab === 'kpi') {
+        sKpi.classList.remove('hidden');
+        bKpi.className = "flex-1 py-2 rounded-xl bg-white text-black shadow-sm font-bold transition";
+      } else if (tab === 'settings') {
+        sSet.classList.remove('hidden');
+        bSet.className = "flex-1 py-2 rounded-xl bg-white text-black shadow-sm font-bold transition";
+      }
+    }
+
+    function calculateUserKpi(picKey) {
+      const data = getData();
+      let totalAssigned = 0;
+      let totalDone = 0;
+      let activeBlockers = 0;
+      let userTasks = [];
+
+      data.forEach(task => {
+        let isLead = task.pic === picKey;
+        if (task.actions) {
+          task.actions.forEach(act => {
+            if (act.pic === picKey || (isLead && !act.pic)) {
+              totalAssigned++;
+              if (act.done) totalDone++;
+              userTasks.push({
+                taskName: task.title,
+                subtask: act.text,
+                dept: task.dept,
+                done: act.done
+              });
+            }
+          });
+        }
+        if (isLead && task.hasBlocker) {
+          activeBlockers++;
+        }
+      });
+
+      const crPct = totalAssigned === 0 ? 0 : Math.round((totalDone / totalAssigned) * 100);
+      document.getElementById('uKpiCr').innerText = `${crPct}%`;
+      document.getElementById('uKpiSubRatio').innerText = `${totalDone}/${totalAssigned} Sub-tasks`;
+      document.getElementById('uKpiBlockers').innerText = activeBlockers;
+
+      // Diagnosa & Solusi Improvement Otomatis
+      let advice = "";
+      if (activeBlockers > 0) {
+        advice = `🚨 <b>Prioritas Resolusi Blocker:</b> Ditemukan ${activeBlockers} kendala aktif yang menahan kelanjutan proyek. Diperlukan eskalasi cepat ke tim manajemen atau bantuan divisi lain melalui integrasi WhatsApp.`;
+      } else if (crPct < 60) {
+        advice = `⚠️ <b>Akselerasi Fase Closing:</b> Tingkat penyelesaian sub-task berada di angka ${crPct}%. Diperlukan standarisasi checklist serah terima (handover) agar output akhir dapat diselesaikan tepat waktu sesuai kontrak.`;
+      } else if (totalAssigned >= 5 && crPct >= 80) {
+        advice = `🌟 <b>Efisiensi & Delegasi:</b> Performa eksekusi luar biasa (${crPct}%), namun memegang ${totalAssigned} sub-task sekaligus. Direkomendasikan delegasi pengerjaan teknis ke tim pendukung agar kapasitas lead tetap terjaga.`;
+      } else {
+        advice = `✅ <b>Kinerja On-Track:</b> Kepatuhan SLA dan rasio eksekusi tugas berjalan konsisten (${crPct}%). Pertahankan ritme kerja pada sprint mingguan selanjutnya.`;
+      }
+      document.getElementById('uImprovementAdvice').innerHTML = advice;
+
+      // Render Task List
+      const container = document.getElementById('uTaskListContainer');
+      container.innerHTML = '';
+      if (userTasks.length === 0) {
+        container.innerHTML = `<div class="text-xs text-gray-400 italic">Belum ada tugas tercatat.</div>`;
+      } else {
+        userTasks.forEach(ut => {
+          const row = document.createElement('div');
+          row.className = `flex items-center justify-between p-2.5 rounded-xl border ${ut.done ? 'bg-emerald-50/60 border-emerald-200' : 'bg-gray-50 border-gray-200'} text-xs`;
+          row.innerHTML = `
+            <div class="truncate mr-2">
+              <span class="font-bold text-gray-900">[${ut.dept}] ${ut.taskName}</span>
+              <p class="text-[11px] text-gray-500 truncate">${ut.subtask}</p>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${ut.done ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'} whitespace-nowrap">
+              ${ut.done ? 'Done' : 'In Progress'}
+            </span>
+          `;
+          container.appendChild(row);
+        });
+      }
+    }
+
+    function changeActiveUser(newKey) {
+      activeUserKey = newKey;
+      const user = MEMBER_PROFILES[newKey] || MEMBER_PROFILES["Budi"];
+      document.getElementById('activeUserAvatarMini').innerText = user.fullName.split(' ').map(n=>n[0]).join('').substring(0,2);
+      document.getElementById('activeUserNameMini').innerText = user.fullName;
+      openUserProfile(newKey);
+    }
+
+    function exportUserDataJson() {
+      const user = MEMBER_PROFILES[activeUserKey] || MEMBER_PROFILES["Budi"];
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(user, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `profile_${activeUserKey}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      const btnC = document.getElementById('btnViewCapsules');
+      const btnG = document.getElementById('btnViewGantt');
+      const viewC = document.getElementById('capsulesView');
+      const viewG = document.getElementById('ganttView');
+
+      if (mode === 'capsules') {
+        btnC.className = "px-3.5 py-1.5 rounded-full bg-white text-gray-900 shadow-sm transition";
+        btnG.className = "px-3.5 py-1.5 rounded-full text-gray-600 hover:text-black transition flex items-center space-x-1";
+        viewC.classList.remove('hidden');
+        viewG.classList.add('hidden');
+      } else {
+        btnG.className = "px-3.5 py-1.5 rounded-full bg-white text-gray-900 shadow-sm transition flex items-center space-x-1";
+        btnC.className = "px-3.5 py-1.5 rounded-full text-gray-600 hover:text-black transition";
+        viewC.classList.add('hidden');
+        viewG.classList.remove('hidden');
+        renderGantt();
+      }
+    }
+
+    function toggleRole() {
+      if (currentRole === 'Lead / Manager') {
+        currentRole = 'Staff';
+      } else {
+        const pin = prompt("Masukkan PIN Lead / Manager (Default: 1234):");
+        if (pin === "1234") {
+          currentRole = 'Lead / Manager';
+        } else {
+          alert("PIN salah.");
+          return;
+        }
+      }
+      updateRoleUI();
+    }
+
+    function updateRoleUI() {
+      const badge = document.getElementById('roleBadge');
+      const btnNew = document.getElementById('btnNewTask');
+
+      badge.innerText = currentRole;
+      if (currentRole === 'Lead / Manager') {
+        badge.className = "font-bold text-blue-600 hover:underline";
+        btnNew.classList.remove('opacity-40', 'cursor-not-allowed');
+      } else {
+        badge.className = "font-bold text-gray-600 hover:underline";
+        btnNew.classList.add('opacity-40', 'cursor-not-allowed');
+      }
+    }
+
+    function handleNewTaskClick() {
+      if (currentRole !== 'Lead / Manager') {
+        alert("Akses dibatasi. Hanya Lead atau Manager yang memiliki wewenang membuat task baru.");
+        return;
+      }
+      openModal();
+    }
+
+    function filterDept(dept) {
+      activeDeptFilter = dept;
+      document.querySelectorAll('.dept-filter-btn').forEach(btn => {
+        if (btn.dataset.dept === dept) {
+          btn.className = "dept-filter-btn px-4 py-1.5 rounded-full bg-black text-white";
+        } else {
+          btn.className = "dept-filter-btn px-4 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200";
+        }
+      });
+      render();
+    }
+
+    function toggleCard(id) {
+      if (isEditMode) return;
+      if (expandedIds.has(id)) {
+        expandedIds.delete(id);
+      } else {
+        expandedIds.add(id);
+      }
+      render();
+    }
+
+    function toggleEdit() {
+      isEditMode = !isEditMode;
+      document.getElementById('editBtn').innerText = isEditMode ? 'Done' : 'Edit';
+      document.getElementById('editBtn').classList.toggle('text-blue-600', isEditMode);
+      render();
+    }
+
+    function render() {
+      const list = getData();
+      renderCapsules(list);
+      if (currentViewMode === 'gantt') {
+        renderGantt(list);
+      }
+    }
+
+    function renderCapsules(list) {
+      const container = document.getElementById('capsulesView');
+      container.innerHTML = '';
+
+      let filtered = list;
+      if (activeDeptFilter !== 'ALL') {
+        filtered = list.filter(item => item.dept === activeDeptFilter);
+      }
+
+      filtered.forEach(item => {
+        const theme = DEPARTMENTS[item.dept] || DEPARTMENTS.ABD;
+        const total = item.actions.length;
+        const done = item.actions.filter(a => a.done).length;
+        const pct = total === 0 ? 0 : (done / total) * 100;
+        const pctText = pct.toFixed(2) + '%';
+        const isExpanded = expandedIds.has(item.id);
+
+        const col = document.createElement('div');
+        col.className = 'w-full flex flex-col';
+
+        col.innerHTML = `
+          <div onclick="toggleCard('${item.id}')" class="progress-capsule" style="background-color: ${theme.tint};">
+            <div class="h-full transition-all duration-500" style="width: ${pct}%; background-color: ${theme.fill};"></div>
+            
+            <div class="absolute inset-0 px-6 py-4 flex flex-col justify-center pointer-events-none overflow-hidden" style="clip-path: inset(0 ${100 - pct}% 0 0); transition: clip-path 0.5s;">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                  <span class="text-[17px] font-extrabold tracking-tight text-white">${item.title}</span>
+                  <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/25 text-white backdrop-blur-sm">${item.dept}</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  ${item.hasBlocker ? `<span class="bg-white text-red-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">BLOCKER</span>` : ''}
+                  <span class="text-xs font-black text-white ${isExpanded ? 'rotate-180' : ''}">▼</span>
+                </div>
+              </div>
+              <span class="text-[13px] font-bold mt-0.5 text-white/95">${done} / ${total} Langkah Selesai</span>
+              <span class="text-[14px] font-black text-white">${pctText}</span>
+            </div>
+
+            <div class="absolute inset-0 px-6 py-4 flex flex-col justify-center pointer-events-none overflow-hidden" style="clip-path: inset(0 0 0 ${pct}%); transition: clip-path 0.5s;">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                  <span class="text-[17px] font-extrabold tracking-tight" style="color: ${theme.textOnTint};">${item.title}</span>
+                  <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full" style="background-color: ${theme.fill}22; color: ${theme.textOnTint};">${item.dept}</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  ${item.hasBlocker ? `<span class="bg-rose-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">BLOCKER</span>` : ''}
+                  <span class="text-xs font-black ${isExpanded ? 'rotate-180' : ''}" style="color: ${theme.textOnTint};">▼</span>
+                </div>
+              </div>
+              <span class="text-[13px] font-bold mt-0.5 opacity-90" style="color: ${theme.textOnTint};">${done} / ${total} Langkah Selesai</span>
+              <span class="text-[14px] font-black" style="color: ${theme.textOnTint};">${pctText}</span>
+            </div>
+          </div>
+
+          <div class="accordion-drawer ${isExpanded ? 'open' : ''} bg-white rounded-3xl p-5 border border-gray-200/60 shadow-sm space-y-3">
+            <div class="flex justify-between items-center text-xs text-gray-500 pb-2 border-b border-gray-100">
+              <button onclick="openUserProfile('${item.pic}')" class="text-blue-600 font-bold hover:underline flex items-center space-x-1">
+                <span>Lead: ${item.pic}</span>
+                <span class="text-[10px] bg-blue-50 px-1.5 py-0.5 rounded-md">Lihat Profil & Kontrak &rarr;</span>
+              </button>
+              ${item.hasBlocker ? `<span class="text-rose-600 font-bold">🚨 Blocker: ${item.blockerDesc}</span>` : ''}
+            </div>
+            <div class="space-y-2">
+              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Action Plans & Assignee:</span>
+              ${item.actions.map((act, idx) => `
+                <div class="flex items-center justify-between p-2.5 rounded-2xl border ${act.done ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-200/70'}">
+                  <label class="flex items-center space-x-3 flex-1 cursor-pointer">
+                    <input type="checkbox" ${act.done ? 'checked' : ''} onchange="toggleStep('${item.id}', ${idx}, this.checked)" class="apple-check">
+                    <span class="text-xs ${act.done ? 'line-through text-gray-400 font-normal' : 'text-gray-800 font-semibold'}">${act.text}</span>
+                  </label>
+                  <button onclick="openUserProfile('${act.pic || item.pic}')" class="text-[9px] font-bold px-2.5 py-0.5 rounded-full ${act.done ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'} hover:scale-105 transition">
+                    ${act.pic || item.pic} (Profil)
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        container.appendChild(col);
+      });
+    }
+
+    function renderGantt(list = getData()) {
+      const container = document.getElementById('ganttTimelineContent');
+      let filtered = list;
+      if (activeDeptFilter !== 'ALL') {
+        filtered = list.filter(item => item.dept === activeDeptFilter);
+      }
+
+      let html = `
+        <div class="min-w-[880px]">
+          <div class="flex border-b border-gray-200 pb-2 text-xs">
+            <div class="w-64 font-bold text-gray-400 pl-2">TASK / PIC</div>
+            <div class="flex-1 flex">
+      `;
+
+      timelineDays.forEach((td) => {
+        html += `
+          <div class="gantt-day-col flex-1 ${td.isWeekend ? 'gantt-weekend' : ''}">
+            ${td.week ? `<div class="text-[10px] font-bold text-gray-400 text-left pl-1">May <b>${td.week}</b></div>` : '<div class="text-[10px]">&nbsp;</div>'}
+            <div class="text-[13px] font-bold text-gray-700 mt-1">${td.date}</div>
+          </div>
+        `;
+      });
+
+      html += `
+            </div>
+          </div>
+      `;
+
+      filtered.forEach(item => {
+        const doneActions = item.actions ? item.actions.filter(a => a.done) : [];
+        const theme = DEPARTMENTS[item.dept] || DEPARTMENTS.ABD;
+
+        html += `
+          <div class="flex items-center py-3 border-b border-gray-100 hover:bg-gray-50/50 transition">
+            <div class="w-64 flex items-center space-x-2 pl-2">
+              <span class="w-7 h-7 rounded-xl flex items-center justify-center text-white text-xs font-bold" style="background-color: ${theme.fill};">
+                ${item.dept.substring(0,2)}
+              </span>
+              <div class="truncate">
+                <div class="text-xs font-extrabold text-gray-900 truncate">${item.title}</div>
+                <button onclick="openUserProfile('${item.pic}')" class="text-[10px] text-blue-600 font-bold hover:underline">Lead: ${item.pic} &bull; Profil & Kontrak</button>
+              </div>
+            </div>
+
+            <div class="flex-1 flex">
+              ${timelineDays.map((td, dIdx) => {
+                const hasDoneActivity = doneActions.some(a => dIdx >= (a.startDay || 0) && dIdx <= (a.startDay || 0) + (a.duration || 2));
+                return `
+                  <div class="gantt-day-col flex-1 py-1 ${td.isWeekend ? 'gantt-weekend' : ''}">
+                    ${hasDoneActivity ? `<span class="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-800">Done</span>` : `<span class="text-[10px] text-gray-300">0h</span>`}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+        if (doneActions.length > 0) {
+          doneActions.forEach(act => {
+            const start = act.startDay || 1;
+            const dur = Math.min(act.duration || 4, 14 - start);
+            const leftPct = (start / 14) * 100;
+            const widthPct = (dur / 14) * 100;
+
+            html += `
+              <div class="flex items-center py-2 relative border-b border-gray-50">
+                <div class="w-64 pl-10 pr-2 text-xs text-gray-600 font-medium truncate flex items-center space-x-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span class="truncate">${act.text}</span>
+                </div>
+
+                <div class="flex-1 flex relative h-8 items-center">
+                  ${timelineDays.map(td => `<div class="gantt-day-col flex-1 h-full ${td.isWeekend ? 'gantt-weekend' : ''}"></div>`).join('')}
+                  
+                  <div onclick="openUserProfile('${act.pic}')" class="absolute h-7 rounded-full border border-pink-300 bg-pink-50/90 text-pink-900 flex items-center px-2 shadow-sm gantt-bar-pill text-[11px] cursor-pointer" style="left: ${leftPct}%; width: ${Math.max(widthPct, 18)}%;">
+                    <span class="px-2 py-0.5 rounded-full bg-pink-500 text-white font-extrabold text-[9px] mr-2 whitespace-nowrap">
+                      ${act.badge || 'Done'}
+                    </span>
+                    <span class="font-bold truncate mr-1">${act.pic}</span>
+                    <span class="text-[10px] text-gray-500 truncate hidden lg:inline">${act.hours || '4h over 4 days'}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+        }
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    function toggleStep(id, idx, isDone) {
+      const data = getData();
+      const item = data.find(c => c.id === id);
+      if (!item) return;
+
+      item.actions[idx].done = isDone;
+      saveData(data);
+    }
+
+    function openModal() {
+      document.getElementById('inpTitle').value = '';
+      document.getElementById('inpPic').value = '';
+      document.getElementById('taskModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('taskModal').classList.add('hidden');
+    }
+
+    function addField() {
+      const box = document.getElementById('fieldsBox');
+      const div = document.createElement('div');
+      div.className = 'flex space-x-2';
+      div.innerHTML = `
+        <input type="text" placeholder="Langkah ${box.children.length + 1}" class="step-txt flex-1 px-3 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+        <input type="text" placeholder="Assignee" class="step-pic w-20 px-2 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none">
+        <input type="number" placeholder="Hari" min="1" max="14" value="3" class="step-days w-16 px-2 py-2 bg-gray-100 rounded-xl text-xs focus:outline-none text-center">
+      `;
+      box.appendChild(div);
+    }
+
+    function saveTask() {
+      const dept = document.getElementById('inpDept').value;
+      const title = document.getElementById('inpTitle').value.trim();
+      const pic = document.getElementById('inpPic').value.trim() || 'Unassigned';
+      const unit = document.getElementById('inpUnit').value.trim() || 'Tasks';
+
+      const txts = document.querySelectorAll('.step-txt');
+      const pics = document.querySelectorAll('.step-pic');
+      const days = document.querySelectorAll('.step-days');
+      const actions = [];
+
+      txts.forEach((t, i) => {
+        const val = t.value.trim();
+        const p = pics[i]?.value.trim() || pic;
+        const d = parseInt(days[i]?.value || 3);
+        if (val) {
+          actions.push({
+            text: val,
+            pic: p,
+            done: false,
+            startDay: (i * 2) % 10,
+            duration: d,
+            hours: `${d * 2}h over ${d} days`,
+            badge: `${d} Hari`
+          });
+        }
+      });
+
+      if (!title) {
+        alert("Mohon isi judul.");
+        return;
+      }
+
+      if (actions.length === 0) {
+        actions.push({ text: "Eksekusi utama", pic, done: false, startDay: 2, duration: 4, hours: "4h over 4 days", badge: "Task" });
+      }
+
+      const data = getData();
+      const newId = "tsk-" + Date.now();
+      data.unshift({
+        id: newId,
+        dept,
+        title,
+        pic,
+        unit,
+        actions,
+        hasBlocker: false,
+        blockerDesc: ""
+      });
+
+      expandedIds.add(newId);
+      saveData(data);
+      closeModal();
+    }
+
+    function copyWA() {
+      const list = getData();
+      let msg = `*DAILY PROGRESS UPDATE*\n\n`;
+      list.forEach((p, idx) => {
+        const total = p.actions.length;
+        const done = p.actions.filter(a => a.done).length;
+        const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+        msg += `*${idx + 1}. [${p.dept}] ${p.title}*\n• Progress: ${pct}%\n• Lead: ${p.pic}\n`;
+        if (p.hasBlocker) msg += `• 🚨 *BLOCKER:* ${p.blockerDesc}\n`;
+        msg += `\n`;
+      });
+
+      navigator.clipboard.writeText(msg).then(() => {
+        const t = document.getElementById('toast');
+        t.classList.remove('opacity-0', 'pointer-events-none');
+        setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2000);
+      });
+    }
+
+    updateRoleUI();
+    render();
+  </script>
+
+</body>
+</html>
