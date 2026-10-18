@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Operations Hub — macOS Sequoia Enterprise v9</title>
+  <style>
+    :root {
+      --apple-canvas: #f3f4f8;
+      --apple-card: #ffffff;
+      --apple-card-subtle: #f8f9fc;
+      --apple-card-inset: rgba(0, 0, 0, 0.03);
+      --apple-card-hover: rgba(0, 0, 0, 0.025);
+      --apple-text: #1d1d1f;
+      --apple-secondary: #86868b;
+      --apple-border: rgba(0, 0, 0, 0.07);
+      --apple-border-strong: rgba(0, 0, 0, 0.14);
+      --apple-header: rgba(255, 255, 255, 0.86);
+      --apple-glass-menu: rgba(255, 255, 255, 0.94);
+      
+      --apple-blue: #0071e3;
+      --apple-indigo: #4f46e5;
+      --apple-green: #10b981;
+      --apple-red: #f43f5e;
+      --apple-orange: #f97316;
+      --apple-purple: #8b5cf6;
+      --apple-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+      --sb-bg: #ffffff;
+      --sb-text: #1d1d1f;
+      --sb-muted: #86868b;
+      --sb-hover: rgba(249, 115, 22, 0.06);
+      --sb-active-card: rgba(249, 115, 22, 0.1);
+      --sb-card-box: rgba(0, 0, 0, 0.025);
+      --sb-tree-line: rgba(0, 0, 0, 0.1);
+
+      --kanban-col-bg: rgba(0, 0, 0, 0.025);
+      --apple-funnel-canvas: rgba(0, 0, 0, 0.018);
+    }
+
+    .dark {
+      --apple-canvas: #09090b;
+      --apple-card: #18181b;
+      --apple-card-subtle: #27272a;
+      --apple-card-inset: rgba(255, 255, 255, 0.04);
+      --apple-card-hover: rgba(255, 255, 255, 0.035);
+      --apple-text: #f4f4f5;
+      --apple-secondary: #a1a1aa;
+      --apple-border: rgba(255, 255, 255, 0.1);
+      --apple-border-strong: rgba(255, 255, 255, 0.2);
+      --apple-header: rgba(24, 24, 27, 0.86);
+      --apple-glass-menu: rgba(36, 36, 40, 0.95);
+
+      --apple-blue: #38bdf8;
+      --apple-indigo: #6366f1;
+      --apple-green: #34d399;
+      --apple-red: #fb7185;
+      --apple-orange: #fb923c;
+      --apple-purple: #a78bfa;
+
+      --sb-bg: #18181b;
+      --sb-text: #f4f4f5;
+      --sb-muted: #a1a1aa;
+      --sb-hover: rgba(255, 255, 255, 0.06);
+      --sb-active-card: rgba(251, 146, 60, 0.15);
+      --sb-card-box: rgba(255, 255, 255, 0.04);
+      --sb-tree-line: rgba(255, 255, 255, 0.15);
+
+      --kanban-col-bg: rgba(255, 255, 255, 0.03);
+      --apple-funnel-canvas: rgba(255, 255, 255, 0.02);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      letter-spacing: -0.015em;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(134, 134, 139, 0.25); border-radius: 10px; }
+
+    body {
+      background-color: var(--apple-canvas);
+      color: var(--apple-text);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      padding: 12px;
+      gap: 12px;
+      position: relative;
+    }
+
+    .view-module { animation: appleViewEnter 0.22s var(--apple-spring); }
+    @keyframes appleViewEnter {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------------------------------------------------- */
+    /* ANALYTICS OVERVIEW LAYOUT (NO USER PROFILE)          */
+    /* ---------------------------------------------------- */
+    .analytics-overview-shell {
+      display: grid;
+      grid-template-columns: 1fr 285px;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 1180px) { .analytics-overview-shell { grid-template-columns: 1fr; } }
+
+    .analytics-main-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+    .ref-kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 820px) { .ref-kpi-grid { grid-template-columns: 1fr; } }
+
+    .ref-kpi-card {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 20px;
+      padding: 18px 20px;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.025);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .ref-kpi-card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05); }
+    .ref-kpi-top { display: flex; align-items: center; gap: 14px; }
+    .ref-kpi-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #ffffff; flex-shrink: 0; }
+    .ref-kpi-label { font-size: 11px; color: var(--apple-secondary); font-weight: 600; }
+    .ref-kpi-val { font-size: 20px; font-weight: 800; color: var(--apple-text); font-variant-numeric: tabular-nums; margin-top: 2px; }
+    .ref-kpi-bar-bg { width: 100%; height: 5px; background: var(--apple-card-inset); border-radius: 10px; overflow: hidden; }
+    .ref-kpi-bar-fill { height: 100%; background: var(--apple-indigo); border-radius: 10px; transition: width 0.4s ease; }
+    .ref-kpi-foot { display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--apple-indigo); }
+
+    .ref-chart-section {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 22px;
+      padding: 20px 22px;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.025);
+      display: grid;
+      grid-template-columns: 1fr 195px;
+      gap: 22px;
+      align-items: center;
+    }
+    @media (max-width: 900px) { .ref-chart-section { grid-template-columns: 1fr; } }
+    .ref-chart-meta-row { display: flex; align-items: center; gap: 36px; margin-bottom: 12px; flex-wrap: wrap; }
+    .ref-meta-item span { display: block; font-size: 11px; color: var(--apple-secondary); font-weight: 600; }
+    .ref-meta-item strong { font-size: 17px; font-weight: 800; color: var(--apple-text); font-variant-numeric: tabular-nums; }
+    .ref-side-boxes { display: flex; flex-direction: column; gap: 10px; }
+    .ref-mini-stat-box { background: var(--apple-card-subtle); border: 0.5px solid var(--apple-border); border-radius: 14px; padding: 11px 14px; display: flex; flex-direction: column; gap: 3px; }
+    .ref-mini-stat-box span { font-size: 10.5px; color: var(--apple-secondary); font-weight: 600; }
+    .ref-mini-stat-box strong { font-size: 15px; font-weight: 800; color: var(--apple-text); font-variant-numeric: tabular-nums; }
+
+    .ref-bottom-split { display: grid; grid-template-columns: 1.05fr 1fr; gap: 16px; }
+    @media (max-width: 900px) { .ref-bottom-split { grid-template-columns: 1fr; } }
+    .ref-panel-box { background: var(--apple-card); border: 0.5px solid var(--apple-border); border-radius: 22px; padding: 18px 20px; box-shadow: 0 8px 26px rgba(0, 0, 0, 0.025); display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
+    .ref-panel-header { display: flex; align-items: center; justify-content: space-between; }
+    .ref-panel-title { font-size: 14px; font-weight: 800; color: var(--apple-text); }
+    .ref-customer-list { display: flex; flex-direction: column; gap: 8px; }
+    .ref-customer-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 14px; background: var(--apple-card-subtle); border: 0.5px solid var(--apple-border); gap: 10px; transition: transform 0.12s ease; }
+    .ref-customer-row:hover { transform: translateX(2px); }
+    .ref-cust-avatar { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; color: #ffffff; flex-shrink: 0; }
+    .ref-mail-btn { width: 30px; height: 30px; border-radius: 50%; border: 0.5px solid var(--apple-border); background: var(--apple-card); color: var(--apple-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 10px; font-weight: 800; }
+    .ref-mail-btn:hover { background: var(--apple-green); color: #ffffff; border-color: var(--apple-green); }
+
+    .ref-offer-banner { background: rgba(249, 115, 22, 0.1); color: #ea580c; border-radius: 12px; padding: 10px 12px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+    .dark .ref-offer-banner { color: #fb923c; }
+
+    /* Right Column (Clean Operations Summary) */
+    .analytics-right-col {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 24px;
+      padding: 20px 18px;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.025);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .ref-profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; text-align: center; padding: 12px 0; background: var(--apple-card-subtle); border-radius: 14px; border: 0.5px solid var(--apple-border); }
+    .ref-profile-stats strong { display: block; font-size: 15px; font-weight: 800; color: var(--apple-text); font-variant-numeric: tabular-nums; }
+    .ref-profile-stats span { font-size: 10px; color: var(--apple-secondary); font-weight: 600; }
+    .ref-action-links { display: flex; flex-direction: column; gap: 8px; }
+    .ref-link-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 10px; border-radius: 14px; cursor: pointer; transition: background 0.15s ease; border: 0.5px solid transparent; }
+    .ref-link-row:hover { background: var(--apple-card-subtle); border-color: var(--apple-border); }
+    .ref-link-left { display: flex; align-items: center; gap: 12px; font-size: 12px; font-weight: 700; }
+    .ref-link-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+    .ref-gauge-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 12px; border-top: 0.5px solid var(--apple-border); }
+
+    /* ---------------------------------------------------- */
+    /* FUNNEL SCALING SIMULATOR & BENCHMARK BADGES (#6)     */
+    /* ---------------------------------------------------- */
+    .funnel-simulator-card {
+      background: var(--apple-card-subtle);
+      border: 0.5px solid var(--apple-border-strong);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sim-slider-row { display: flex; align-items: center; gap: 14px; }
+    .apple-range-slider { flex: 1; accent-color: var(--apple-blue); cursor: pointer; }
+    .sim-metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding-top: 6px; border-top: 0.5px solid var(--apple-border); }
+    @media (max-width: 760px) { .sim-metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+    .sim-stat-box { display: flex; flex-direction: column; gap: 2px; }
+    .sim-stat-box span { font-size: 9.5px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; }
+    .sim-stat-box strong { font-size: 13.5px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--apple-text); }
+
+    /* Benchmark Leak Badges (#6) */
+    .funnel-leak-badge {
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 3px 7px;
+      border-radius: 6px;
+      width: 112px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+    .leak-healthy {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--apple-green);
+      border: 0.5px solid rgba(16, 185, 129, 0.3);
+    }
+    .leak-warning {
+      background: rgba(244, 63, 94, 0.12);
+      color: var(--apple-red);
+      border: 0.5px solid rgba(244, 63, 94, 0.35);
+    }
+
+    /* ---------------------------------------------------- */
+    /* DRAG-TO-REORDER TRACKLIST ROWS (#4)                  */
+    /* ---------------------------------------------------- */
+    .row-drag-handle {
+      cursor: grab;
+      color: var(--apple-secondary);
+      font-size: 13px;
+      font-weight: 800;
+      padding: 0 4px;
+      user-select: none;
+      opacity: 0.55;
+      transition: opacity 0.15s ease;
+    }
+    .tracklist-item:hover .row-drag-handle { opacity: 1; color: var(--apple-blue); }
+    .tracklist-item.drag-over-row {
+      border-top: 2px solid var(--apple-blue);
+      background: rgba(0, 113, 227, 0.05);
+    }
+
+    /* ---------------------------------------------------- */
+    /* ADAPTIVE GANTT TIMELINE & DEPENDENCY TAGS            */
+    /* ---------------------------------------------------- */
+    .gantt-toolbar-card {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 16px;
+      padding: 10px 18px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+    }
+    .filter-pills-wrap { display: flex; align-items: center; gap: 6px; }
+    .filter-tab-pill { font-size: 11.5px; font-weight: 600; padding: 5px 12px; border-radius: 8px; border: none; background: transparent; color: var(--apple-secondary); cursor: pointer; transition: all 0.15s ease; }
+    .filter-tab-pill:hover { background: var(--apple-card-inset); color: var(--apple-text); }
+    .filter-tab-pill.active { background: rgba(0, 113, 227, 0.12); color: var(--apple-blue); font-weight: 700; }
+
+    .gantt-root-container {
+      width: 100%;
+      border-radius: 14px;
+      border: 0.5px solid var(--apple-border);
+      background: var(--apple-card);
+      overflow-x: auto;
+      scroll-behavior: smooth;
+    }
+    .gantt-inner-scroll { min-width: 1060px; display: flex; flex-direction: column; }
+    .gantt-row-container { display: flex; width: 100%; height: 48px; border-bottom: 0.5px solid var(--apple-border); position: relative; }
+    .gantt-row-container:last-child { border-bottom: none; }
+    .gantt-row-container.header-row { height: 38px; background: var(--apple-card-inset); font-size: 10.5px; font-weight: 700; color: var(--apple-secondary); }
+    .gantt-left-column {
+      width: 250px;
+      min-width: 250px;
+      max-width: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 0 12px;
+      border-right: 0.5px solid var(--apple-border);
+      font-size: 11.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      background: var(--apple-card);
+      z-index: 5;
+      cursor: pointer;
+    }
+    .gantt-left-column:hover { color: var(--apple-blue); }
+    .header-row .gantt-left-column { background: var(--apple-card-inset); color: var(--apple-secondary); cursor: default; }
+
+    .dep-Order-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1.5px 5px;
+      border-radius: 4px;
+      background: var(--apple-card-inset);
+      border: 0.5px solid var(--apple-border-strong);
+      color: var(--apple-secondary);
+      flex-shrink: 0;
+    }
+
+    .gantt-timeline-stage { flex: 1; position: relative; height: 100%; }
+    .gantt-background-grid { position: absolute; inset: 0; display: grid; height: 100%; z-index: 1; pointer-events: none; }
+    .gantt-cell { border-right: 0.5px dashed var(--apple-border); height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-variant-numeric: tabular-nums; }
+    .gantt-cell:last-child { border-right: none; }
+    .gantt-cell.weekend { background: rgba(0, 0, 0, 0.015); }
+    .dark .gantt-cell.weekend { background: rgba(255, 255, 255, 0.02); }
+    .gantt-today-line { position: absolute; top: 0; bottom: 0; width: 1.5px; background: var(--apple-red); z-index: 12; pointer-events: none; }
+    .gantt-today-pin { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); background: var(--apple-red); color: #ffffff; font-size: 8px; font-weight: 800; padding: 1.5px 5px; border-radius: 4px; text-transform: uppercase; }
+
+    .gantt-fixed-capsule {
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: grab;
+      white-space: nowrap;
+      z-index: 8;
+      transition: box-shadow 0.15s ease;
+    }
+    .gantt-fixed-capsule:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); z-index: 15; }
+    .gantt-fixed-capsule.compact-30d { padding: 0 6px; justify-content: center; }
+    .capsule-inner-clip { display: flex; align-items: center; justify-content: space-between; width: 100%; overflow: hidden; gap: 6px; padding-right: 8px; }
+    .capsule-dept-tag { font-size: 9px; font-weight: 800; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .capsule-dur-label { font-size: 10px; font-weight: 800; color: currentColor; flex-shrink: 0; }
+    .capsule-outside-badge {
+      position: absolute;
+      left: calc(100% + 6px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border-strong);
+      color: var(--apple-text);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 9.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      pointer-events: none;
+    }
+    .capsule-mini-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .gantt-resize-grip { width: 12px; height: 100%; position: absolute; right: 0; top: 0; cursor: ew-resize; border-radius: 0 16px 16px 0; display: flex; align-items: center; justify-content: center; z-index: 12; }
+    .gantt-resize-grip::after { content: ''; width: 2.5px; height: 11px; border-radius: 2px; background: currentColor; opacity: 0.45; }
+
+    .cap-pink { background: rgba(219, 39, 119, 0.14); color: #be185d; border: 1px solid rgba(219, 39, 119, 0.45); }
+    .cap-blue { background: rgba(0, 113, 227, 0.14); color: var(--apple-blue); border: 1px solid rgba(0, 113, 227, 0.45); }
+    .cap-green { background: rgba(16, 185, 129, 0.14); color: #15803d; border: 1px solid rgba(16, 185, 129, 0.45); }
+    .cap-orange { background: rgba(249, 115, 22, 0.14); color: #d97706; border: 1px solid rgba(249, 115, 22, 0.45); }
+
+    /* ---------------------------------------------------- */
+    /* OTHER MODULES STYLING                                */
+    /* ---------------------------------------------------- */
+    .notion-side-drawer {
+      position: fixed; top: 12px; right: 12px; bottom: 12px; width: 400px;
+      background: var(--apple-glass-menu); backdrop-filter: blur(45px) saturate(200%);
+      border: 0.5px solid var(--apple-border-strong); border-radius: 20px;
+      box-shadow: -16px 0 48px rgba(0, 0, 0, 0.18); z-index: 9500;
+      display: flex; flex-direction: column; transform: translateX(440px);
+      transition: transform 0.3s var(--apple-spring); overflow: hidden;
+    }
+    .notion-side-drawer.open { transform: translateX(0); }
+    .drawer-top-bar { padding: 14px 18px; border-bottom: 0.5px solid var(--apple-border); display: flex; align-items: center; justify-content: space-between; }
+    .drawer-content { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+    .notion-callout-box { background: var(--apple-card-inset); border: 0.5px solid var(--apple-border); border-left: 3px solid var(--apple-blue); border-radius: 10px; padding: 10px 12px; font-size: 11px; line-height: 1.45; color: var(--apple-secondary); }
+    .notion-prop-grid { display: grid; grid-template-columns: 110px 1fr; row-gap: 8px; font-size: 11.5px; align-items: center; padding-bottom: 12px; border-bottom: 0.5px solid var(--apple-border); }
+    .notion-prop-label { color: var(--apple-secondary); font-weight: 600; font-size: 11px; }
+    .subtask-list-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .subtask-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--apple-card-inset); border-radius: 8px; font-size: 11.5px; }
+
+    .kb-quicklinks-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 1.25rem; background: var(--apple-card-inset); border-bottom: 0.5px solid var(--apple-border); flex-wrap: wrap; gap: 8px; }
+    .kb-links-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .kb-link-pill { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 6px; background: var(--apple-card); border: 0.5px solid var(--apple-border); color: var(--apple-text); text-decoration: none; cursor: pointer; }
+    .kb-link-pill:hover { border-color: var(--apple-blue); color: var(--apple-blue); }
+    .brand-swatch-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: var(--apple-card); border: 0.5px solid var(--apple-border); }
+
+    .freq-badge { font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; cursor: pointer; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; }
+    .freq-healthy { background: rgba(16, 185, 129, 0.12); color: var(--apple-green); }
+    .freq-fatigue { background: rgba(244, 63, 94, 0.15); color: var(--apple-red); border: 0.5px solid rgba(244, 63, 94, 0.4); font-weight: 800; }
+
+    .checklist-mini-wrap { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: var(--apple-secondary); }
+    .checklist-mini-bar { flex: 1; height: 4px; background: rgba(134, 134, 139, 0.2); border-radius: 4px; overflow: hidden; }
+    .checklist-mini-fill { height: 100%; background: var(--apple-green); transition: width 0.25s ease; }
+    .kanban-column.wip-exceeded { border-color: rgba(249, 115, 22, 0.65); background: rgba(249, 115, 22, 0.04); }
+    .wip-warning-tag { font-size: 9px; font-weight: 800; background: var(--apple-orange); color: #fff; padding: 1px 5px; border-radius: 4px; text-transform: uppercase; }
+    .swimlane-section { display: flex; flex-direction: column; gap: 8px; padding-bottom: 14px; border-bottom: 1px dashed var(--apple-border-strong); }
+
+    .apple-pill-btn.focus-active { background: var(--apple-purple); color: #ffffff; border-color: var(--apple-purple); }
+
+    .apple-modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.42); backdrop-filter: blur(20px) saturate(180%); z-index: 10000; display: none !important; align-items: center; justify-content: center; padding: 16px; }
+    .apple-modal-backdrop.active { display: flex !important; }
+
+    .spotlight-dialog { width: 100%; max-width: 520px; background: var(--apple-glass-menu); backdrop-filter: blur(40px) saturate(200%); border-radius: 18px; border: 0.5px solid var(--apple-border-strong); box-shadow: 0 28px 70px rgba(0, 0, 0, 0.35); overflow: hidden; display: flex; flex-direction: column; margin-top: -12vh; }
+    .spotlight-input-bar { display: flex; align-items: center; padding: 14px 18px; border-bottom: 0.5px solid var(--apple-border); gap: 12px; }
+    .spotlight-input { flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 500; color: var(--apple-text); outline: none; }
+    .spotlight-results { max-height: 320px; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+    .spotlight-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: 10px; cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--apple-text); }
+    .spotlight-item:hover { background: var(--apple-blue); color: #ffffff; }
+    .spotlight-sub { font-size: 10.5px; color: var(--apple-secondary); font-weight: 600; }
+
+    .apple-context-menu { position: fixed; width: 215px; background: var(--apple-glass-menu); backdrop-filter: blur(35px) saturate(200%); border: 0.5px solid var(--apple-border-strong); border-radius: 12px; padding: 5px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22); z-index: 10050; display: none !important; flex-direction: column; gap: 1px; }
+    .apple-context-menu.active { display: flex !important; }
+    .ctx-item { padding: 6px 10px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--apple-text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: transparent; border: none; width: 100%; text-align: left; }
+    .ctx-item:hover { background: var(--apple-blue); color: #ffffff; }
+    .ctx-item.danger { color: var(--apple-red); }
+    .ctx-item.danger:hover { background: var(--apple-red); color: #ffffff; }
+    .ctx-divider { height: 0.5px; background: var(--apple-border); margin: 4px 6px; }
+    .ctx-section-label { font-size: 9.5px; font-weight: 700; color: var(--apple-secondary); padding: 4px 10px 2px; text-transform: uppercase; }
+
+    .apple-sheet-dialog { width: 100%; max-width: 450px; background: var(--apple-card); border-radius: 20px; border: 0.5px solid var(--apple-border); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; overflow: hidden; }
+    .sheet-header { padding: 16px 20px; border-bottom: 0.5px solid var(--apple-border); display: flex; align-items: center; justify-content: space-between; }
+    .sheet-title { font-size: 15px; font-weight: 700; color: var(--apple-text); }
+    .sheet-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+    .sheet-field-group { display: flex; flex-direction: column; gap: 4px; }
+    .sheet-field-label { font-size: 10px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; }
+    .sheet-text-input, .sheet-select { width: 100%; height: 34px; border-radius: 8px; border: 0.5px solid var(--apple-border-strong); background: var(--apple-card-inset); padding: 0 10px; font-size: 12px; color: var(--apple-text); outline: none; }
+    .sheet-footer { padding: 14px 20px; border-top: 0.5px solid var(--apple-border); display: flex; justify-content: flex-end; gap: 8px; }
+
+    .apple-dynamic-island { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-90px); background: rgba(29, 29, 31, 0.94); backdrop-filter: blur(25px) saturate(180%); color: #ffffff; padding: 7px 16px; border-radius: 30px; font-size: 11.5px; font-weight: 600; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35); display: flex; align-items: center; gap: 10px; transition: transform 0.3s var(--apple-spring); z-index: 9999; }
+    .apple-dynamic-island.active { transform: translateX(-50%) translateY(0); }
+    .island-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--apple-green); }
+    .island-undo-btn { background: var(--apple-blue); color: #ffffff; border: none; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; cursor: pointer; display: none; }
+
+    .persistence-badge { position: fixed; bottom: 24px; right: 28px; display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--apple-secondary); background: var(--apple-card); border: 0.5px solid var(--apple-border); padding: 5px 12px; border-radius: 20px; z-index: 50; pointer-events: none; }
+    .persistence-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--apple-green); }
+
+    .gantt-drag-tooltip { position: fixed; background: rgba(29, 29, 31, 0.92); color: #ffffff; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 600; pointer-events: none; z-index: 9998; display: none; transform: translate(-50%, -130%); }
+
+    /* Sidebar */
+    .apple-sidebar-frame { width: 224px; height: 100%; background: var(--sb-bg); border: 0.5px solid var(--apple-border); border-radius: 24px; display: flex; flex-direction: column; flex-shrink: 0; z-index: 30; transition: width 0.3s var(--apple-spring); position: relative; padding: 18px 14px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); }
+    .apple-sidebar-frame.collapsed { width: 68px; padding: 18px 10px; }
+    .sb-edge-toggle { position: absolute; right: -10px; top: 56px; width: 20px; height: 20px; border-radius: 50%; background: var(--apple-card); border: 0.5px solid var(--apple-border-strong); color: var(--apple-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 35; }
+    .apple-sidebar-frame.collapsed .sb-edge-toggle svg { transform: rotate(180deg); }
+    .apple-traffic-lights { display: flex; align-items: center; gap: 7px; margin-bottom: 18px; padding-left: 4px; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; cursor: pointer; }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .sb-section-title { font-size: 10px; font-weight: 700; color: var(--sb-muted); margin: 8px 0 6px 8px; white-space: nowrap; }
+    .sb-menu-group { display: flex; flex-direction: column; gap: 4px; }
+    .sb-nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: none; background: transparent; color: var(--sb-text); font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; width: 100%; }
+    .sb-nav-item:hover { background: var(--sb-hover); }
+    .sb-nav-item.active { background: var(--sb-active-card); color: var(--apple-orange); font-weight: 700; }
+    .sb-icon-wrap { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    .sb-member-btn { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; border: none; background: transparent; cursor: pointer; width: 100%; text-align: left; }
+    .sb-member-btn:hover { background: var(--sb-hover); }
+    .sb-member-btn.active { background: var(--sb-active-card); }
+
+    .sb-dashed-cta { margin-top: auto; border: 1.5px dashed var(--apple-border-strong); border-radius: 18px; padding: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; cursor: pointer; }
+    .sb-dashed-cta:hover { border-color: var(--apple-orange); background: var(--sb-hover); }
+    .sb-plus-circle { width: 30px; height: 30px; border-radius: 50%; background: var(--apple-orange); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35); }
+
+    .sb-theme-switcher { display: grid; grid-template-columns: 1fr 1fr; background: var(--apple-card-inset); padding: 3px; border-radius: 12px; margin-top: 10px; }
+    .sb-theme-btn { border: none; background: transparent; padding: 6px; border-radius: 9px; font-size: 11px; font-weight: 700; color: var(--apple-secondary); cursor: pointer; }
+    .sb-theme-btn.active { background: var(--apple-card); color: var(--apple-text); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+
+    .apple-sidebar-frame.collapsed .sb-section-title,
+    .apple-sidebar-frame.collapsed .sb-item-text,
+    .apple-sidebar-frame.collapsed .sb-member-name,
+    .apple-sidebar-frame.collapsed .sb-member-count,
+    .apple-sidebar-frame.collapsed .sb-dashed-text,
+    .apple-sidebar-frame.collapsed .sb-theme-switcher { display: none !important; }
+
+    /* Main Canvas */
+    .apple-canvas-area { flex: 1; height: 100%; display: flex; flex-direction: column; min-width: 0; background: var(--apple-card); border-radius: 24px; border: 0.5px solid var(--apple-border); position: relative; overflow: hidden; box-shadow: 0 2px 14px rgba(0, 0, 0, 0.02); }
+    .apple-navbar-header { height: 58px; background: var(--apple-header); backdrop-filter: blur(25px); border-bottom: 0.5px solid var(--apple-border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0; z-index: 15; gap: 10px; }
+    .apple-canvas-content { flex: 1; overflow-y: auto; padding: 1.5rem 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .macos-segmented-bar { position: relative; background: rgba(0, 0, 0, 0.05); border-radius: 10px; padding: 2.5px; display: flex; align-items: center; border: 0.5px solid var(--apple-border); }
+    .dark .macos-segmented-bar { background: rgba(255, 255, 255, 0.08); }
+    .seg-pill-bg { position: absolute; top: 2.5px; bottom: 2.5px; left: 2.5px; width: calc((100% - 5px) / 5); background: var(--apple-card); border-radius: 8px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); transition: transform 0.25s var(--apple-spring); z-index: 1; }
+    .seg-btn { position: relative; flex: 1; text-align: center; font-size: 11.5px; font-weight: 600; padding: 5px 8px; background: transparent; border: none; color: var(--apple-secondary); cursor: pointer; z-index: 2; }
+    .seg-btn.active { color: var(--apple-text); font-weight: 700; }
+
+    .apple-search-wrap { position: relative; display: flex; align-items: center; max-width: 210px; flex: 1; }
+    .apple-search-input { width: 100%; height: 34px; background: var(--apple-card-subtle); border: 0.5px solid var(--apple-border); border-radius: 10px; padding: 0 36px 0 30px; font-size: 11.5px; color: var(--apple-text); outline: none; }
+    .search-icon-svg { position: absolute; left: 10px; color: var(--apple-secondary); pointer-events: none; }
+    .search-kbd-shortcut { position: absolute; right: 7px; font-size: 9px; color: var(--apple-secondary); background: rgba(0, 0, 0, 0.05); border-radius: 4px; padding: 2px 5px; cursor: pointer; font-weight: 700; }
+
+    .apple-pill-btn { padding: 5px 10px; border-radius: 20px; border: 0.5px solid var(--apple-border-strong); background: var(--apple-card); color: var(--apple-text); font-size: 11px; font-weight: 600; cursor: pointer; }
+    .apple-cta-btn { background: var(--apple-orange); color: #ffffff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+
+    .apple-card-box { background: var(--apple-card); border: 0.5px solid var(--apple-border); border-radius: 18px; display: flex; flex-direction: column; overflow: hidden; }
+    .card-collapsible-header { padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .card-body-drawer { padding: 0 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 1.15rem; border-top: 0.5px solid var(--apple-border); }
+    .card-body-drawer.collapsed { display: none !important; }
+
+    .inline-editable { cursor: text; border-radius: 4px; padding: 2px 5px; outline: none; overflow-wrap: anywhere; word-break: break-word; }
+    .inline-editable:hover { background: rgba(0, 113, 227, 0.08); }
+    .inline-editable:focus { box-shadow: 0 0 0 1.5px var(--apple-blue); background: var(--apple-card); }
+    .apple-inline-select { appearance: none; background: var(--apple-card-inset); border: 0.5px solid var(--apple-border); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: var(--apple-text); cursor: pointer; outline: none; }
+
+    .blocker-badge { background: rgba(244, 63, 94, 0.14); color: var(--apple-red); border: 0.5px solid rgba(244, 63, 94, 0.35); font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 5px; text-transform: uppercase; cursor: pointer; }
+    .apple-filter-banner { background: rgba(139, 92, 246, 0.12); border: 0.5px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 8px 14px; display: none; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--apple-purple); font-weight: 600; }
+
+    /* Financial Ribbon & Funnel */
+    .metrics-ribbon { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 1rem 1.25rem; background: var(--apple-card-inset); border: 0.5px solid var(--apple-border); border-radius: 12px; margin-top: 1rem; }
+    .metric-cell { display: flex; flex-direction: column; gap: 4px; }
+    .metric-label { font-size: 9.5px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; }
+    .metric-val { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--apple-text); width: fit-content; }
+    .funnel-hero-card { background: var(--apple-funnel-canvas); border: 0.5px solid var(--apple-border); border-radius: 14px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.15rem; }
+    .funnel-layout-split { display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem; align-items: center; }
+    .funnel-steps-stack { display: flex; flex-direction: column; gap: 8px; }
+    .funnel-step-row { display: flex; align-items: center; gap: 10px; background: var(--apple-card); border: 0.5px solid var(--apple-border); border-radius: 10px; padding: 8px 12px; }
+    .funnel-indicator-bar { width: 4px; height: 34px; border-radius: 2px; flex-shrink: 0; }
+    .funnel-step-name { font-size: 12.5px; font-weight: 700; color: var(--apple-text); width: 92px; flex-shrink: 0; }
+    .funnel-desc-cell { flex: 1; font-size: 11px; color: var(--apple-secondary); }
+    .funnel-spend-cell { width: 95px; text-align: right; font-size: 11px; font-weight: 600; display: flex; flex-direction: column; align-items: flex-end; }
+    .funnel-cpa-cell { width: 85px; text-align: right; font-size: 10.5px; font-weight: 600; color: var(--apple-blue); display: flex; flex-direction: column; align-items: flex-end; }
+    .funnel-spend-tag { font-size: 8px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; }
+    .funnel-step-num { font-size: 13px; font-weight: 700; min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* Kanban & Stepper */
+    .kanban-root-wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: start; }
+    .kanban-column { background: var(--kanban-col-bg); border: 0.5px solid var(--apple-border); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 400px; }
+    .kanban-col-header { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px; }
+    .kanban-status-badge { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .badge-backlog { background: rgba(134, 134, 139, 0.15); color: var(--apple-secondary); }
+    .badge-progress { background: rgba(0, 113, 227, 0.15); color: var(--apple-blue); }
+    .badge-review { background: rgba(249, 115, 22, 0.15); color: #d97706; }
+    .badge-done { background: rgba(16, 185, 129, 0.15); color: var(--apple-green); }
+    .kanban-cards-stack { display: flex; flex-direction: column; gap: 8px; min-height: 300px; }
+    .kanban-card { background: var(--apple-card); border: 0.5px solid var(--apple-border); border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03); display: flex; flex-direction: column; gap: 8px; cursor: grab; }
+    .kanban-card.blocked-card { border-color: rgba(244, 63, 94, 0.55); background: rgba(244, 63, 94, 0.03); }
+    .kanban-card-title { font-size: 12px; font-weight: 700; color: var(--apple-text); line-height: 1.35; cursor: pointer; }
+    .kanban-card-notes { font-size: 10.5px; color: var(--apple-secondary); line-height: 1.35; }
+    .kanban-card-footer { display: flex; align-items: center; justify-content: space-between; border-top: 0.5px solid var(--apple-border); padding-top: 7px; }
+
+    .apple-stepper-wrap { display: flex; align-items: center; justify-content: center; padding: 1.15rem 1rem; border-bottom: 0.5px solid var(--apple-border); }
+    .step-item { display: flex; flex-direction: column; align-items: center; min-width: 90px; }
+    .step-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; }
+    .step-dot.done { background: var(--apple-blue); color: #ffffff; }
+    .step-dot.active { border: 2px solid var(--apple-blue); color: var(--apple-blue); background: var(--apple-card); }
+    .step-dot.pending { background: rgba(0, 0, 0, 0.05); color: var(--apple-secondary); }
+    .step-connector { flex: 1; height: 1.5px; margin: 0 8px; border-radius: 2px; margin-bottom: 20px; }
+    .step-connector.active { background: var(--apple-blue); }
+    .step-connector.pending { background: rgba(0, 0, 0, 0.06); }
+    .tracklist-header { display: flex; align-items: center; padding: 0.5rem; border-bottom: 0.5px solid var(--apple-border); font-size: 9px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; gap: 8px; }
+    .tracklist-item { display: flex; align-items: center; border-bottom: 0.5px solid var(--apple-border); font-size: 12px; padding: 0.6rem 0.5rem; gap: 8px; }
+    .tracklist-item:hover { background: var(--apple-card-hover); }
+    .tracklist-item.blocked-row { background: rgba(244, 63, 94, 0.04); }
+    .apple-checkbox { appearance: none; width: 16px; height: 16px; border: 1.5px solid #d1d1d6; border-radius: 4px; cursor: pointer; position: relative; flex-shrink: 0; }
+    .apple-checkbox:checked { background: var(--apple-blue); border-color: var(--apple-blue); }
+    .apple-checkbox:checked::after { content: ''; position: absolute; left: 4.5px; top: 1.5px; width: 4px; height: 7.5px; border: solid white; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+
+    .time-left-badge { font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .time-left-badge.on-track { background: rgba(16, 185, 129, 0.14); color: var(--apple-green); }
+    .time-left-badge.urgent { background: rgba(249, 115, 22, 0.16); color: var(--apple-orange); }
+    .time-left-badge.overdue { background: rgba(244, 63, 94, 0.16); color: var(--apple-red); }
+    .time-left-badge.completed { background: rgba(134, 134, 139, 0.14); color: var(--apple-secondary); }
+  </style>
+</head>
+<body>
+
+  <!-- Hidden File Input for JSON Restore (#5) -->
+  <input type="file" id="json-restore-input" accept=".json" style="display:none;" onchange="handleJSONRestoreFile(event)">
+
+  <!-- Dynamic Island Toast -->
+  <div id="dynamic-island" class="apple-dynamic-island">
+    <span class="island-dot"></span>
+    <span id="island-message">Ready</span>
+    <button id="island-undo-btn" class="island-undo-btn" onclick="undoLastDelete()">Undo (⌘Z)</button>
+  </div>
+
+  <div id="drag-tooltip" class="gantt-drag-tooltip"></div>
+
+  <!-- NOTION SIDE-PEEK INSPECTOR DRAWER -->
+  <aside id="notion-side-drawer" class="notion-side-drawer">
+    <div class="drawer-top-bar">
+      <span style="font-size: 11px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase;" id="drawer-client-tag">Client Deliverable</span>
+      <button class="apple-pill-btn" onclick="closeSidePeek()">Close ✕</button>
+    </div>
+    <div class="drawer-content" id="drawer-body-content"></div>
+  </aside>
+
+  <!-- Custom Right-Click Context Menu -->
+  <div id="apple-context-menu" class="apple-context-menu">
+    <div class="ctx-section-label" id="ctx-task-title">Task Options</div>
+    <button class="ctx-item" onclick="ctxOpenSidePeek()"><span>Open Side-Peek Drawer</span><span>⇥</span></button>
+    <button class="ctx-item" onclick="ctxToggleBlocker()"><span>Toggle Blocker Flag</span><span>!</span></button>
+    <div class="ctx-divider"></div>
+    <div class="ctx-section-label">Move Status</div>
+    <button class="ctx-item" onclick="ctxSetStatus('backlog')"><span>Backlog / Brief</span></button>
+    <button class="ctx-item" onclick="ctxSetStatus('in_progress')"><span>In Progress</span></button>
+    <button class="ctx-item" onclick="ctxSetStatus('review')"><span>Review &amp; QA</span></button>
+    <button class="ctx-item" onclick="ctxSetStatus('done')"><span>Done</span><span>✓</span></button>
+    <div class="ctx-divider"></div>
+    <button class="ctx-item" onclick="ctxDuplicateTask()"><span>Duplicate Deliverable</span><span>⌘D</span></button>
+    <button class="ctx-item" onclick="ctxPingWA()"><span>Ping Assignee via WA</span><span>↗</span></button>
+    <div class="ctx-divider"></div>
+    <button class="ctx-item danger" onclick="ctxDeleteTask()"><span>Delete Deliverable</span><span>⌫</span></button>
+  </div>
+
+  <div class="persistence-badge">
+    <span class="persistence-dot" id="persist-dot"></span>
+    <span id="persist-text">Local Store Synced</span>
+  </div>
+
+  <!-- MODAL 0: SPOTLIGHT COMMAND PALETTE -->
+  <div id="spotlight-modal" class="apple-modal-backdrop" onclick="if(event.target.id==='spotlight-modal') closeSpotlight()">
+    <div class="spotlight-dialog" onclick="event.stopPropagation()">
+      <div class="spotlight-input-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--apple-secondary);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="spotlight-input" class="spotlight-input" placeholder="Type a command or search deliverables... (Esc to close)" oninput="renderSpotlightItems(this.value)">
+      </div>
+      <div class="spotlight-results" id="spotlight-results"></div>
+    </div>
+  </div>
+
+  <!-- MODAL 1: ADD DELIVERABLE SHEET -->
+  <div id="apple-sheet-modal" class="apple-modal-backdrop" onclick="if(event.target.id==='apple-sheet-modal') hideSheetModal()">
+    <div class="apple-sheet-dialog" onclick="event.stopPropagation()">
+      <div class="sheet-header">
+        <span class="sheet-title">New Deliverable Action Plan</span>
+        <button class="apple-pill-btn" onclick="hideSheetModal()">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Load 1-Click Agency SOP Template</label>
+          <select id="modal-sop-template" class="sheet-select" onchange="applySopTemplate(this.value)">
+            <option value="">— Custom Blank Deliverable —</option>
+            <option value="capi">Meta Broad &amp; CAPI Server Setup (4 Sub-tasks)</option>
+            <option value="ugc">UGC Video 9:16 Hook Batch (4 Sub-tasks)</option>
+            <option value="slicing">Landing Page Slicing &lt; 1.5s (4 Sub-tasks)</option>
+          </select>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Target Client</label>
+          <select id="modal-target-client" class="sheet-select"></select>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Deliverable Name</label>
+          <input type="text" id="modal-task-name" class="sheet-text-input" placeholder="Misal: Hook Testing Video 9:16">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Department</label>
+            <select id="modal-task-dept" class="sheet-select">
+              <option value="creative">Creative &amp; Copy</option>
+              <option value="performance">Performance Ads</option>
+              <option value="video">Video &amp; UGC</option>
+              <option value="tech">Tech &amp; Slicing</option>
+            </select>
+          </div>
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Assignee (PIC)</label>
+            <select id="modal-task-pic" class="sheet-select">
+              <option value="Razaan Al-Ghifari">Razaan Al-Ghifari</option>
+              <option value="Arif Kurniawan">Arif Kurniawan</option>
+              <option value="Jireh Pratama">Jireh Pratama</option>
+            </select>
+          </div>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Duration (Bebas Bahasa: "2 jam", "3 hours", "4 hari", "45 menit")</label>
+          <input type="text" id="modal-task-duration" class="sheet-text-input" value="3 hari" placeholder="Contoh: 2 jam, 3 hours, 4d">
+        </div>
+      </div>
+      <div class="sheet-footer">
+        <button class="apple-pill-btn" onclick="hideSheetModal()">Cancel</button>
+        <button class="apple-cta-btn" onclick="saveNewDeliverableFromModal()">Save &amp; Start Countdown</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: ADD NEW CLIENT WIZARD -->
+  <div id="new-client-modal" class="apple-modal-backdrop" onclick="if(event.target.id==='new-client-modal') hideNewClientModal()">
+    <div class="apple-sheet-dialog" onclick="event.stopPropagation()">
+      <div class="sheet-header">
+        <span class="sheet-title">Add New Agency Client &amp; Funnel</span>
+        <button class="apple-pill-btn" onclick="hideNewClientModal()">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Client / Brand Name</label>
+          <input type="text" id="client-wiz-name" class="sheet-text-input" placeholder="Misal: GlowSkin Clinic">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Account Lead (PIC)</label>
+            <select id="client-wiz-lead" class="sheet-select">
+              <option value="Razaan Al-Ghifari">Razaan Al-Ghifari</option>
+              <option value="Arif Kurniawan">Arif Kurniawan</option>
+            </select>
+          </div>
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Brand Color (Hex)</label>
+            <input type="color" id="client-wiz-hex" class="sheet-text-input" value="#8b5cf6" style="padding:2px 4px;">
+          </div>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Brand Voice &amp; Identity</label>
+          <input type="text" id="client-wiz-voice" class="sheet-text-input" value="Clinical, Trusted, Direct-to-Consultation">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Baseline Omset (Rp)</label>
+            <input type="text" id="client-wiz-omset" class="sheet-text-input" value="65M">
+          </div>
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Target Break-Even ROAS</label>
+            <input type="number" step="0.1" id="client-wiz-beroas" class="sheet-text-input" value="2.6">
+          </div>
+        </div>
+      </div>
+      <div class="sheet-footer">
+        <button class="apple-pill-btn" onclick="hideNewClientModal()">Cancel</button>
+        <button class="apple-cta-btn" onclick="saveNewClientFromWizard()">Create Client &amp; Funnel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside id="app-sidebar" class="apple-sidebar-frame">
+    <button class="sb-edge-toggle" onclick="toggleSidebar()" title="Toggle Sidebar (⌘B)">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+
+    <div class="apple-traffic-lights">
+      <span class="dot dot-red" onclick="toggleSidebar()"></span>
+      <span class="dot dot-yellow" onclick="toggleAllCards()"></span>
+      <span class="dot dot-green" onclick="toggleTheme()"></span>
+    </div>
+
+    <span class="sb-section-title">Filter by PIC</span>
+    <select class="sheet-select sb-item-text" style="margin-bottom: 10px; font-weight: 700;" onchange="setPicFilterFromSidebar(this.value)">
+      <option value="ALL">All Agency Teams</option>
+      <option value="Razaan Al-Ghifari">Razaan (WA Commerce)</option>
+      <option value="Arif Kurniawan">Arif (Tech &amp; Slicing)</option>
+    </select>
+
+    <span class="sb-section-title">Menu</span>
+    <div class="sb-menu-group">
+      <button class="sb-nav-item active" id="subBtn-overview" onclick="switchTab('overview')">
+        <div class="sb-icon-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+        </div>
+        <span class="sb-item-text">Dashboard</span>
+      </button>
+      <button class="sb-nav-item" id="subBtn-projects" onclick="switchTab('projects')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <span class="sb-item-text">Sprint Stepper</span>
+      </button>
+      <button class="sb-nav-item" id="subBtn-home" onclick="switchTab('home')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></div>
+        <span class="sb-item-text">Funnel Matrix</span>
+      </button>
+      <button class="sb-nav-item" id="subBtn-timeline" onclick="switchTab('timeline')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <span class="sb-item-text">Gantt Schedule</span>
+      </button>
+      <button class="sb-nav-item" id="subBtn-kanban" onclick="switchTab('kanban')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+        <span class="sb-item-text" style="flex:1;">Kanban Board</span>
+        <span class="sb-item-text" style="background:var(--apple-orange); color:#fff; font-size:9px; padding:2px 6px; border-radius:6px;" id="sb-total-badge">5</span>
+      </button>
+    </div>
+
+    <span class="sb-section-title" style="margin-top: 12px;">Team Capacity</span>
+    <div class="sb-menu-group">
+      <button class="sb-member-btn" id="sb-member-razaan" onclick="setPicFilterFromSidebar('Razaan Al-Ghifari')">
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #e07a5f; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">RG</span>
+        <span class="sb-member-name" style="font-size: 11.5px; font-weight: 600; color: var(--sb-text); flex: 1;">Razaan Al-Ghifari</span>
+        <span class="sb-member-count" id="sb-cnt-razaan" style="font-size: 10px; font-weight:700; color: var(--sb-muted);">0</span>
+      </button>
+      <button class="sb-member-btn" id="sb-member-arif" onclick="setPicFilterFromSidebar('Arif Kurniawan')">
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #3d5a80; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">AK</span>
+        <span class="sb-member-name" style="font-size: 11.5px; font-weight: 600; color: var(--sb-text); flex: 1;">Arif Kurniawan</span>
+        <span class="sb-member-count" id="sb-cnt-arif" style="font-size: 10px; font-weight:700; color: var(--sb-muted);">0</span>
+      </button
