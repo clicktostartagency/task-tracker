@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Operations - Ultra Minimal</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --text: #1d1d1f;
+      --subtext: #86868b;
+      --border: rgba(0, 0, 0, 0.06);
+      --hover: rgba(0, 0, 0, 0.03);
+      --accent: #0071e3;
+      --danger: #ff3b30;
+    }
+    .dark {
+      --bg: #000000;
+      --card: #121214;
+      --text: #f5f5f7;
+      --subtext: #707075;
+      --border: rgba(255, 255, 255, 0.08);
+      --hover: rgba(255, 255, 255, 0.04);
+      --accent: #2997ff;
+      --danger: #ff453a;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      letter-spacing: -0.015em;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem;
+      user-select: none;
+    }
+    .container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+    }
+    .top-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .pill-btn {
+      border: none;
+      background: transparent;
+      color: var(--subtext);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .pill-btn:hover {
+      background: var(--hover);
+      color: var(--text);
+    }
+    .pill-btn.primary {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Project Card */
+    .project-card {
+      background: var(--card);
+      border: 0.5px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 0.15s ease;
+    }
+    .card-header {
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .client-title {
+      font-size: 14px;
+      font-weight: 600;
+      padding: 2px 4px;
+      border-radius: 4px;
+      cursor: text;
+    }
+    .client-title:focus {
+      outline: 1.5px solid var(--accent);
+      background: var(--bg);
+    }
+    .client-dropdown {
+      border: none;
+      background: transparent;
+      color: var(--subtext);
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+    .client-dropdown:hover {
+      color: var(--accent);
+    }
+    .progress-pill {
+      font-size: 11px;
+      font-family: -apple-system, monospace;
+      color: var(--subtext);
+      margin-left: 4px;
+    }
+    .chevron {
+      width: 14px;
+      height: 14px;
+      color: var(--subtext);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .chevron.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    /* Card Content */
+    .card-body {
+      padding: 0 16px 14px;
+      display: flex;
+      flex-direction: column;
+      border-top: 0.5px solid var(--border);
+    }
+    .card-body.hide {
+      display: none;
+    }
+
+    /* Task Item Row */
+    .task-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 0;
+      border-bottom: 0.5px solid var(--border);
+      font-size: 13px;
+    }
+    .task-row:last-of-type {
+      border-bottom: none;
+    }
+    .task-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+    .apple-checkbox {
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border: 1.2px solid #c7c7cc;
+      border-radius: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .apple-checkbox:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .apple-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 1.5px;
+      width: 4px;
+      height: 7px;
+      border: solid white;
+      border-width: 0 1.5px 1.5px 0;
+      transform: rotate(45deg);
+    }
+    .editable-text {
+      padding: 2px 4px;
+      border-radius: 4px;
+      outline: none;
+    }
+    .editable-text:focus {
+      background: var(--bg);
+      outline: 1.5px solid var(--accent);
+    }
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--subtext);
+      font-size: 11px;
+    }
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-size: 11px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+    .task-row:hover .delete-btn {
+      opacity: 1;
+    }
+
+    /* Inline Quick Add Input */
+    .quick-add-input {
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 12px;
+      padding: 10px 0 2px;
+      outline: none;
+      width: 100%;
+    }
+    .quick-add-input::placeholder {
+      color: var(--subtext);
+    }
+
+    /* Modal Form / Minimal Drawer */
+    .modal-box {
+      background: var(--card);
+      border: 0.5px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .input-flat {
+      border: 0.5px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      width: 100%;
+    }
+    .input-flat:focus {
+      border-color: var(--accent);
+    }
+
+    /* Dynamic Island Toast */
+    .island-toast {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50px);
+      background: rgba(29, 29, 31, 0.95);
+      color: #ffffff;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+    }
+    .island-toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="island-toast" class="island-toast">Status Updated</div>
+
+  <div class="container">
+    <!-- Clean Minimal Top Bar -->
+    <header class="top-bar">
+      <span class="top-title">Projects</span>
+      <div class="top-actions">
+        <button onclick="toggleAllCards()" class="pill-btn">Toggle All</button>
+        <button onclick="toggleDarkMode()" class="pill-btn">Theme</button>
+        <button onclick="toggleAudio()" id="audio-btn" class="pill-btn">Sound: ON</button>
+        <button onclick="toggleModal(true)" class="pill-btn primary">+ Project</button>
+      </div>
+    </header>
+
+    <!-- Inline Creator Drawer -->
+    <div id="creator-modal" class="modal-box" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; font-weight: 600;">Proyek Baru</span>
+        <button onclick="toggleModal(false)" class="pill-btn">Batal</button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <select id="modal-client-select" onchange="handleModalClientSelect(this.value)" class="input-flat">
+          <option value="__NEW__">+ Client Baru...</option>
+        </select>
+        <input type="text" id="modal-client-name" placeholder="Nama Client" class="input-flat">
+      </div>
+      <input type="text" id="modal-task-title" placeholder="Nama deliverable pertama..." class="input-flat">
+      <div style="display: flex; justify-content: flex-end;">
+        <button onclick="saveProjectFromModal()" class="pill-btn primary">Simpan</button>
+      </div>
+    </div>
+
+    <!-- Minimal Cards List -->
+    <main id="cards-container" style="display: flex; flex-direction: column; gap: 10px;"></main>
+  </div>
+
+  <script>
+    const INITIAL_DATA = [
+      {
+        id: "p1",
+        clientName: "Sondaika",
+        lead: "Razaan",
+        collapsed: false,
+        actions: [
+          { id: "a1", text: "Pink Flamingo Copywriting", plan: "3 sudut hook emosional", duration: "3h", done: true },
+          { id: "a2", text: "Meta CAPI Setup", plan: "Integrasi WhatsApp conversion", duration: "5h", done: true },
+          { id: "a3", text: "Testing WhatsApp Pixel", plan: "Verifikasi SLA chat", duration: "2h", done: false }
+        ]
+      },
+      {
+        id: "p2",
+        clientName: "Sibersih",
+        lead: "Arif",
+        collapsed: false,
+        actions: [
+          { id: "a4", text: "Landing Page Slicing", plan: "Optimasi speed load WebP", duration: "4h", done: false },
+          { id: "a5", text: "Video Editing 9:16", plan: "Revisi skrip UGC", duration: "6h", done: false }
+        ]
+      }
+    ];
+
+    let APP_STATE = {
+      projects: INITIAL_DATA,
+      clients: ["Sondaika", "Sibersih", "Nebula", "Pink Flamingo"],
+      dark: localStorage.getItem('clean_dark') === 'true',
+      muted: localStorage.getItem('clean_muted') === 'true'
+    };
+
+    try {
+      const savedProjects = localStorage.getItem('clean_projects_store');
+      if (savedProjects) APP_STATE.projects = JSON.parse(savedProjects);
+      const savedClients = localStorage.getItem('clean_clients_store');
+      if (savedClients) APP_STATE.clients = JSON.parse(savedClients);
+    } catch (e) {}
+
+    function sync(msg) {
+      localStorage.setItem('clean_projects_store', JSON.stringify(APP_STATE.projects));
+      localStorage.setItem('clean_clients_store', JSON.stringify(APP_STATE.clients));
+      render();
+      if (msg) showToast(msg);
+    }
+
+    // Audio Engine
+    let audioCtx = null;
+    function playBeep(type = 'click') {
+      if (APP_STATE.muted) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        if (type === 'click') {
+          osc.frequency.setValueAtTime(1400, now);
+          osc.frequency.exponentialRampToValueAtTime(350, now + 0.025);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.025);
+        } else if (type === 'done') {
+          osc.frequency.setValueAtTime(900, now);
+          osc.frequency.exponentialRampToValueAtTime(1350, now + 0.06);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.06);
+        }
+      } catch (e) {}
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('island-toast');
+      toast.innerText = text;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1600);
+    }
+
+    // Render Cards
+    function render() {
+      const container = document.getElementById('cards-container');
+      if (!container) return;
+
+      container.innerHTML = APP_STATE.projects.map((p, pIdx) => {
+        const total = p.actions.length;
+        const done = p.actions.filter(a => a.done).length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+
+        return `
+          <div class="project-card">
+            <!-- Header (Accordion Trigger) -->
+            <div class="card-header" onclick="toggleCard(${pIdx})">
+              <div class="header-info">
+                <span 
+                  class="client-title" 
+                  contenteditable="true" 
+                  onclick="event.stopPropagation()"
+                  onblur="updateClientTitle(${pIdx}, this.innerText)"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
+                  ${p.clientName}
+                </span>
+
+                <div onclick="event.stopPropagation()">
+                  <select class="client-dropdown" onchange="switchClient(${pIdx}, this.value)">
+                    ${APP_STATE.clients.map(c => `<option value="${c}" ${c === p.clientName ? 'selected' : ''}>${c}</option>`).join('')}
+                    <option value="__NEW__">+ Baru...</option>
+                  </select>
+                </div>
+
+                <span class="progress-pill">${done}/${total} &bull; ${pct}%</span>
+              </div>
+
+              <svg class="chevron ${p.collapsed ? 'collapsed' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
+
+            <!-- Body Drawer -->
+            <div class="card-body ${p.collapsed ? 'hide' : ''}">
+              <div style="display: flex; flex-direction: column;">
+                ${p.actions.map((act, aIdx) => `
+                  <div class="task-row">
+                    <div class="task-left">
+                      <input type="checkbox" ${act.done ? 'checked' : ''} onchange="toggleDone(${pIdx},${aIdx})" class="apple-checkbox">
+                      <span 
+                        class="editable-text" 
+                        contenteditable="true" 
+                        onblur="updateTaskText(${pIdx},${aIdx}, this.innerText)"
+                        style="${act.done ? 'text-decoration: line-through; opacity: 0.5;' : ''}">
+                        ${act.text}
+                      </span>
+                    </div>
+
+                    <div class="task-meta">
+                      <span class="editable-text" contenteditable="true" onblur="updateTaskPlan(${pIdx}, ${aIdx}, this.innerText)">${act.plan || 'catatan'}</span>
+                      <span style="font-family: monospace;">${act.duration || '2h'}</span>
+                      <button onclick="deleteTask(${pIdx},${aIdx})" class="delete-btn">Hapus</button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Quick Add Inline Input -->
+              <input 
+                type="text" 
+                class="quick-add-input" 
+                placeholder="+ Ketik tugas baru & tekan Enter..." 
+                onkeydown="handleQuickAdd(event, ${pIdx})">
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Interaksi & Update Data
+    function toggleCard(pIdx) {
+      APP_STATE.projects[pIdx].collapsed = !APP_STATE.projects[pIdx].collapsed;
+      playBeep('click');
+      sync();
+    }
+
+    function toggleAllCards() {
+      const target = !APP_STATE.projects[0]?.collapsed;
+      APP_STATE.projects.forEach(p => p.collapsed = target);
+      playBeep('click');
+      sync(target ? 'Semua Ditutup' : 'Semua Dibuka');
+    }
+
+    function updateClientTitle(pIdx, val) {
+      const clean = val.trim();
+      if (!clean) return;
+      APP_STATE.projects[pIdx].clientName = clean;
+      if (!APP_STATE.clients.includes(clean)) APP_STATE.clients.push(clean);
+      playBeep('click');
+      sync();
+    }
+
+    function switchClient(pIdx, val) {
+      playBeep('click');
+      if (val === '__NEW__') {
+        const custom = prompt("Nama Client Baru:");
+        if (custom && custom.trim()) updateClientTitle(pIdx, custom.trim());
+      } else {
+        APP_STATE.projects[pIdx].clientName = val;
+        sync();
+      }
+    }
+
+    function toggleDone(pIdx, aIdx) {
+      APP_STATE.projects[pIdx].actions[aIdx].done = !APP_STATE.projects[pIdx].actions[aIdx].done;
+      playBeep(APP_STATE.projects[pIdx].actions[aIdx].done ? 'done' : 'click');
+      sync();
+    }
+
+    function updateTaskText(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].text = val.trim() || APP_STATE.projects[pIdx].actions[aIdx].text;
+      sync();
+    }
+
+    function updateTaskPlan(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].plan = val.trim();
+      sync();
+    }
+
+    function deleteTask(pIdx, aIdx) {
+      APP_STATE.projects[pIdx].actions.splice(aIdx, 1);
+      playBeep('click');
+      sync('Tugas dihapus');
+    }
+
+    function handleQuickAdd(e, pIdx) {
+      if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        if (!val) return;
+        APP_STATE.projects[pIdx].actions.push({
+          id: "act-" + Date.now(),
+          text: val,
+          plan: "Rencana tugas",
+          duration: "2h",
+          done: false
+        });
+        e.target.value = '';
+        playBeep('click');
+        sync();
+      }
+    }
+
+    // Minimal Creator Modal
+    function toggleModal(show) {
+      document.getElementById('creator-modal').style.display = show ? 'flex' : 'none';
+      playBeep('click');
+      if (show) {
+        const select = document.getElementById('modal-client-select');
+        select.innerHTML = `<option value="__NEW__">+ Client Baru...</option>` + 
+          APP_STATE.clients.map(c => `<option value="${c}">${c}</option>`).join('');
+        document.getElementById('modal-client-name').focus();
+      }
+    }
+
+    function handleModalClientSelect(val) {
+      const nameInput = document.getElementById('modal-client-name');
+      if (val === '__NEW__') {
+        nameInput.value = '';
+        nameInput.focus();
+      } else {
+        nameInput.value = val;
+      }
+    }
+
+    function saveProjectFromModal() {
+      const selVal = document.getElementById('modal-client-select').value;
+      const customVal = document.getElementById('modal-client-name').value.trim();
+      const client = (selVal !== '__NEW__' && selVal) ? selVal : (customVal || 'Untitled');
+      const task = document.getElementById('modal-task-title').value.trim() || 'Deliverable Awal';
+
+      if (!APP_STATE.clients.includes(client)) APP_STATE.clients.push(client);
+
+      APP_STATE.projects.unshift({
+        id: "proj-" + Date.now(),
+        clientName: client,
+        lead: "Lead",
+        collapsed: false,
+        actions: [{ id: "act-" + Date.now(), text: task, plan: "Action plan", duration: "2h", done: false }]
+      });
+
+      toggleModal(false);
+      playBeep('done');
+      sync(`Project ${client} dibuat`);
+    }
+
+    // Global Settings
+    function toggleAudio() {
+      APP_STATE.muted = !APP_STATE.muted;
+      localStorage.setItem('clean_muted', APP_STATE.muted ? 'true' : 'false');
+      document.getElementById('audio-btn').innerText = APP_STATE.muted ? 'Sound: OFF' : 'Sound: ON';
+      if (!APP_STATE.muted) playBeep('click');
+      showToast(APP_STATE.muted ? 'Suara Dimatikan' : 'Suara Aktif');
+    }
+
+    function toggleDarkMode() {
+      APP_STATE.dark = !APP_STATE.dark;
+      localStorage.setItem('clean_dark', APP_STATE.dark ? 'true' : 'false');
+      document.documentElement.classList.toggle('dark', APP_STATE.dark);
+      playBeep('click');
+    }
+
+    // Inisialisasi
+    if (APP_STATE.dark) document.documentElement.classList.add('dark');
+    if (APP_STATE.muted) document.getElementById('audio-btn').innerText = 'Sound: OFF';
+    render();
+  </script>
+</body>
+</html>
