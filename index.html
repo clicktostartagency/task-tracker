@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Operations Hub - Apple Studio Suite</title>
+  <style>
+    :root {
+      /* Apple macOS Sequoia Native Palette */
+      --apple-canvas: #f2f2f7;
+      --apple-card: #ffffff;
+      --apple-card-subtle: #fafafc;
+      --apple-card-inset: rgba(0, 0, 0, 0.025);
+      --apple-card-hover: rgba(0, 0, 0, 0.015);
+      --apple-text: #1d1d1f;
+      --apple-secondary: #86868b;
+      --apple-border: rgba(0, 0, 0, 0.08);
+      --apple-border-strong: rgba(0, 0, 0, 0.14);
+      --apple-header: rgba(255, 255, 255, 0.82);
+      
+      --apple-blue: #0071e3;
+      --apple-green: #34c759;
+      --apple-red: #ff3b30;
+      --apple-orange: #ff9500;
+      --apple-purple: #af52de;
+      --apple-cyan: #32ade6;
+      --apple-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+      --sb-bg: rgba(246, 246, 248, 0.82);
+      --sb-text: #1d1d1f;
+      --sb-muted: #86868b;
+      --sb-hover: rgba(0, 0, 0, 0.04);
+      --sb-active-card: #ffffff;
+      --sb-card-box: rgba(0, 0, 0, 0.03);
+      --sb-tree-line: rgba(0, 0, 0, 0.12);
+
+      --kanban-col-bg: rgba(0, 0, 0, 0.025);
+      --apple-funnel-canvas: rgba(0, 0, 0, 0.018);
+    }
+
+    .dark {
+      --apple-canvas: #000000;
+      --apple-card: #1c1c1e;
+      --apple-card-subtle: #2c2c2e;
+      --apple-card-inset: rgba(255, 255, 255, 0.04);
+      --apple-card-hover: rgba(255, 255, 255, 0.02);
+      --apple-text: #f5f5f7;
+      --apple-secondary: #8e8e93;
+      --apple-border: rgba(255, 255, 255, 0.12);
+      --apple-border-strong: rgba(255, 255, 255, 0.2);
+      --apple-header: rgba(28, 28, 30, 0.85);
+
+      --apple-blue: #2997ff;
+      --apple-green: #30d158;
+      --apple-red: #ff453a;
+      --apple-orange: #ff9f0a;
+      --apple-purple: #bf5af2;
+      --apple-cyan: #64d2ff;
+
+      --sb-bg: rgba(28, 28, 30, 0.82);
+      --sb-text: #f5f5f7;
+      --sb-muted: #8e8e93;
+      --sb-hover: rgba(255, 255, 255, 0.06);
+      --sb-active-card: rgba(255, 255, 255, 0.12);
+      --sb-card-box: rgba(255, 255, 255, 0.04);
+      --sb-tree-line: rgba(255, 255, 255, 0.15);
+
+      --kanban-col-bg: rgba(255, 255, 255, 0.03);
+      --apple-funnel-canvas: rgba(255, 255, 255, 0.02);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      letter-spacing: -0.018em;
+    }
+
+    body {
+      background-color: var(--apple-canvas);
+      color: var(--apple-text);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+      padding: 12px;
+      gap: 12px;
+      position: relative;
+    }
+
+    /* Apple Dynamic Island Toast */
+    .apple-dynamic-island {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: rgba(29, 29, 31, 0.88);
+      backdrop-filter: blur(25px) saturate(180%);
+      color: #ffffff;
+      padding: 7px 18px;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 600;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.3s var(--apple-spring);
+      z-index: 9999;
+      pointer-events: none;
+      border: 0.5px solid rgba(255, 255, 255, 0.15);
+    }
+    .apple-dynamic-island.active { transform: translateX(-50%) translateY(0); }
+    .island-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--apple-green); }
+
+    .persistence-badge {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: var(--apple-secondary);
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      padding: 5px 12px;
+      border-radius: 20px;
+      z-index: 50;
+      pointer-events: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+    .persistence-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--apple-green); }
+
+    /* Warning Banner Budget Pacing */
+    .apple-pacing-banner {
+      background: rgba(255, 149, 0, 0.12);
+      border: 0.5px solid rgba(255, 149, 0, 0.3);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: #d97706;
+      animation: bannerSlideIn 0.3s var(--apple-spring);
+    }
+    .dark .apple-pacing-banner { color: #f59e0b; }
+    @keyframes bannerSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* macOS Sidebar */
+    .apple-sidebar-frame {
+      width: 220px;
+      height: 100%;
+      background: var(--sb-bg);
+      backdrop-filter: blur(35px) saturate(190%);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 30;
+      transition: width 0.3s var(--apple-spring);
+      position: relative;
+      padding: 16px 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+    .apple-sidebar-frame.collapsed { width: 68px; padding: 16px 10px; }
+
+    .sb-edge-toggle {
+      position: absolute;
+      right: -10px;
+      top: 56px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      color: var(--apple-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      z-index: 35;
+      transition: transform 0.2s ease;
+    }
+    .sb-edge-toggle:hover { transform: scale(1.08); color: var(--apple-text); }
+    .apple-sidebar-frame.collapsed .sb-edge-toggle svg { transform: rotate(180deg); }
+
+    .apple-traffic-lights {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 18px;
+      padding-left: 2px;
+    }
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .sb-profile-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding: 6px 8px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .sb-profile-card:hover { background: var(--sb-hover); }
+    .sb-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0071e3, #42a5f5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0, 113, 227, 0.25);
+    }
+    .sb-profile-info { display: flex; flex-direction: column; overflow: hidden; white-space: nowrap; }
+    .sb-profile-role { font-size: 9px; font-weight: 600; text-transform: uppercase; color: var(--sb-muted); letter-spacing: 0.04em; }
+    .sb-profile-name { font-size: 12px; font-weight: 700; color: var(--sb-text); overflow: hidden; text-overflow: ellipsis; }
+
+    .sb-section-title {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--sb-muted);
+      letter-spacing: 0.05em;
+      margin: 10px 0 6px 8px;
+      white-space: nowrap;
+    }
+    .sb-menu-group { display: flex; flex-direction: column; gap: 3px; position: relative; }
+    .sb-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--sb-text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+    .sb-nav-item:hover { background: var(--sb-hover); }
+    .sb-nav-item.active {
+      background: var(--sb-active-card);
+      color: var(--sb-text);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    .sb-icon-wrap {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--sb-muted);
+    }
+    .active .sb-icon-wrap { color: var(--apple-blue); }
+
+    .sb-subtree-container {
+      position: relative;
+      margin-left: 20px;
+      padding-left: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-top: 3px;
+      margin-bottom: 6px;
+    }
+    .sb-subtree-container::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 12px;
+      width: 1.5px;
+      background: var(--sb-tree-line);
+    }
+    .sb-sub-item {
+      position: relative;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--sb-muted);
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+    }
+    .sb-sub-item::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      width: 10px;
+      height: 1.5px;
+      background: var(--sb-tree-line);
+    }
+    .sb-sub-item:hover { color: var(--sb-text); background: var(--sb-hover); }
+    .sb-sub-item.active { color: var(--sb-text); font-weight: 700; background: var(--sb-active-card); }
+
+    .sb-member-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      transition: background 0.15s ease;
+    }
+    .sb-member-btn:hover { background: var(--sb-hover); }
+    .sb-member-btn.active { background: var(--sb-active-card); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
+
+    .sb-bottom-card {
+      margin-top: auto;
+      background: var(--sb-card-box);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      border: 0.5px solid var(--apple-border);
+    }
+    .sb-bottom-title { font-size: 12px; font-weight: 700; color: var(--sb-text); }
+    .sb-bottom-subtitle { font-size: 10px; color: var(--sb-muted); line-height: 1.35; margin-bottom: 4px; }
+    .sb-orange-btn {
+      width: 100%;
+      height: 34px;
+      border-radius: 10px;
+      border: none;
+      background: var(--apple-orange);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(255, 149, 0, 0.25);
+    }
+
+    /* Main Canvas */
+    .apple-canvas-area {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--apple-card);
+      border-radius: 22px;
+      border: 0.5px solid var(--apple-border);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 14px rgba(0, 0, 0, 0.03);
+    }
+
+    .apple-navbar-header {
+      height: 56px;
+      background: var(--apple-header);
+      backdrop-filter: blur(25px);
+      border-bottom: 0.5px solid var(--apple-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      flex-shrink: 0;
+      z-index: 15;
+      gap: 12px;
+    }
+
+    .apple-canvas-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.75rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .macos-segmented-bar {
+      position: relative;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 10px;
+      padding: 2.5px;
+      display: flex;
+      align-items: center;
+      border: 0.5px solid var(--apple-border);
+    }
+    .dark .macos-segmented-bar { background: rgba(255, 255, 255, 0.08); }
+    .seg-pill-bg {
+      position: absolute;
+      top: 2.5px;
+      bottom: 2.5px;
+      left: 2.5px;
+      width: calc((100% - 5px) / 5);
+      background: var(--apple-card);
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      transition: transform 0.25s var(--apple-spring);
+      z-index: 1;
+    }
+    .seg-btn {
+      position: relative;
+      flex: 1;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 8px;
+      background: transparent;
+      border: none;
+      color: var(--apple-secondary);
+      cursor: pointer;
+      z-index: 2;
+    }
+    .seg-btn.active { color: var(--apple-text); font-weight: 700; }
+
+    .apple-search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      max-width: 210px;
+      flex: 1;
+    }
+    .apple-search-input {
+      width: 100%;
+      height: 30px;
+      background: rgba(0, 0, 0, 0.04);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 8px;
+      padding: 0 28px;
+      font-size: 11px;
+      color: var(--apple-text);
+      outline: none;
+      transition: all 0.15s ease;
+    }
+    .apple-search-input:focus {
+      background: var(--apple-card);
+      border-color: var(--apple-blue);
+      box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.18);
+    }
+    .dark .apple-search-input { background: rgba(255, 255, 255, 0.06); }
+    .search-icon-svg { position: absolute; left: 9px; color: var(--apple-secondary); pointer-events: none; }
+    .search-kbd-shortcut {
+      position: absolute;
+      right: 6px;
+      font-size: 9px;
+      font-family: -apple-system, monospace;
+      color: var(--apple-secondary);
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+      padding: 1px 4px;
+      pointer-events: none;
+    }
+
+    .apple-pill-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 0.5px solid var(--apple-border);
+      background: var(--apple-card);
+      color: var(--apple-text);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .apple-pill-btn:hover { background: var(--apple-card-hover); }
+
+    .apple-card-box {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 18px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .card-collapsible-header {
+      padding: 1.15rem 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .card-body-drawer {
+      padding: 0 1.4rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      border-top: 0.5px solid var(--apple-border);
+    }
+    .card-body-drawer.collapsed { display: none !important; }
+
+    .inline-editable {
+      cursor: text;
+      border-radius: 4px;
+      padding: 2px 6px;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+      outline: none;
+    }
+    .inline-editable:hover { background: rgba(0, 113, 227, 0.08); }
+    .inline-editable:focus {
+      box-shadow: 0 0 0 1.5px var(--apple-blue);
+      background: var(--apple-card);
+    }
+
+    /* Structured Financial Ribbon */
+    .metrics-ribbon {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding: 1rem 1.25rem;
+      background: var(--apple-card-inset);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 14px;
+      margin-top: 1rem;
+    }
+    @media (max-width: 800px) { .metrics-ribbon { grid-template-columns: 1fr; gap: 10px; } }
+    .metric-cell { display: flex; flex-direction: column; gap: 4px; }
+    .metric-label { font-size: 9.5px; font-weight: 800; color: var(--apple-secondary); text-transform: uppercase; letter-spacing: 0.04em; font-family: -apple-system, monospace; }
+    .metric-val { font-size: 16px; font-weight: 800; font-family: -apple-system, monospace; color: var(--apple-text); display: inline-block; width: fit-content; }
+
+    /* Funnel Matrix */
+    .funnel-hero-card {
+      background: var(--apple-funnel-canvas);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+    .funnel-layout-split {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    @media (max-width: 960px) { .funnel-layout-split { grid-template-columns: 1fr; } }
+    .funnel-steps-stack { display: flex; flex-direction: column; gap: 10px; }
+    .funnel-step-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 12px;
+      padding: 9px 14px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+    .funnel-indicator-bar { width: 4px; height: 38px; border-radius: 2px; flex-shrink: 0; }
+    .funnel-step-name { font-size: 13px; font-weight: 700; color: var(--apple-text); width: 95px; flex-shrink: 0; }
+    .funnel-desc-cell { flex: 1; font-size: 11px; color: var(--apple-secondary); line-height: 1.35; padding: 0 8px; }
+    .funnel-spend-cell {
+      width: 115px;
+      text-align: right;
+      font-family: -apple-system, monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--apple-text);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .funnel-spend-tag { font-size: 8px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; }
+    .funnel-step-num { font-family: -apple-system, monospace; font-size: 13px; font-weight: 700; color: var(--apple-text); min-width: 55px; text-align: right; }
+    .funnel-leak-badge {
+      font-size: 10px;
+      font-family: -apple-system, monospace;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 6px;
+      background: rgba(255, 59, 48, 0.1);
+      color: var(--apple-red);
+      border: 0.5px solid rgba(255, 59, 48, 0.2);
+      width: 60px;
+      text-align: center;
+    }
+
+    /* Overview Hub */
+    .ov-hero-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .ov-hero-title-group { display: flex; flex-direction: column; gap: 4px; }
+    .ov-hero-title { font-size: 26px; font-weight: 700; color: var(--apple-text); letter-spacing: -0.024em; }
+    .ov-hero-subtitle { font-size: 13px; color: var(--apple-secondary); font-weight: 400; }
+    .apple-cta-btn {
+      background: var(--apple-blue);
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 113, 227, 0.28);
+      transition: transform 0.12s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .apple-cta-btn:hover { transform: translateY(-1px); }
+
+    .ov-cards-quad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 1100px) { .ov-cards-quad { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .ov-cards-quad { grid-template-columns: 1fr; } }
+
+    .apple-stat-card {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 18px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 140px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .apple-stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05); border-color: var(--apple-border-strong); }
+    .card-top-indicator { display: flex; align-items: center; justify-content: space-between; }
+    .apple-category-pill { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 8px; border-radius: 6px; }
+    .card-arrow-link { font-size: 11px; font-weight: 600; color: var(--apple-blue); display: flex; align-items: center; gap: 4px; }
+    .stat-main-figure { font-size: 26px; font-weight: 700; color: var(--apple-text); letter-spacing: -0.025em; margin-top: 10px; font-variant-numeric: tabular-nums; }
+    .stat-caption-meta { font-size: 11px; color: var(--apple-secondary); margin-top: 4px; }
+
+    .apple-panel-card {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 18px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .panel-header-row { display: flex; align-items: center; justify-content: space-between; }
+    .panel-title-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-secondary); display: flex; align-items: center; gap: 8px; }
+    .panel-view-more { font-size: 11.5px; font-weight: 600; color: var(--apple-blue); cursor: pointer; }
+
+    .kanban-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .kanban-box-unit { background: var(--apple-card-inset); border: 0.5px solid var(--apple-border); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+    .kanban-unit-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--apple-secondary); letter-spacing: 0.03em; }
+    .kanban-unit-number { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--apple-text); }
+
+    .stepper-summary-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--apple-card-inset);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+    .stepper-summary-item:hover { background: var(--apple-card-hover); }
+    .client-title-text { font-size: 12.5px; font-weight: 700; color: var(--apple-text); }
+    .client-stage-sub { font-size: 11px; color: var(--apple-secondary); }
+
+    .apple-mini-stepper { display: flex; align-items: center; gap: 4px; }
+    .mini-step-circle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9.5px;
+      font-weight: 700;
+      font-family: -apple-system, monospace;
+    }
+    .mini-step-circle.active, .mini-step-circle.done { background: var(--apple-blue); color: #ffffff; }
+    .mini-step-circle.pending { background: rgba(0, 0, 0, 0.06); color: var(--apple-secondary); }
+    .dark .mini-step-circle.pending { background: rgba(255, 255, 255, 0.1); }
+    .mini-step-bar { width: 24px; height: 2px; background: rgba(0, 0, 0, 0.08); border-radius: 1px; }
+    .mini-step-bar.active { background: var(--apple-blue); }
+
+    .sla-summary-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid var(--apple-border); font-size: 12px; }
+    .sla-summary-row:last-child { border-bottom: none; }
+    .sla-tag-badge { font-size: 10px; font-family: -apple-system, monospace; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+    .sla-tag-badge.urgent { background: rgba(255, 149, 0, 0.14); color: var(--apple-orange); }
+    .sla-tag-badge.on-track { background: rgba(52, 199, 89, 0.12); color: var(--apple-green); }
+
+    .dept-stat-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 4px 0; }
+    .dept-circle-bullet { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    /* Department Capsules */
+    .cap-pink { background: rgba(219, 39, 119, 0.15); color: #be185d; border: 1px solid rgba(219, 39, 119, 0.45); }
+    .cap-blue { background: rgba(0, 113, 227, 0.15); color: var(--apple-blue); border: 1px solid rgba(0, 113, 227, 0.45); }
+    .cap-green { background: rgba(52, 199, 89, 0.15); color: #15803d; border: 1px solid rgba(52, 199, 89, 0.45); }
+    .cap-brown { background: #7c2d12; color: #ffffff; border: 1px solid #7c2d12; }
+    .cap-orange { background: rgba(255, 149, 0, 0.15); color: #d97706; border: 1px solid rgba(255, 149, 0, 0.45); }
+    .cap-purple { background: rgba(175, 82, 222, 0.15); color: var(--apple-purple); border: 1px solid rgba(175, 82, 222, 0.45); }
+
+    .capsule-dur-label { font-size: 10px; font-family: -apple-system, monospace; font-weight: 800; color: currentColor; margin-right: 14px; user-select: none; }
+    .gantt-resize-grip { width: 16px; height: 100%; position: absolute; right: 0; top: 0; cursor: ew-resize; border-radius: 0 16px 16px 0; display: flex; align-items: center; justify-content: center; z-index: 12; }
+    .gantt-resize-grip::after { content: ''; width: 3px; height: 14px; border-radius: 2px; background: currentColor; opacity: 0.5; }
+
+    /* Kanban Elements */
+    .kanban-root-wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; min-height: calc(100vh - 130px); align-items: start; }
+    @media (max-width: 1080px) { .kanban-root-wrap { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .kanban-root-wrap { grid-template-columns: 1fr; } }
+    .kanban-column { background: var(--kanban-col-bg); border: 0.5px solid var(--apple-border); border-radius: 18px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 480px; }
+    .kanban-col-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; }
+    .kanban-status-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .badge-backlog { background: rgba(134, 134, 139, 0.15); color: var(--apple-secondary); }
+    .badge-progress { background: rgba(0, 113, 227, 0.15); color: var(--apple-blue); }
+    .badge-review { background: rgba(255, 149, 0, 0.15); color: #d97706; }
+    .badge-done { background: rgba(52, 199, 89, 0.15); color: var(--apple-green); }
+    .kanban-cards-stack { display: flex; flex-direction: column; gap: 8px; min-height: 380px; }
+    .kanban-card { background: var(--apple-card); border: 0.5px solid var(--apple-border); border-radius: 14px; padding: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03); display: flex; flex-direction: column; gap: 8px; cursor: grab; }
+    .kanban-card:hover { transform: translateY(-1.5px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06); }
+    .kanban-card-title { font-size: 12px; font-weight: 700; color: var(--apple-text); line-height: 1.35; }
+    .kanban-card-notes { font-size: 10.5px; color: var(--apple-secondary); line-height: 1.35; }
+    .kanban-card-footer { display: flex; align-items: center; justify-content: space-between; border-top: 0.5px solid var(--apple-border); padding-top: 8px; }
+
+    /* Gantt Table */
+    .gantt-root-container { width: 100%; border-radius: 12px; border: 0.5px solid var(--apple-border); background: var(--apple-card); overflow-x: auto; }
+    .gantt-inner-scroll { min-width: 960px; display: flex; flex-direction: column; }
+    .gantt-row-container { display: flex; width: 100%; height: 48px; border-bottom: 0.5px solid var(--apple-border); position: relative; }
+    .gantt-row-container:last-child { border-bottom: none; }
+    .gantt-row-container.header-row { height: 38px; background: var(--apple-card-inset); font-size: 11px; font-weight: 700; color: var(--apple-secondary); }
+    .gantt-left-column { width: 240px; min-width: 240px; max-width: 240px; display: flex; align-items: center; padding: 0 14px; border-right: 0.5px solid var(--apple-border); font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--apple-card); z-index: 5; cursor: pointer; }
+    .gantt-timeline-stage { flex: 1; position: relative; height: 100%; overflow: visible; }
+    .gantt-background-grid { position: absolute; inset: 0; display: grid; height: 100%; z-index: 1; pointer-events: none; }
+    .gantt-cell { border-right: 0.5px dashed var(--apple-border); height: 100%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+    .gantt-cell:last-child { border-right: none; }
+    .gantt-cell.weekend { background: rgba(0, 0, 0, 0.015); }
+    .dark .gantt-cell.weekend { background: rgba(255, 255, 255, 0.02); }
+    .gantt-today-line { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--apple-red); z-index: 12; pointer-events: none; box-shadow: 0 0 8px rgba(255, 59, 48, 0.5); }
+    .gantt-today-pin { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); background: var(--apple-red); color: #ffffff; font-size: 8px; font-weight: 800; padding: 1px 4px; border-radius: 4px; text-transform: uppercase; }
+    .gantt-fixed-capsule { position: absolute; top: 8px; bottom: 8px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: 10.5px; font-weight: 700; cursor: grab; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); white-space: nowrap; z-index: 8; }
+    .capsule-dept-tag { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.85; }
+
+    /* Stepper Header (Projects) */
+    .notion-breadcrumb-bar { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--apple-secondary); padding: 0.85rem 1.25rem 0.25rem; font-weight: 500; }
+    .apple-stepper-wrap { display: flex; align-items: center; justify-content: center; padding: 1.25rem 1rem; border-bottom: 0.5px solid var(--apple-border); }
+    .step-item { display: flex; flex-direction: column; align-items: center; min-width: 95px; }
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: -apple-system, monospace; }
+    .step-dot.done { background: var(--apple-blue); color: #ffffff; }
+    .step-dot.active { border: 2px solid var(--apple-blue); color: var(--apple-blue); background: var(--apple-card); }
+    .step-dot.pending { background: rgba(0, 0, 0, 0.05); color: var(--apple-secondary); }
+    .dark .step-dot.pending { background: rgba(255, 255, 255, 0.08); }
+    .step-connector { flex: 1; height: 1.5px; margin: 0 8px; border-radius: 2px; margin-bottom: 22px; }
+    .step-connector.active { background: var(--apple-blue); }
+    .step-connector.pending { background: rgba(0, 0, 0, 0.06); }
+    .dark .step-connector.pending { background: rgba(255, 255, 255, 0.1); }
+    .tracklist-header { display: flex; align-items: center; padding: 0.55rem 0.5rem; border-bottom: 0.5px solid var(--apple-border); font-size: 9px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; font-family: -apple-system, monospace; gap: 12px; }
+    .tracklist-item { display: flex; align-items: center; border-bottom: 0.5px solid var(--apple-border); font-size: 12px; padding: 0.75rem 0.5rem; gap: 12px; }
+    .apple-checkbox { appearance: none; width: 16px; height: 16px; border: 1.5px solid #d1d1d6; border-radius: 4px; cursor: pointer; position: relative; flex-shrink: 0; }
+    .apple-checkbox:checked { background: var(--apple-blue); border-color: var(--apple-blue); }
+    .apple-checkbox:checked::after { content: ''; position: absolute; left: 4.5px; top: 1.5px; width: 4px; height: 7.5px; border: solid white; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+    .time-left-badge { font-size: 10px; font-family: -apple-system, monospace; font-weight: 600; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; }
+    .time-left-badge.on-track { background: rgba(52, 199, 89, 0.12); color: var(--apple-green); }
+    .time-left-badge.urgent { background: rgba(255, 149, 0, 0.14); color: var(--apple-orange); }
+    .time-left-badge.overdue { background: rgba(255, 59, 48, 0.14); color: var(--apple-red); }
+
+    /* ---------------------------------------------------- */
+    /* APPLE NATIVE SHEET MODAL (ADD DELIVERABLE / CLIENT)  */
+    /* ---------------------------------------------------- */
+    .apple-sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(20px) saturate(180%);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: sheetFade 0.24s var(--apple-spring);
+    }
+    .apple-sheet-backdrop.active { display: flex; }
+    @keyframes sheetFade {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .apple-sheet-dialog {
+      width: 100%;
+      max-width: 440px;
+      background: var(--apple-card);
+      border-radius: 20px;
+      border: 0.5px solid var(--apple-border);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sheet-header {
+      padding: 16px 20px;
+      border-bottom: 0.5px solid var(--apple-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sheet-title { font-size: 15px; font-weight: 700; color: var(--apple-text); }
+    .sheet-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .sheet-field-group { display: flex; flex-direction: column; gap: 5px; }
+    .sheet-field-label { font-size: 11px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; }
+    .sheet-text-input, .sheet-select {
+      width: 100%;
+      height: 34px;
+      border-radius: 8px;
+      border: 0.5px solid var(--apple-border);
+      background: var(--apple-card-inset);
+      padding: 0 10px;
+      font-size: 12px;
+      color: var(--apple-text);
+      outline: none;
+    }
+    .sheet-text-input:focus, .sheet-select:focus {
+      border-color: var(--apple-blue);
+      box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.18);
+    }
+    .sheet-footer {
+      padding: 14px 20px;
+      border-top: 0.5px solid var(--apple-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Island Toast -->
+  <div id="dynamic-island" class="apple-dynamic-island">
+    <span class="island-dot"></span>
+    <span id="island-message">Ready</span>
+  </div>
+
+  <div id="drag-tooltip" class="gantt-drag-tooltip"></div>
+
+  <div class="persistence-badge">
+    <span class="persistence-dot" id="persist-dot"></span>
+    <span id="persist-text">Local Store Synced</span>
+  </div>
+
+  <!-- APPLE NATIVE SHEET MODAL -->
+  <div id="apple-sheet-modal" class="apple-sheet-backdrop" onclick="closeSheetModal(event)">
+    <div class="apple-sheet-dialog" onclick="event.stopPropagation()">
+      <div class="sheet-header">
+        <span class="sheet-title">New Deliverable Action Plan</span>
+        <button class="apple-pill-btn" onclick="hideSheetModal()" style="padding: 3px 9px;">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Target Client</label>
+          <select id="modal-target-client" class="sheet-select">
+            <option value="0">Pink Flamingo</option>
+            <option value="1">Sibersih</option>
+          </select>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Deliverable Name</label>
+          <input type="text" id="modal-task-name" class="sheet-text-input" placeholder="Misal: Hook Testing Video 9:16">
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Department / Discipline</label>
+          <select id="modal-task-dept" class="sheet-select">
+            <option value="creative">Creative & Copywriting</option>
+            <option value="performance">Performance & Media Buying</option>
+            <option value="video">Video Production & UGC</option>
+            <option value="tech">Tech & Web Slicing</option>
+          </select>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Assignee (PIC)</label>
+          <select id="modal-task-pic" class="sheet-select">
+            <option value="Razaan Al-Ghifari">Razaan Al-Ghifari</option>
+            <option value="Arif Kurniawan">Arif Kurniawan</option>
+            <option value="Jireh Pratama">Jireh Pratama</option>
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Duration (Days)</label>
+            <input type="number" id="modal-task-duration" class="sheet-text-input" value="3" min="1" max="14">
+          </div>
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Deadline (Date)</label>
+            <input type="date" id="modal-task-date" class="sheet-text-input">
+          </div>
+        </div>
+      </div>
+      <div class="sheet-footer">
+        <button class="apple-pill-btn" onclick="hideSheetModal()">Cancel</button>
+        <button class="apple-cta-btn" onclick="saveNewDeliverableFromModal()">Save Deliverable</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLE SIDEBAR -->
+  <aside id="app-sidebar" class="apple-sidebar-frame">
+    <button class="sb-edge-toggle" onclick="toggleSidebar()" title="Toggle Sidebar (⌘B)">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+
+    <div class="apple-traffic-lights">
+      <span class="dot dot-red" onclick="toggleSidebar()"></span>
+      <span class="dot dot-yellow" onclick="toggleAllCards()"></span>
+      <span class="dot dot-green" onclick="toggleTheme()"></span>
+    </div>
+
+    <div class="sb-profile-card">
+      <div class="sb-avatar">AS</div>
+      <div class="sb-profile-info">
+        <span class="sb-profile-role">Product Designer</span>
+        <span class="sb-profile-name">Andrew Smith</span>
+      </div>
+    </div>
+
+    <span class="sb-section-title">Navigation</span>
+    <div class="sb-menu-group">
+      <button class="sb-nav-item active" onclick="switchTab('overview')">
+        <div class="sb-icon-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+        </div>
+        <span class="sb-item-text" style="flex: 1;">Overview Hub</span>
+      </button>
+
+      <div class="sb-subtree-container">
+        <button class="sb-sub-item" onclick="switchTab('projects')">Sprint Stepper</button>
+        <button class="sb-sub-item" onclick="switchTab('home')">Funnel Matrix</button>
+        <button class="sb-sub-item" onclick="switchTab('timeline')">Gantt Schedule</button>
+        <button class="sb-sub-item" onclick="switchTab('kanban')">Kanban Board</button>
+      </div>
+
+      <button class="sb-nav-item" onclick="triggerToast('Menghubungkan ke Meta Ads CAPI...')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div>
+        <span class="sb-item-text">Ad Accounts &amp; CAPI</span>
+      </button>
+      <button class="sb-nav-item" onclick="triggerToast('Membuka Creative Vault...')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>
+        <span class="sb-item-text">Creative Vault</span>
+      </button>
+    </div>
+
+    <span class="sb-section-title" style="margin-top: 14px;">Members (Quick Filter)</span>
+    <div class="sb-menu-group" id="sb-members-list">
+      <button class="sb-member-btn" id="sb-member-razaan" onclick="setPicFilterFromSidebar('Razaan Al-Ghifari')">
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #e07a5f; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">RG</span>
+        <span class="sb-member-name" style="font-size: 11px; font-weight: 600; color: var(--sb-text); flex: 1;">Razaan Al-Ghifari</span>
+        <span class="sb-member-count" style="font-size: 9px; font-family: -apple-system, monospace; color: var(--sb-muted);" id="sb-cnt-razaan">2</span>
+      </button>
+      <button class="sb-member-btn" id="sb-member-arif" onclick="setPicFilterFromSidebar('Arif Kurniawan')">
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #3d5a80; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">AK</span>
+        <span class="sb-member-name" style="font-size: 11px; font-weight: 600; color: var(--sb-text); flex: 1;">Arif Kurniawan</span>
+        <span class="sb-member-count" style="font-size: 9px; font-family: -apple-system, monospace; color: var(--sb-muted);" id="sb-cnt-arif">1</span>
+      </button>
+    </div>
+
+    <div class="sb-bottom-card">
+      <span class="sb-bottom-title">Quick Action</span>
+      <span class="sb-bottom-subtitle">Buat deliverable baru</span>
+      <button class="sb-orange-btn" onclick="openSheetModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Add Deliverable</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CANVAS -->
+  <div class="apple-canvas-area">
+    <header class="apple-navbar-header">
+      <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+        <div class="macos-segmented-bar" style="width: 480px;">
+          <div id="segPill" class="seg-pill-bg" style="transform: translateX(0%);"></div>
+          <button onclick="switchTab('overview')" id="segBtn-overview" class="seg-btn active">Overview</button>
+          <button onclick="switchTab('projects')" id="segBtn-projects" class="seg-btn">Projects</button>
+          <button onclick="switchTab('home')" id="segBtn-home" class="seg-btn">Funnels</button>
+          <button onclick="switchTab('timeline')" id="segBtn-timeline" class="seg-btn">Timeline</button>
+          <button onclick="switchTab('kanban')" id="segBtn-kanban" class="seg-btn">Kanban</button>
+        </div>
+
+        <div class="apple-search-wrap">
+          <svg class="search-icon-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="global-search-input" class="apple-search-input" placeholder="Search tasks..." oninput="handleSearch(this.value)">
+          <span class="search-kbd-shortcut">⌘K</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button onclick="exportClientReport()" class="apple-pill-btn" title="Ekspor laporan PDF ringkasan">Export PDF</button>
+        <button onclick="toggleAudio()" id="audio-toggle-btn" class="apple-pill-btn font-mono">Sound: ON</button>
+        <button onclick="toggleTheme()" class="apple-pill-btn font-mono">THEME</button>
+      </div>
+    </header>
+
+    <div class="apple-canvas-content">
+      
+      <!-- Pacing Warning Banner -->
+      <div id="pacing-warning-banner" class="apple-pacing-banner" style="display: none;">
+        <span>⚠️ <b>Target Budget Pacing Warning:</b> Akumulasi ad spend mendekati batas efisiensi Break-Even ROAS pada klien aktif.</span>
+        <span style="font-weight: 700; cursor: pointer;" onclick="switchTab('home')">Audit Funnel &rarr;</span>
+      </div>
+
+      <!-- VIEW 00: OVERVIEW HUB -->
+      <div id="view-overview" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <div class="ov-hero-header">
+          <div class="ov-hero-title-group">
+            <h1 class="ov-hero-title">
+              Executive Summary
+            </h1>
+            <p class="ov-hero-subtitle">
+              Ringkasan performa finansial agen, status sprint deliverable, alur kanban, dan matriks beban kerja.
+            </p>
+          </div>
+          <button class="apple-cta-btn" onclick="openSheetModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>New Deliverable</span>
+          </button>
+        </div>
+
+        <div class="ov-cards-quad">
+          <div class="apple-stat-card" onclick="switchTab('home')">
+            <div class="card-top-indicator">
+              <span class="apple-category-pill" style="background: rgba(52, 199, 89, 0.12); color: var(--apple-green);">Funnels &amp; Finance</span>
+              <span class="card-arrow-link">Open &rarr;</span>
+            </div>
+            <div>
+              <div class="stat-main-figure" id="ov-total-revenue-card">Rp 120.5M</div>
+              <div class="stat-caption-meta" id="ov-roas-subtext">Total Spend: Rp 44.8M &bull; ROAS: 2.69x</div>
+            </div>
+          </div>
+
+          <div class="apple-stat-card" onclick="switchTab('kanban')">
+            <div class="card-top-indicator">
+              <span class="apple-category-pill" style="background: rgba(0, 113, 227, 0.12); color: var(--apple-blue);">Kanban Boards</span>
+              <span class="card-arrow-link">Open &rarr;</span>
+            </div>
+            <div>
+              <div class="stat-main-figure" id="ov-active-tasks-card">5 Tasks</div>
+              <div class="stat-caption-meta" id="ov-kanban-subtext">2 in Progress &bull; 1 in QA &bull; 1 Done</div>
+            </div>
+          </div>
+
+          <div class="apple-stat-card" onclick="switchTab('projects')">
+            <div class="card-top-indicator">
+              <span class="apple-category-pill" style="background: rgba(255, 149, 0, 0.12); color: var(--apple-orange);">Sprint Stepper</span>
+              <span class="card-arrow-link">Open &rarr;</span>
+            </div>
+            <div>
+              <div class="stat-main-figure" id="ov-completion-card">60%</div>
+              <div class="stat-caption-meta">Pink Flamingo Stage 2 &bull; Sibersih Stage 1</div>
+            </div>
+          </div>
+
+          <div class="apple-stat-card" onclick="switchTab('timeline')">
+            <div class="card-top-indicator">
+              <span class="apple-category-pill" style="background: rgba(175, 82, 222, 0.12); color: var(--apple-purple);">Gantt Schedule</span>
+              <span class="card-arrow-link">Open &rarr;</span>
+            </div>
+            <div>
+              <div class="stat-main-figure">4 Active</div>
+              <div class="stat-caption-meta">Creative, Performance, UGC, Tech Slicing</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px;">
+          <div class="apple-panel-card">
+            <div class="panel-header-row">
+              <span class="panel-title-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+                Kanban Stage Distribution
+              </span>
+              <span class="panel-view-more" onclick="switchTab('kanban')">View Board &rarr;</span>
+            </div>
+
+            <div class="kanban-summary-grid">
+              <div class="kanban-box-unit">
+                <span class="kanban-unit-label">Backlog</span>
+                <span class="kanban-unit-number" id="ov-cnt-backlog">1</span>
+              </div>
+              <div class="kanban-box-unit" style="border-left: 2.5px solid var(--apple-blue);">
+                <span class="kanban-unit-label">In Progress</span>
+                <span class="kanban-unit-number" id="ov-cnt-progress" style="color: var(--apple-blue);">2</span>
+              </div>
+              <div class="kanban-box-unit" style="border-left: 2.5px solid var(--apple-orange);">
+                <span class="kanban-unit-label">Review / QA</span>
+                <span class="kanban-unit-number" id="ov-cnt-review" style="color: var(--apple-orange);">1</span>
+              </div>
+              <div class="kanban-box-unit" style="border-left: 2.5px solid var(--apple-green);">
+                <span class="kanban-unit-label">Done</span>
+                <span class="kanban-unit-number" id="ov-cnt-done" style="color: var(--apple-green);">1</span>
+              </div>
+            </div>
+
+            <p style="font-size: 11.5px; color: var(--apple-secondary); line-height: 1.45;">
+              Alur kerja terdistribusi dengan stabil. Respon rata-rata QA berada pada <b>3.8 jam</b> tanpa akumulasi antrean berlebih pada tahap Review.
+            </p>
+          </div>
+
+          <div class="apple-panel-card">
+            <div class="panel-header-row">
+              <span class="panel-title-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Client Sprint Stepper
+              </span>
+              <span class="panel-view-more" onclick="switchTab('projects')">Sprint Tracklist &rarr;</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 9px;" id="ov-stepper-client-list"></div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="apple-panel-card">
+            <div class="panel-header-row">
+              <span class="panel-title-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Urgent Deliverable SLA Watchlist
+              </span>
+              <span style="font-size: 11px; color: var(--apple-secondary); font-family: -apple-system, monospace;">Next 48 Hours</span>
+            </div>
+            <div id="ov-sla-watchlist-box"></div>
+          </div>
+
+          <div class="apple-panel-card">
+            <div class="panel-header-row">
+              <span class="panel-title-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Gantt Department Capacity Matrix
+              </span>
+              <span class="panel-view-more" onclick="switchTab('timeline')">Open Gantt &rarr;</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="dept-stat-row">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                  <span class="dept-circle-bullet" style="background: #be185d;"></span>
+                  <b>Creative &amp; Copywriting</b>
+                </span>
+                <span style="font-family: -apple-system, monospace; color: var(--apple-secondary); font-weight: 600;">2 Tasks &bull; 9 Days</span>
+              </div>
+              <div class="dept-stat-row">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                  <span class="dept-circle-bullet" style="background: var(--apple-blue);"></span>
+                  <b>Performance &amp; Media Buying</b>
+                </span>
+                <span style="font-family: -apple-system, monospace; color: var(--apple-secondary); font-weight: 600;">1 Task &bull; 3 Days</span>
+              </div>
+              <div class="dept-stat-row">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                  <span class="dept-circle-bullet" style="background: #15803d;"></span>
+                  <b>Video Production &amp; UGC</b>
+                </span>
+                <span style="font-family: -apple-system, monospace; color: var(--apple-secondary); font-weight: 600;">1 Task &bull; 4 Days</span>
+              </div>
+              <div class="dept-stat-row">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                  <span class="dept-circle-bullet" style="background: #d97706;"></span>
+                  <b>Tech, Dev &amp; Web Slicing</b>
+                </span>
+                <span style="font-family: -apple-system, monospace; color: var(--apple-secondary); font-weight: 600;">1 Task &bull; 4 Days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- VIEW 01: PROJECTS -->
+      <div id="view-projects" style="display: none; flex-direction: column; gap: 1.25rem;"></div>
+
+      <!-- VIEW 02: HOME & FUNNELS -->
+      <div id="view-home" style="display: none; flex-direction: column; gap: 1.25rem;"></div>
+
+      <!-- VIEW 03: TIMELINE GANTT -->
+      <div id="view-timeline" style="display: none; flex-direction: column; gap: 1.25rem;">
+        <div class="apple-card-box" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div class="filter-pills-wrap">
+            <span style="font-size: 10px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase;">Range:</span>
+            <button onclick="setGanttZoom('7D')" id="zoom-7D" class="filter-tab-pill active">Sprint 7D</button>
+            <button onclick="setGanttZoom('12D')" id="zoom-12D" class="filter-tab-pill">Cycle 12D</button>
+            <button onclick="setGanttZoom('30D')" id="zoom-30D" class="filter-tab-pill">Month 30D</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; font-size: 10px; font-weight: 600; color: var(--apple-secondary);">
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #be185d;"></span> Creative</span>
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--apple-blue);"></span> Performance</span>
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #15803d;"></span> Video UGC</span>
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d97706;"></span> Tech</span>
+          </div>
+        </div>
+        <div id="gantt-cards-container" style="display: flex; flex-direction: column; gap: 1.25rem;"></div>
+      </div>
+
+      <!-- VIEW 04: KANBAN BOARD -->
+      <div id="view-kanban" style="display: none; flex-direction: column; gap: 1rem;">
+        <div class="kanban-root-wrap" id="kanban-columns-container"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const INITIAL_PROJECTS = [
+      {
+        id: "proj-1",
+        clientName: "Pink Flamingo",
+        description: "Optimasi funnel performance WhatsApp Commerce, scale broad audience CAPI Meta Ads & testing variasi hook UGC 9:16.",
+        lead: "Razaan Al-Ghifari",
+        category: "Performance WA Commerce",
+        isCollapsed: false,
+        stepLabels: ["Brief", "Production", "Review/QA", "Live Scale"],
+        actions: [
+          { id: "act-1", text: "Pink Flamingo Copywriting & Hook", notes: "Testing 3 variasi hook problem-aware.", duration: "4d", deadlineISO: "2026-10-22T17:30:00+07:00", pic: "Razaan Al-Ghifari", department: "creative", startCol: 0, spanCol: 4, done: true, status: "done" },
+          { id: "act-2", text: "Meta Broad CAPI Setup", notes: "Integrasi server-side event deduplication.", duration: "3d", deadlineISO: "2026-10-23T14:00:00+07:00", pic: "Razaan Al-Ghifari", department: "performance", startCol: 2, spanCol: 3, done: true, status: "review" },
+          { id: "act-3", text: "UGC Video Creative Direction", notes: "Naskah skrip 9:16 berorientasi pain point.", duration: "4d", deadlineISO: "2026-10-24T15:00:00+07:00", pic: "Jireh Pratama", department: "video", startCol: 3, spanCol: 4, done: false, status: "in_progress" }
+        ]
+      },
+      {
+        id: "proj-2",
+        clientName: "Sibersih",
+        description: "Ekspansi akuisisi jasa cleaning service area residensial Tangerang Selatan, speed load landing page & otomasi booking CS.",
+        lead: "Arif Kurniawan",
+        category: "Home Cleaning Funnel",
+        isCollapsed: false,
+        stepLabels: ["Brief", "Production", "Review/QA", "Live Scale"],
+        actions: [
+          { id: "act-4", text: "Landing Page Slicing", notes: "Speed load test di bawah 1.5 detik.", duration: "4d", deadlineISO: "2026-10-21T12:00:00+07:00", pic: "Arif Kurniawan", department: "tech", startCol: 0, spanCol: 4, done: false, status: "in_progress" },
+          { id: "act-5", text: "Hook Script Revisi 9:16", notes: "Penyesuaian hook awal video sesuai arahan klien.", duration: "5d", deadlineISO: "2026-10-23T18:00:00+07:00", pic: "Jireh Pratama", department: "creative", startCol: 2, spanCol: 5, done: false, status: "backlog" }
+        ]
+      }
+    ];
+
+    const DEFAULT_HOME_CLIENTS = [
+      {
+        id: "cli-1",
+        title: "Pink Flamingo",
+        lead: "Razaan Al-Ghifari",
+        revenueNum: 79550000,
+        beRoas: 2.50,
+        funnelTitle: "The Ecommerce Funnel",
+        isCollapsed: false,
+        dropRates: [0.80, 0.02, 0.76, 0.73],
+        funnelStages: [
+          { name: "Awareness", val: 5000, color: "#0e3a66", spend: 8500000, description: "Testing 3 angle hook video 9:16 broad & lookalike" },
+          { name: "Interest", val: 1000, color: "#0284c7", spend: 4200000, description: "Meta Advantage+ catalog ads carousel benefit" },
+          { name: "Consideration", val: 980, color: "#0d9488", spend: 3800000, description: "Retargeting penonton video >50% promo ongkir" },
+          { name: "Conversion", val: 240, color: "#16a34a", spend: 15000000, description: "Direct-to-WhatsApp automation CS reminder" },
+          { name: "Loyalty", val: 65, color: "#84cc16", spend: 500000, description: "Broadcast WA CRM voucher diskon repeat order" }
+        ]
+      },
+      {
+        id: "cli-2",
+        title: "Sibersih",
+        lead: "Arif Kurniawan",
+        revenueNum: 41000000,
+        beRoas: 2.80,
+        funnelTitle: "Home Cleaning Funnel",
+        isCollapsed: false,
+        dropRates: [0.85, 0.67, 0.78, 0.80],
+        funnelStages: [
+          { name: "Awareness", val: 8500, color: "#0e3a66", spend: 6000000, description: "Video problem-aware rumah kotor & deep clean" },
+          { name: "Interest", val: 1200, color: "#0284c7", spend: 3200000, description: "UGC testimoni pelanggan area Jakarta Selatan" },
+          { name: "Consideration", val: 400, color: "#0d9488", spend: 2100000, description: "Landing page load <1.5 detik & price breakdown" },
+          { name: "Conversion", val: 90, color: "#16a34a", spend: 1200000, description: "Booking via form WA otomatis jadwal petugas" },
+          { name: "Loyalty", val: 18, color: "#84cc16", spend: 300000, description: "Langganan rutin mingguan membership program" }
+        ]
+      }
+    ];
+
+    // Local Storage Loading
+    const savedProjects = localStorage.getItem('agency_app_projects');
+    const savedClients = localStorage.getItem('agency_app_clients');
+
+    let APP_STATE = {
+      projects: savedProjects ? JSON.parse(savedProjects) : INITIAL_PROJECTS,
+      homeClients: savedClients ? JSON.parse(savedClients) : DEFAULT_HOME_CLIENTS,
+      activeTab: 'overview',
+      zoomRange: '7D',
+      picFilter: 'ALL',
+      searchQuery: '',
+      sidebarCollapsed: false,
+      isMuted: localStorage.getItem('agency_sound_muted') === 'true',
+      isDark: localStorage.getItem('agency_app_dark') === 'true'
+    };
+
+    function notifySync() {
+      localStorage.setItem('agency_app_projects', JSON.stringify(APP_STATE.projects));
+      localStorage.setItem('agency_app_clients', JSON.stringify(APP_STATE.homeClients));
+      const dot = document.getElementById('persist-dot');
+      const text = document.getElementById('persist-text');
+      dot.style.background = 'var(--apple-orange)';
+      text.innerText = 'Syncing...';
+      setTimeout(() => {
+        dot.style.background = 'var(--apple-green)';
+        text.innerText = 'Local Store Synced';
+      }, 250);
+      checkPacingAlert();
+    }
+
+    function checkPacingAlert() {
+      let totalRev = 0;
+      let totalSpend = 0;
+      APP_STATE.homeClients.forEach(c => {
+        totalRev += c.revenueNum || 0;
+        totalSpend += c.funnelStages.reduce((acc, st) => acc + (st.spend || 0), 0);
+      });
+      const avgRoas = totalSpend > 0 ? (totalRev / totalSpend) : 0;
+      const banner = document.getElementById('pacing-warning-banner');
+      if (banner) {
+        banner.style.display = (avgRoas < 2.7) ? 'flex' : 'none';
+      }
+    }
+
+    // Modal Sheet Handlers
+    function openSheetModal() {
+      document.getElementById('modal-task-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('apple-sheet-modal').classList.add('active');
+      playAppleSound('switch');
+    }
+
+    function hideSheetModal() {
+      document.getElementById('apple-sheet-modal').classList.remove('active');
+      playAppleSound('click');
+    }
+
+    function closeSheetModal(e) {
+      if (e.target.id === 'apple-sheet-modal') hideSheetModal();
+    }
+
+    function saveNewDeliverableFromModal() {
+      const cIdx = parseInt(document.getElementById('modal-target-client').value) || 0;
+      const taskName = document.getElementById('modal-task-name').value.trim();
+      const dept = document.getElementById('modal-task-dept').value;
+      const pic = document.getElementById('modal-task-pic').value;
+      const duration = parseInt(document.getElementById('modal-task-duration').value) || 3;
+      const deadlineDate = document.getElementById('modal-task-date').value || new Date().toISOString();
+
+      if (!taskName) {
+        alert("Nama deliverable tidak boleh kosong.");
+        return;
+      }
+
+      APP_STATE.projects[cIdx].actions.push({
+        id: "act-" + Date.now(),
+        text: taskName,
+        notes: `Deliverable untuk divisi ${dept}.`,
+        duration: `${duration}d`,
+        deadlineISO: new Date(deadlineDate).toISOString(),
+        pic: pic,
+        department: dept,
+        startCol: 1,
+        spanCol: Math.min(6, duration),
+        done: false,
+        status: "in_progress"
+      });
+
+      playAppleSound('done');
+      triggerToast("Deliverable berhasil ditambahkan");
+      hideSheetModal();
+      notifySync();
+      renderAllViews();
+    }
+
+    function exportClientReport() {
+      playAppleSound('click');
+      window.print();
+    }
+
+    // Mutator Handlers
+    function updateTotalRevenue(cIdx, rawText) {
+      APP_STATE.homeClients[cIdx].revenueNum = parseNumericRupiah(rawText);
+      playAppleSound('done');
+      renderHomeView();
+      renderOverviewView();
+      notifySync();
+    }
+
+    function updateStageSpend(cIdx, sIdx, rawText) {
+      APP_STATE.homeClients[cIdx].funnelStages[sIdx].spend = parseNumericRupiah(rawText);
+      playAppleSound('done');
+      renderHomeView();
+      renderOverviewView();
+      notifySync();
+    }
+
+    function updateStageDescription(cIdx, sIdx, rawText) {
+      APP_STATE.homeClients[cIdx].funnelStages[sIdx].description = rawText.trim();
+      notifySync();
+    }
+
+    function recalculateFunnelCascade(cIdx, changedStageIdx, newRawValue) {
+      const client = APP_STATE.homeClients[cIdx];
+      const stages = client.funnelStages;
+      const numVal = parseInt(String(newRawValue).replace(/[^0-9]/g, '')) || 0;
+      stages[changedStageIdx].val = Math.max(1, numVal);
+
+      if (changedStageIdx > 0 && stages[changedStageIdx - 1].val > 0) {
+        client.dropRates[changedStageIdx - 1] = Math.max(0, Math.min(0.999, (stages[changedStageIdx - 1].val - stages[changedStageIdx].val) / stages[changedStageIdx - 1].val));
+      }
+      for (let i = changedStageIdx; i < stages.length - 1; i++) {
+        stages[i + 1].val = Math.max(1, Math.round(stages[i].val * (1 - client.dropRates[i])));
+      }
+      playAppleSound('done');
+      renderHomeView();
+      renderOverviewView();
+      notifySync();
+    }
+
+    function toggleCollapse(pIdx) {
+      APP_STATE.projects[pIdx].isCollapsed = !APP_STATE.projects[pIdx].isCollapsed;
+      playAppleSound('click');
+      renderProjectsView();
+      renderTimelineView();
+      notifySync();
+    }
+
+    function toggleHomeCollapse(cIdx) {
+      APP_STATE.homeClients[cIdx].isCollapsed = !APP_STATE.homeClients[cIdx].isCollapsed;
+      playAppleSound('click');
+      renderHomeView();
+      notifySync();
+    }
+
+    function toggleAllCards() {
+      const target = !APP_STATE.projects[0]?.isCollapsed;
+      APP_STATE.projects.forEach(p => p.isCollapsed = target);
+      APP_STATE.homeClients.forEach(c => c.isCollapsed = target);
+      playAppleSound('click');
+      renderAllViews();
+      notifySync();
+    }
+
+    function toggleTask(pIdx, aIdx) {
+      APP_STATE.projects[pIdx].actions[aIdx].done = !APP_STATE.projects[pIdx].actions[aIdx].done;
+      APP_STATE.projects[pIdx].actions[aIdx].status = APP_STATE.projects[pIdx].actions[aIdx].done ? 'done' : 'in_progress';
+      playAppleSound(APP_STATE.projects[pIdx].actions[aIdx].done ? 'done' : 'click');
+      renderAllViews();
+      notifySync();
+    }
+
+    function updateClientName(pIdx, val) {
+      const clean = val.trim();
+      if (!clean) return;
+      APP_STATE.projects[pIdx].clientName = clean;
+      renderAllViews();
+      notifySync();
+    }
+
+    function updateProjectDescription(pIdx, val) {
+      APP_STATE.projects[pIdx].description = val.trim();
+      notifySync();
+    }
+
+    function updateStepLabel(pIdx, sIdx, val) {
+      const clean = val.trim();
+      if (!clean) return;
+      APP_STATE.projects[pIdx].stepLabels[sIdx] = clean;
+      renderAllViews();
+      notifySync();
+    }
+
+    function updateTaskText(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].text = val.trim() || APP_STATE.projects[pIdx].actions[aIdx].text;
+      renderOverviewView();
+      notifySync();
+    }
+
+    function updateTaskNotes(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].notes = val.trim();
+      notifySync();
+    }
+
+    function updateTaskDuration(pIdx, aIdx, val) {
+      const clean = val.trim();
+      APP_STATE.projects[pIdx].actions[aIdx].duration = clean || "4d";
+      const match = clean.match(/([0-9]+)/);
+      if (match) {
+        const span = parseInt(match[1]);
+        const numCols = GANTT_SCALES[APP_STATE.zoomRange].length;
+        APP_STATE.projects[pIdx].actions[aIdx].spanCol = Math.max(1, Math.min(numCols - APP_STATE.projects[pIdx].actions[aIdx].startCol, span));
+        renderTimelineView();
+        renderKanbanView();
+        renderOverviewView();
+      }
+      notifySync();
+    }
+
+    function updateTaskPic(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].pic = val.trim() || APP_STATE.projects[pIdx].lead;
+      renderOverviewView();
+      notifySync();
+    }
+
+    function deleteTask(pIdx, aIdx) {
+      APP_STATE.projects[pIdx].actions.splice(aIdx, 1);
+      playAppleSound('click');
+      renderAllViews();
+      notifySync();
+    }
+
+    function switchTab(tabId) {
+      APP_STATE.activeTab = tabId;
+      playAppleSound('click');
+
+      const tabs = ['overview', 'projects', 'home', 'timeline', 'kanban'];
+      const idx = tabs.indexOf(tabId);
+      const pill = document.getElementById('segPill');
+      if (pill && idx !== -1) pill.style.transform = `translateX(${idx * 100}%)`;
+
+      tabs.forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const seg = document.getElementById(`segBtn-${t}`);
+        if (view) view.style.display = (t === tabId) ? 'flex' : 'none';
+        if (seg) seg.classList.toggle('active', t === tabId);
+      });
+
+      renderAllViews();
+    }
+
+    function renderAllViews() {
+      if (APP_STATE.activeTab === 'overview') renderOverviewView();
+      else if (APP_STATE.activeTab === 'projects') renderProjectsView();
+      else if (APP_STATE.activeTab === 'home') renderHomeView();
+      else if (APP_STATE.activeTab === 'timeline') renderTimelineView();
+      else if (APP_STATE.activeTab === 'kanban') renderKanbanView();
+      updateSidebarMemberCounters();
+    }
+
+    function toggleTheme() {
+      APP_STATE.isDark = !APP_STATE.isDark;
+      localStorage.setItem('agency_app_dark', APP_STATE.isDark ? 'true' : 'false');
+      document.documentElement.classList.toggle('dark', APP_STATE.isDark);
+      playAppleSound('click');
+    }
+
+    if (APP_STATE.isDark) document.documentElement.classList.add('dark');
+    renderAllViews();
+    checkPacingAlert();
+  </script>
+</body>
+</html>
