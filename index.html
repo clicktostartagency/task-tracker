@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Operations Hub — macOS Sequoia Edition</title>
+  <style>
+    :root {
+      /* Apple macOS Sequoia Native Palette (Light) */
+      --apple-canvas: #f2f2f7;
+      --apple-card: #ffffff;
+      --apple-card-subtle: #fafafc;
+      --apple-card-inset: rgba(0, 0, 0, 0.03);
+      --apple-card-hover: rgba(0, 0, 0, 0.02);
+      --apple-text: #1d1d1f;
+      --apple-secondary: #86868b;
+      --apple-border: rgba(0, 0, 0, 0.08);
+      --apple-border-strong: rgba(0, 0, 0, 0.15);
+      --apple-header: rgba(255, 255, 255, 0.82);
+      
+      /* Apple HIG System Colors */
+      --apple-blue: #0071e3;
+      --apple-green: #34c759;
+      --apple-red: #ff3b30;
+      --apple-orange: #ff9500;
+      --apple-purple: #af52de;
+      --apple-pink: #ff2d55;
+      --apple-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+      /* Sidebar Vibrancy */
+      --sb-bg: rgba(244, 244, 246, 0.85);
+      --sb-text: #1d1d1f;
+      --sb-muted: #86868b;
+      --sb-hover: rgba(0, 0, 0, 0.04);
+      --sb-active-card: #ffffff;
+      --sb-card-box: rgba(0, 0, 0, 0.03);
+      --sb-tree-line: rgba(0, 0, 0, 0.12);
+
+      --kanban-col-bg: rgba(0, 0, 0, 0.025);
+      --apple-funnel-canvas: rgba(0, 0, 0, 0.018);
+    }
+
+    .dark {
+      /* Apple macOS Sequoia Native Palette (Dark Mode) */
+      --apple-canvas: #000000;
+      --apple-card: #1c1c1e;
+      --apple-card-subtle: #2c2c2e;
+      --apple-card-inset: rgba(255, 255, 255, 0.04);
+      --apple-card-hover: rgba(255, 255, 255, 0.03);
+      --apple-text: #f5f5f7;
+      --apple-secondary: #8e8e93;
+      --apple-border: rgba(255, 255, 255, 0.12);
+      --apple-border-strong: rgba(255, 255, 255, 0.22);
+      --apple-header: rgba(28, 28, 30, 0.82);
+
+      --apple-blue: #2997ff;
+      --apple-green: #30d158;
+      --apple-red: #ff453a;
+      --apple-orange: #ff9f0a;
+      --apple-purple: #bf5af2;
+      --apple-pink: #ff375f;
+
+      --sb-bg: rgba(28, 28, 30, 0.85);
+      --sb-text: #f5f5f7;
+      --sb-muted: #8e8e93;
+      --sb-hover: rgba(255, 255, 255, 0.06);
+      --sb-active-card: rgba(255, 255, 255, 0.12);
+      --sb-card-box: rgba(255, 255, 255, 0.04);
+      --sb-tree-line: rgba(255, 255, 255, 0.15);
+
+      --kanban-col-bg: rgba(255, 255, 255, 0.03);
+      --apple-funnel-canvas: rgba(255, 255, 255, 0.02);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      letter-spacing: -0.016em;
+    }
+
+    body {
+      background-color: var(--apple-canvas);
+      color: var(--apple-text);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      padding: 12px;
+      gap: 12px;
+      position: relative;
+    }
+
+    /* ---------------------------------------------------- */
+    /* MODALS & OVERLAYS (ISOLATED AGAR TIDAK BLOKIR KLIK)  */
+    /* ---------------------------------------------------- */
+    .apple-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(20px) saturate(180%);
+      z-index: 10000;
+      display: none !important;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .apple-modal-backdrop.active {
+      display: flex !important;
+    }
+
+    /* Sheet Dialog (Add Deliverable) */
+    .apple-sheet-dialog {
+      width: 100%;
+      max-width: 440px;
+      background: var(--apple-card);
+      border-radius: 20px;
+      border: 0.5px solid var(--apple-border);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sheet-header {
+      padding: 16px 20px;
+      border-bottom: 0.5px solid var(--apple-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sheet-title { font-size: 15px; font-weight: 700; color: var(--apple-text); }
+    .sheet-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .sheet-field-group { display: flex; flex-direction: column; gap: 5px; }
+    .sheet-field-label { font-size: 10.5px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+    .sheet-text-input, .sheet-select {
+      width: 100%;
+      height: 36px;
+      border-radius: 8px;
+      border: 0.5px solid var(--apple-border-strong);
+      background: var(--apple-card-inset);
+      padding: 0 10px;
+      font-size: 12.5px;
+      color: var(--apple-text);
+      outline: none;
+    }
+    .sheet-text-input:focus, .sheet-select:focus {
+      border-color: var(--apple-blue);
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.18);
+    }
+    .sheet-footer {
+      padding: 14px 20px;
+      border-top: 0.5px solid var(--apple-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Talent Profile Card Modal */
+    .talent-card-frame {
+      width: 100%;
+      max-width: 360px;
+      max-height: 90vh;
+      background: var(--apple-card);
+      border-radius: 32px;
+      border: 0.5px solid var(--apple-border-strong);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .talent-hero-photo {
+      width: 100%;
+      height: 280px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 18px;
+      color: #ffffff;
+    }
+    .talent-hero-photo::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%);
+      pointer-events: none;
+    }
+    .talent-close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.5);
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      z-index: 10;
+      font-weight: 700;
+    }
+    .talent-hero-info { position: relative; z-index: 2; }
+    .talent-body { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+    .talent-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .talent-tag { font-size: 10.5px; padding: 4px 10px; border-radius: 20px; background: var(--apple-card-inset); border: 0.5px solid var(--apple-border); font-weight: 500; }
+    .talent-bio { font-size: 12px; color: var(--apple-secondary); line-height: 1.45; font-style: italic; padding-left: 10px; border-left: 2.5px solid var(--apple-blue); }
+    .talent-anon-box { background: var(--apple-card-inset); padding: 12px; border-radius: 14px; border: 0.5px solid var(--apple-border); display: flex; flex-direction: column; gap: 8px; }
+    .talent-anon-textarea { width: 100%; height: 56px; border-radius: 8px; border: 0.5px solid var(--apple-border); background: var(--apple-card); padding: 8px; font-size: 11.5px; color: var(--apple-text); resize: none; outline: none; }
+    .talent-actions-row { display: flex; justify-content: center; gap: 16px; padding-top: 4px; }
+    .talent-circle-btn { width: 46px; height: 46px; border-radius: 50%; border: 0.5px solid var(--apple-border); background: var(--apple-card); box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: transform 0.15s ease; }
+    .talent-circle-btn:hover { transform: scale(1.1); }
+
+    /* Dynamic Island & Badges */
+    .apple-dynamic-island {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: rgba(29, 29, 31, 0.92);
+      backdrop-filter: blur(25px) saturate(180%);
+      color: #ffffff;
+      padding: 7px 18px;
+      border-radius: 30px;
+      font-size: 11.5px;
+      font-weight: 600;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.3s var(--apple-spring);
+      z-index: 9999;
+      pointer-events: none;
+      border: 0.5px solid rgba(255, 255, 255, 0.15);
+    }
+    .apple-dynamic-island.active { transform: translateX(-50%) translateY(0); }
+    .island-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--apple-green); }
+
+    .persistence-badge {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: var(--apple-secondary);
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      padding: 5px 12px;
+      border-radius: 20px;
+      z-index: 50;
+      pointer-events: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+    .persistence-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--apple-green); }
+
+    .gantt-drag-tooltip {
+      position: fixed;
+      background: rgba(29, 29, 31, 0.92);
+      backdrop-filter: blur(12px);
+      color: #ffffff;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      pointer-events: none;
+      z-index: 9998;
+      display: none;
+      transform: translate(-50%, -130%);
+    }
+
+    /* Task Hover Popover */
+    .task-hover-popover {
+      position: fixed;
+      width: 280px;
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border-strong);
+      border-radius: 14px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+      padding: 12px;
+      display: none !important;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 9990;
+      font-size: 11px;
+      transform: translateY(-100%) translateY(-8px);
+    }
+    .task-hover-popover.active { display: flex !important; }
+
+    /* ---------------------------------------------------- */
+    /* MACBOOK SIDEBAR ARCHITECTURE                         */
+    /* ---------------------------------------------------- */
+    .apple-sidebar-frame {
+      width: 224px;
+      height: 100%;
+      background: var(--sb-bg);
+      backdrop-filter: blur(40px) saturate(190%);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 30;
+      transition: width 0.3s var(--apple-spring);
+      position: relative;
+      padding: 16px 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+    .apple-sidebar-frame.collapsed { width: 68px; padding: 16px 10px; }
+
+    .sb-edge-toggle {
+      position: absolute;
+      right: -10px;
+      top: 56px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border-strong);
+      color: var(--apple-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      z-index: 35;
+    }
+    .apple-sidebar-frame.collapsed .sb-edge-toggle svg { transform: rotate(180deg); }
+
+    .apple-traffic-lights {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 18px;
+      padding-left: 4px;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .sb-profile-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 6px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .sb-profile-card:hover { background: var(--sb-hover); }
+    .sb-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0071e3, #42a5f5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+    .sb-profile-info { display: flex; flex-direction: column; overflow: hidden; white-space: nowrap; }
+    .sb-profile-role { font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--sb-muted); letter-spacing: 0.04em; }
+    .sb-profile-name { font-size: 12.5px; font-weight: 700; color: var(--sb-text); }
+
+    .sb-section-title {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--sb-muted);
+      letter-spacing: 0.05em;
+      margin: 10px 0 6px 8px;
+      white-space: nowrap;
+    }
+    .sb-menu-group { display: flex; flex-direction: column; gap: 3px; }
+    .sb-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--sb-text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+    }
+    .sb-nav-item:hover { background: var(--sb-hover); }
+    .sb-nav-item.active {
+      background: var(--sb-active-card);
+      color: var(--apple-blue);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    .sb-icon-wrap {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sb-subtree-container {
+      position: relative;
+      margin-left: 20px;
+      padding-left: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-top: 3px;
+      margin-bottom: 6px;
+    }
+    .sb-subtree-container::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 12px;
+      width: 1.5px;
+      background: var(--sb-tree-line);
+    }
+    .sb-sub-item {
+      position: relative;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--sb-muted);
+      padding: 5px 8px;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+    }
+    .sb-sub-item::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      width: 10px;
+      height: 1.5px;
+      background: var(--sb-tree-line);
+    }
+    .sb-sub-item:hover { color: var(--sb-text); background: var(--sb-hover); }
+    .sb-sub-item.active { color: var(--apple-blue); font-weight: 700; background: var(--sb-active-card); }
+
+    .sb-member-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+    .sb-member-btn:hover { background: var(--sb-hover); }
+    .sb-member-btn.active { background: var(--sb-active-card); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
+
+    .sb-bottom-card {
+      margin-top: auto;
+      background: var(--sb-card-box);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      border: 0.5px solid var(--apple-border);
+    }
+    .sb-bottom-title { font-size: 12px; font-weight: 700; color: var(--sb-text); }
+    .sb-bottom-subtitle { font-size: 10px; color: var(--sb-muted); line-height: 1.35; margin-bottom: 4px; }
+    .sb-orange-btn {
+      width: 100%;
+      height: 34px;
+      border-radius: 10px;
+      border: none;
+      background: var(--apple-blue);
+      color: #ffffff;
+      font-size: 11.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 113, 227, 0.25);
+    }
+
+    .apple-sidebar-frame.collapsed .sb-profile-info,
+    .apple-sidebar-frame.collapsed .sb-section-title,
+    .apple-sidebar-frame.collapsed .sb-item-text,
+    .apple-sidebar-frame.collapsed .sb-subtree-container,
+    .apple-sidebar-frame.collapsed .sb-member-name,
+    .apple-sidebar-frame.collapsed .sb-member-count,
+    .apple-sidebar-frame.collapsed .sb-bottom-title,
+    .apple-sidebar-frame.collapsed .sb-bottom-subtitle {
+      display: none !important;
+    }
+    .apple-sidebar-frame.collapsed .sb-profile-card { justify-content: center; }
+    .apple-sidebar-frame.collapsed .sb-nav-item,
+    .apple-sidebar-frame.collapsed .sb-member-btn { justify-content: center; padding: 8px 0; }
+    .apple-sidebar-frame.collapsed .sb-bottom-card { background: transparent; padding: 0; border: none; }
+    .apple-sidebar-frame.collapsed .sb-orange-btn { width: 38px; height: 38px; border-radius: 10px; padding: 0; }
+    .apple-sidebar-frame.collapsed .sb-orange-btn span { display: none; }
+
+    /* ---------------------------------------------------- */
+    /* MAIN WINDOW CANVAS                                   */
+    /* ---------------------------------------------------- */
+    .apple-canvas-area {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--apple-card);
+      border-radius: 20px;
+      border: 0.5px solid var(--apple-border);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 14px rgba(0, 0, 0, 0.03);
+    }
+
+    .apple-navbar-header {
+      height: 54px;
+      background: var(--apple-header);
+      backdrop-filter: blur(25px);
+      border-bottom: 0.5px solid var(--apple-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      flex-shrink: 0;
+      z-index: 15;
+      gap: 12px;
+    }
+
+    .apple-canvas-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .macos-segmented-bar {
+      position: relative;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 9px;
+      padding: 2.5px;
+      display: flex;
+      align-items: center;
+      border: 0.5px solid var(--apple-border);
+    }
+    .dark .macos-segmented-bar { background: rgba(255, 255, 255, 0.08); }
+    .seg-pill-bg {
+      position: absolute;
+      top: 2.5px;
+      bottom: 2.5px;
+      left: 2.5px;
+      width: calc((100% - 5px) / 5);
+      background: var(--apple-card);
+      border-radius: 7px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.25s var(--apple-spring);
+      z-index: 1;
+    }
+    .seg-btn {
+      position: relative;
+      flex: 1;
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 8px;
+      background: transparent;
+      border: none;
+      color: var(--apple-secondary);
+      cursor: pointer;
+      z-index: 2;
+    }
+    .seg-btn.active { color: var(--apple-text); font-weight: 700; }
+
+    .apple-search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      max-width: 210px;
+      flex: 1;
+    }
+    .apple-search-input {
+      width: 100%;
+      height: 30px;
+      background: rgba(0, 0, 0, 0.04);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 8px;
+      padding: 0 28px;
+      font-size: 11.5px;
+      color: var(--apple-text);
+      outline: none;
+    }
+    .apple-search-input:focus {
+      background: var(--apple-card);
+      border-color: var(--apple-blue);
+      box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.18);
+    }
+    .dark .apple-search-input { background: rgba(255, 255, 255, 0.06); }
+    .search-icon-svg { position: absolute; left: 9px; color: var(--apple-secondary); pointer-events: none; }
+    .search-kbd-shortcut {
+      position: absolute;
+      right: 6px;
+      font-size: 9px;
+      color: var(--apple-secondary);
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+      padding: 1px 4px;
+      pointer-events: none;
+    }
+
+    .apple-pill-btn {
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 0.5px solid var(--apple-border-strong);
+      background: var(--apple-card);
+      color: var(--apple-text);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .apple-pill-btn:hover { background: var(--apple-card-hover); }
+
+    .apple-card-box {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 16px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .card-collapsible-header {
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .card-body-drawer {
+      padding: 0 1.25rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+      border-top: 0.5px solid var(--apple-border);
+    }
+    .card-body-drawer.collapsed { display: none !important; }
+
+    .inline-editable {
+      cursor: text;
+      border-radius: 4px;
+      padding: 2px 5px;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+      outline: none;
+    }
+    .inline-editable:hover { background: rgba(0, 113, 227, 0.08); }
+    .inline-editable:focus {
+      box-shadow: 0 0 0 1.5px var(--apple-blue);
+      background: var(--apple-card);
+    }
+
+    /* Pacing Warning Banner */
+    .apple-pacing-banner {
+      background: rgba(255, 149, 0, 0.12);
+      border: 0.5px solid rgba(255, 149, 0, 0.35);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: #d97706;
+    }
+    .dark .apple-pacing-banner { color: #ff9f0a; }
+
+    /* Financial Ribbon */
+    .metrics-ribbon {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding: 1rem 1.25rem;
+      background: var(--apple-card-inset);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 12px;
+      margin-top: 1rem;
+    }
+    @media (max-width: 800px) { .metrics-ribbon { grid-template-columns: 1fr; } }
+    .metric-cell { display: flex; flex-direction: column; gap: 4px; }
+    .metric-label { font-size: 9.5px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+    .metric-val { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--apple-text); width: fit-content; }
+
+    /* Funnel Matrix */
+    .funnel-hero-card {
+      background: var(--apple-funnel-canvas);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+    .funnel-layout-split {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    @media (max-width: 960px) { .funnel-layout-split { grid-template-columns: 1fr; } }
+    .funnel-steps-stack { display: flex; flex-direction: column; gap: 8px; }
+    .funnel-step-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+    .funnel-indicator-bar { width: 4px; height: 34px; border-radius: 2px; flex-shrink: 0; }
+    .funnel-step-name { font-size: 12.5px; font-weight: 700; color: var(--apple-text); width: 95px; flex-shrink: 0; }
+    .funnel-desc-cell { flex: 1; font-size: 11px; color: var(--apple-secondary); line-height: 1.35; }
+    .funnel-spend-cell { width: 110px; text-align: right; font-size: 11px; font-weight: 600; display: flex; flex-direction: column; align-items: flex-end; }
+    .funnel-spend-tag { font-size: 8px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; }
+    .funnel-step-num { font-size: 13px; font-weight: 700; min-width: 55px; text-align: right; font-variant-numeric: tabular-nums; }
+    .funnel-leak-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(255, 59, 48, 0.1);
+      color: var(--apple-red);
+      width: 58px;
+      text-align: center;
+    }
+
+    /* Overview Hub */
+    .ov-hero-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .ov-hero-title { font-size: 24px; font-weight: 700; color: var(--apple-text); letter-spacing: -0.022em; }
+    .ov-hero-subtitle { font-size: 12.5px; color: var(--apple-secondary); margin-top: 2px; }
+    .apple-cta-btn {
+      background: var(--apple-blue);
+      color: #ffffff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ov-cards-quad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 1100px) { .ov-cards-quad { grid-template-columns: repeat(2, 1fr); } }
+
+    .apple-stat-card {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 128px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .apple-stat-card:hover { transform: translateY(-2px); border-color: var(--apple-border-strong); }
+    .card-top-indicator { display: flex; align-items: center; justify-content: space-between; }
+    .apple-category-pill { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 7px; border-radius: 6px; }
+    .card-arrow-link { font-size: 11px; font-weight: 600; color: var(--apple-blue); }
+    .stat-main-figure { font-size: 24px; font-weight: 700; color: var(--apple-text); margin-top: 8px; font-variant-numeric: tabular-nums; }
+    .stat-caption-meta { font-size: 11px; color: var(--apple-secondary); margin-top: 4px; }
+
+    .apple-panel-card {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .panel-header-row { display: flex; align-items: center; justify-content: space-between; }
+    .panel-title-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--apple-secondary); display: flex; align-items: center; gap: 6px; }
+    .panel-view-more { font-size: 11px; font-weight: 600; color: var(--apple-blue); cursor: pointer; }
+
+    .kanban-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .kanban-box-unit { background: var(--apple-card-inset); border: 0.5px solid var(--apple-border); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+    .kanban-unit-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: var(--apple-secondary); }
+    .kanban-unit-number { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .stepper-summary-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--apple-card-inset);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .client-title-text { font-size: 12px; font-weight: 700; color: var(--apple-text); }
+    .client-stage-sub { font-size: 10.5px; color: var(--apple-secondary); }
+
+    .apple-mini-stepper { display: flex; align-items: center; gap: 4px; }
+    .mini-step-circle {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+    }
+    .mini-step-circle.done { background: var(--apple-blue); color: #ffffff; }
+    .mini-step-circle.pending { background: rgba(0, 0, 0, 0.06); color: var(--apple-secondary); }
+    .dark .mini-step-circle.pending { background: rgba(255, 255, 255, 0.1); }
+    .mini-step-bar { width: 18px; height: 2px; background: rgba(0, 0, 0, 0.08); }
+    .mini-step-bar.active { background: var(--apple-blue); }
+
+    .sla-summary-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid var(--apple-border); font-size: 11.5px; }
+    .sla-summary-row:last-child { border-bottom: none; }
+    .sla-tag-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 5px; }
+    .sla-tag-badge.urgent { background: rgba(255, 149, 0, 0.14); color: var(--apple-orange); }
+    .sla-tag-badge.on-track { background: rgba(52, 199, 89, 0.12); color: var(--apple-green); }
+
+    .dept-stat-row { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; padding: 4px 0; }
+    .dept-circle-bullet { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    /* Department Capsules */
+    .cap-pink { background: rgba(219, 39, 119, 0.15); color: #be185d; border: 1px solid rgba(219, 39, 119, 0.45); }
+    .cap-blue { background: rgba(0, 113, 227, 0.15); color: var(--apple-blue); border: 1px solid rgba(0, 113, 227, 0.45); }
+    .cap-green { background: rgba(52, 199, 89, 0.15); color: #15803d; border: 1px solid rgba(52, 199, 89, 0.45); }
+    .cap-orange { background: rgba(255, 149, 0, 0.15); color: #d97706; border: 1px solid rgba(255, 149, 0, 0.45); }
+    .cap-purple { background: rgba(175, 82, 222, 0.15); color: var(--apple-purple); border: 1px solid rgba(175, 82, 222, 0.45); }
+
+    .capsule-dur-label { font-size: 10px; font-weight: 800; color: currentColor; margin-right: 14px; }
+    .gantt-resize-grip { width: 16px; height: 100%; position: absolute; right: 0; top: 0; cursor: ew-resize; border-radius: 0 16px 16px 0; display: flex; align-items: center; justify-content: center; z-index: 12; }
+    .gantt-resize-grip::after { content: ''; width: 3px; height: 12px; border-radius: 2px; background: currentColor; opacity: 0.5; }
+
+    /* Kanban Elements */
+    .kanban-root-wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: start; }
+    @media (max-width: 1080px) { .kanban-root-wrap { grid-template-columns: repeat(2, 1fr); } }
+    .kanban-column { background: var(--kanban-col-bg); border: 0.5px solid var(--apple-border); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 440px; }
+    .kanban-col-header { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px; }
+    .kanban-status-badge { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .badge-backlog { background: rgba(134, 134, 139, 0.15); color: var(--apple-secondary); }
+    .badge-progress { background: rgba(0, 113, 227, 0.15); color: var(--apple-blue); }
+    .badge-review { background: rgba(255, 149, 0, 0.15); color: #d97706; }
+    .badge-done { background: rgba(52, 199, 89, 0.15); color: var(--apple-green); }
+    .kanban-cards-stack { display: flex; flex-direction: column; gap: 8px; min-height: 340px; }
+    .kanban-card { background: var(--apple-card); border: 0.5px solid var(--apple-border); border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03); display: flex; flex-direction: column; gap: 7px; cursor: grab; }
+    .kanban-card-title { font-size: 12px; font-weight: 700; color: var(--apple-text); line-height: 1.35; }
+    .kanban-card-notes { font-size: 10.5px; color: var(--apple-secondary); line-height: 1.35; }
+    .kanban-card-footer { display: flex; align-items: center; justify-content: space-between; border-top: 0.5px solid var(--apple-border); padding-top: 7px; }
+
+    /* Gantt Table */
+    .filter-pills-wrap { display: flex; align-items: center; gap: 6px; }
+    .filter-tab-pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 7px; border: none; background: transparent; color: var(--apple-secondary); cursor: pointer; }
+    .filter-tab-pill.active { background: rgba(0, 113, 227, 0.12); color: var(--apple-blue); }
+    .gantt-root-container { width: 100%; border-radius: 12px; border: 0.5px solid var(--apple-border); background: var(--apple-card); overflow-x: auto; }
+    .gantt-inner-scroll { min-width: 900px; display: flex; flex-direction: column; }
+    .gantt-row-container { display: flex; width: 100%; height: 46px; border-bottom: 0.5px solid var(--apple-border); position: relative; }
+    .gantt-row-container:last-child { border-bottom: none; }
+    .gantt-row-container.header-row { height: 36px; background: var(--apple-card-inset); font-size: 10.5px; font-weight: 700; color: var(--apple-secondary); }
+    .gantt-left-column { width: 220px; min-width: 220px; max-width: 220px; display: flex; align-items: center; padding: 0 12px; border-right: 0.5px solid var(--apple-border); font-size: 11.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--apple-card); z-index: 5; cursor: pointer; }
+    .gantt-timeline-stage { flex: 1; position: relative; height: 100%; }
+    .gantt-background-grid { position: absolute; inset: 0; display: grid; height: 100%; z-index: 1; pointer-events: none; }
+    .gantt-cell { border-right: 0.5px dashed var(--apple-border); height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10.5px; }
+    .gantt-cell:last-child { border-right: none; }
+    .gantt-cell.weekend { background: rgba(0, 0, 0, 0.015); }
+    .dark .gantt-cell.weekend { background: rgba(255, 255, 255, 0.02); }
+    .gantt-today-line { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--apple-red); z-index: 12; pointer-events: none; }
+    .gantt-today-pin { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); background: var(--apple-red); color: #ffffff; font-size: 8px; font-weight: 800; padding: 1px 4px; border-radius: 4px; text-transform: uppercase; }
+    .gantt-fixed-capsule { position: absolute; top: 7px; bottom: 7px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: 10px; font-weight: 700; cursor: grab; white-space: nowrap; z-index: 8; }
+    .capsule-dept-tag { font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* Stepper Header (Projects) */
+    .notion-breadcrumb-bar { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--apple-secondary); padding: 0.85rem 1.25rem 0.15rem; font-weight: 500; }
+    .apple-stepper-wrap { display: flex; align-items: center; justify-content: center; padding: 1.15rem 1rem; border-bottom: 0.5px solid var(--apple-border); }
+    .step-item { display: flex; flex-direction: column; align-items: center; min-width: 90px; }
+    .step-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; }
+    .step-dot.done { background: var(--apple-blue); color: #ffffff; }
+    .step-dot.active { border: 2px solid var(--apple-blue); color: var(--apple-blue); background: var(--apple-card); }
+    .step-dot.pending { background: rgba(0, 0, 0, 0.05); color: var(--apple-secondary); }
+    .dark .step-dot.pending { background: rgba(255, 255, 255, 0.08); }
+    .step-connector { flex: 1; height: 1.5px; margin: 0 8px; border-radius: 2px; margin-bottom: 20px; }
+    .step-connector.active { background: var(--apple-blue); }
+    .step-connector.pending { background: rgba(0, 0, 0, 0.06); }
+    .tracklist-header { display: flex; align-items: center; padding: 0.5rem; border-bottom: 0.5px solid var(--apple-border); font-size: 9px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; gap: 12px; }
+    .tracklist-item { display: flex; align-items: center; border-bottom: 0.5px solid var(--apple-border); font-size: 12px; padding: 0.65rem 0.5rem; gap: 12px; }
+    .apple-checkbox { appearance: none; width: 16px; height: 16px; border: 1.5px solid #d1d1d6; border-radius: 4px; cursor: pointer; position: relative; flex-shrink: 0; }
+    .apple-checkbox:checked { background: var(--apple-blue); border-color: var(--apple-blue); }
+    .apple-checkbox:checked::after { content: ''; position: absolute; left: 4.5px; top: 1.5px; width: 4px; height: 7.5px; border: solid white; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+    .time-left-badge { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 5px; display: inline-flex; align-items: center; }
+    .time-left-badge.on-track { background: rgba(52, 199, 89, 0.12); color: var(--apple-green); }
+    .time-left-badge.urgent { background: rgba(255, 149, 0, 0.14); color: var(--apple-orange); }
+    .time-left-badge.overdue { background: rgba(255, 59, 48, 0.14); color: var(--apple-red); }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Island Toast -->
+  <div id="dynamic-island" class="apple-dynamic-island">
+    <span class="island-dot"></span>
+    <span id="island-message">Ready</span>
+  </div>
+
+  <div id="drag-tooltip" class="gantt-drag-tooltip"></div>
+
+  <!-- Task Hover Popover -->
+  <div id="task-hover-popover" class="task-hover-popover">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:0.5px solid var(--apple-border); padding-bottom:4px;">
+      <strong id="pop-title" style="font-size:11.5px;">Task</strong>
+      <span id="pop-sla" class="time-left-badge on-track">2d left</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:10.5px; color:var(--apple-secondary);">
+      <span>PIC: <b id="pop-pic" style="color:var(--apple-text);">-</b></span>
+      <span>Dept: <b id="pop-dept" style="color:var(--apple-text);">-</b></span>
+    </div>
+    <div id="pop-notes" style="font-size:10.5px; color:var(--apple-secondary); background:var(--apple-card-inset); padding:6px; border-radius:6px;">-</div>
+  </div>
+
+  <div class="persistence-badge">
+    <span class="persistence-dot" id="persist-dot"></span>
+    <span id="persist-text">Local Store Synced</span>
+  </div>
+
+  <!-- MODAL 1: ADD DELIVERABLE SHEET -->
+  <div id="apple-sheet-modal" class="apple-modal-backdrop" onclick="if(event.target.id==='apple-sheet-modal') hideSheetModal()">
+    <div class="apple-sheet-dialog" onclick="event.stopPropagation()">
+      <div class="sheet-header">
+        <span class="sheet-title">New Deliverable Action Plan</span>
+        <button class="apple-pill-btn" onclick="hideSheetModal()">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Target Client</label>
+          <select id="modal-target-client" class="sheet-select">
+            <option value="0">Pink Flamingo</option>
+            <option value="1">Sibersih</option>
+          </select>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Deliverable Name</label>
+          <input type="text" id="modal-task-name" class="sheet-text-input" placeholder="Misal: Hook Testing Video 9:16">
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Department / Discipline</label>
+          <select id="modal-task-dept" class="sheet-select">
+            <option value="creative">Creative & Copywriting</option>
+            <option value="performance">Performance & Media Buying</option>
+            <option value="video">Video Production & UGC</option>
+            <option value="tech">Tech & Web Slicing</option>
+          </select>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Assignee (PIC)</label>
+          <select id="modal-task-pic" class="sheet-select">
+            <option value="Razaan Al-Ghifari">Razaan Al-Ghifari</option>
+            <option value="Arif Kurniawan">Arif Kurniawan</option>
+            <option value="Jireh Pratama">Jireh Pratama</option>
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Duration (Days)</label>
+            <input type="number" id="modal-task-duration" class="sheet-text-input" value="3" min="1" max="14">
+          </div>
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Deadline (Date)</label>
+            <input type="date" id="modal-task-date" class="sheet-text-input">
+          </div>
+        </div>
+      </div>
+      <div class="sheet-footer">
+        <button class="apple-pill-btn" onclick="hideSheetModal()">Cancel</button>
+        <button class="apple-cta-btn" onclick="saveNewDeliverableFromModal()">Save Deliverable</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: TALENT PROFILE CARD -->
+  <div id="talent-profile-modal" class="apple-modal-backdrop" onclick="if(event.target.id==='talent-profile-modal') hideTalentModal()">
+    <div class="talent-card-frame" onclick="event.stopPropagation()">
+      <div class="talent-hero-photo" id="talent-photo">
+        <button class="talent-close-btn" onclick="hideTalentModal()">✕</button>
+        <div class="talent-hero-info">
+          <h2 id="talent-name" style="font-size: 20px; font-weight: 800;">Andrew Smith, 28</h2>
+          <p id="talent-role" style="font-size: 11.5px; opacity: 0.9;">Product Designer @ Agency</p>
+        </div>
+      </div>
+      <div class="talent-body">
+        <div class="talent-tags" id="talent-tags"></div>
+        <div class="talent-bio" id="talent-bio"></div>
+        <div class="talent-anon-box">
+          <span style="font-size: 10.5px; font-weight: 700;">Anonymous Feedback Box (100% Private)</span>
+          <textarea id="talent-anon-text" class="talent-anon-textarea" placeholder="Tulis masukan objektif secara anonim..."></textarea>
+          <button class="apple-cta-btn" style="align-self: flex-end;" onclick="sendAnonFeedback()">Send Feedback</button>
+        </div>
+        <div class="talent-actions-row">
+          <button class="talent-circle-btn" style="color: var(--apple-red);" onclick="hideTalentModal()" title="Pass">✕</button>
+          <button class="talent-circle-btn" style="color: var(--apple-blue);" onclick="likeTalent('Superlike ⭐')" title="Superlike">★</button>
+          <button class="talent-circle-btn" style="color: var(--apple-green);" onclick="likeTalent('Kudos Heart ❤️')" title="Like">♥</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MACBOOK SIDEBAR -->
+  <aside id="app-sidebar" class="apple-sidebar-frame">
+    <button class="sb-edge-toggle" onclick="toggleSidebar()" title="Toggle Sidebar (⌘B)">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+
+    <div class="apple-traffic-lights">
+      <span class="dot dot-red" onclick="toggleSidebar()" title="Collapse Sidebar"></span>
+      <span class="dot dot-yellow" onclick="toggleAllCards()" title="Collapse/Expand All Cards"></span>
+      <span class="dot dot-green" onclick="toggleTheme()" title="Switch Light/Dark Mode"></span>
+    </div>
+
+    <div class="sb-profile-card" onclick="openTalentModal('andrew')" title="Klik untuk lihat Talent Profile">
+      <div class="sb-avatar">AS</div>
+      <div class="sb-profile-info">
+        <span class="sb-profile-role">Product Designer</span>
+        <span class="sb-profile-name">Andrew Smith</span>
+      </div>
+    </div>
+
+    <span class="sb-section-title">Workspace</span>
+    <div class="sb-menu-group">
+      <button class="sb-nav-item active" id="navMain-overview" onclick="switchTab('overview')">
+        <div class="sb-icon-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+        </div>
+        <span class="sb-item-text" style="flex: 1;">Operations Hub</span>
+      </button>
+
+      <div class="sb-subtree-container">
+        <button class="sb-sub-item active" id="subBtn-overview" onclick="switchTab('overview')">Overview Summary</button>
+        <button class="sb-sub-item" id="subBtn-projects" onclick="switchTab('projects')">Sprint Stepper</button>
+        <button class="sb-sub-item" id="subBtn-home" onclick="switchTab('home')">Funnel Matrix</button>
+        <button class="sb-sub-item" id="subBtn-timeline" onclick="switchTab('timeline')">Gantt Schedule</button>
+        <button class="sb-sub-item" id="subBtn-kanban" onclick="switchTab('kanban')">Kanban Board</button>
+      </div>
+
+      <button class="sb-nav-item" onclick="triggerToast('Meta CAPI Server Event: Connected (Deduplicated)')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div>
+        <span class="sb-item-text">Ad Accounts &amp; CAPI</span>
+      </button>
+      <button class="sb-nav-item" onclick="triggerToast('Creative Vault 9:16: 14 Active Winning Hooks')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>
+        <span class="sb-item-text">Creative Vault</span>
+      </button>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin: 14px 8px 6px;">
+      <span class="sb-section-title" style="margin:0;">Team Members</span>
+      <span class="sb-item-text" style="font-size:9px; color:var(--apple-blue); cursor:pointer; font-weight:600;" onclick="setPicFilterFromSidebar('ALL')">Reset</span>
+    </div>
+    <div class="sb-menu-group">
+      <button class="sb-member-btn" id="sb-member-razaan" onclick="setPicFilterFromSidebar('Razaan Al-Ghifari')" ondblclick="openTalentModal('razaan')" title="Klik: Filter Tugas | Klik Ganda: Profil">
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #e07a5f; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">RG</span>
+        <span class="sb-member-name" style="font-size: 11.5px; font-weight: 600; color: var(--sb-text); flex: 1;">Razaan Al-Ghifari</span>
+        <span class="sb-member-count" id="sb-cnt-razaan" style="font-size: 10px; font-weight:700; color: var(--sb-muted);">0</span>
+      </button>
+      <button class="sb-member-btn" id="sb-member-arif" onclick="setPicFilterFromSidebar('Arif Kurniawan')" ondblclick="openTalentModal('arif')" title="Klik: Filter Tugas | Klik Ganda: Profil">
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #3d5a80; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">AK</span>
+        <span class="sb-member-name" style="font-size: 11.5px; font-weight: 600; color: var(--sb-text); flex: 1;">Arif Kurniawan</span>
+        <span class="sb-member-count" id="sb-cnt-arif" style="font-size: 10px; font-weight:700; color: var(--sb-muted);">0</span>
+      </button>
+    </div>
+
+    <div class="sb-bottom-card">
+      <span class="sb-bottom-title">Quick Deliverable</span>
+      <span class="sb-bottom-subtitle">Tambahkan tugas sprint baru</span>
+      <button class="sb-orange-btn" onclick="openSheetModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Add Deliverable</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN WINDOW AREA -->
+  <div class="apple-canvas-area">
+    <header class="apple-navbar-header">
+      <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+        <div class="macos-segmented-bar" style="width: 460px;">
+          <div id="segPill" class="seg-pill-bg" style="transform: translateX(0%);"></div>
+          <button onclick="switchTab('overview')" id="segBtn-overview" class="seg-btn active">Overview</button>
+          <button onclick="switchTab('projects')" id="segBtn-projects" class="seg-btn">Projects</button>
+          <button onclick="switchTab('home')" id="segBtn-home" class="seg-btn">Funnels</button>
+          <button onclick="switchTab('timeline')" id="segBtn-timeline" class="seg-btn">Timeline</button>
+          <button onclick="switchTab('kanban')" id="segBtn-kanban" class="seg-btn">Kanban</button>
+        </div>
+
+        <div class="apple-search-wrap">
+          <svg class="search-icon-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="global-search-input" class="apple-search-input" placeholder="Search deliverables..." oninput="handleSearch(this.value)">
+          <span class="search-kbd-shortcut">⌘K</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button onclick="exportClientReport()" class="apple-pill-btn">Export PDF</button>
+        <button onclick="resetDefaultData()" class="apple-pill-btn" title="Reset ke data awal">Reset</button>
+        <button onclick="toggleAudio()" id="audio-toggle-btn" class="apple-pill-btn">Sound: ON</button>
+        <button onclick="toggleTheme()" class="apple-pill-btn">Theme</button>
+      </div>
+    </header>
+
+    <div class="apple-canvas-content">
+      
+      <!-- Pacing Warning Banner -->
+      <div id="pacing-warning-banner" class="apple-pacing-banner" style="display: none;">
+        <span><b>Target Budget Pacing Alert:</b> Akumulasi Ad Spend mendekati batas Break-Even ROAS.</span>
+        <span style="font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="switchTab('home')">Audit Funnel &rarr;</span>
+      </div>
+
+      <!-- VIEW 00: OVERVIEW HUB -->
+      <div id="view-overview" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <div class="ov-hero-header">
+          <div>
+            <h1 class="ov-hero-title">Executive Summary</h1>
+            <p class="ov-hero-subtitle">Ringkasan terpadu performa finansial, progres tahapan sprint, jadwal timeline, dan arus kerja kanban.</p>
+          </div>
+          <button class="apple-cta-btn" onclick="openSheetModal()">
+            <span>+ New Deliverable</span>
+          </button>
+        </div>
+
+        <div class="ov-cards-quad">
+          <div class="apple-stat-card" onclick="switchTab('home')">
+            <div class="card-top-indicator">
+              <span class="apple-category-pill" style="background: rgba(52, 199, 89, 0.12); color: var(--apple-green);">Funnels &amp; Finance</span>
+              <span class="card-arrow-link">Open &rarr;</span>
+            </div>
+            <div>
+              <div class="stat-main-figure" id="ov-total-revenue-card">Rp 120.5M</div>
+              <div class="stat-caption-meta" id="ov-roas-subtext">Total Spend: Rp 44.8M &bull; ROAS: 2.69x</div>
+            </div>
+          </div>
+
+          <div class="apple-stat-card" onclick="switchTab('kanban')">
+            <div class="card-top-indicator">
+              <span class="apple-category-pill" style="background: rgba(0, 113, 227, 0.12); color: var(--apple-blue);">Kanban Boards</span>
+              <span class="card-arrow-link">Open &rarr;</span>
+            </div>
+            <div>
+              <div class="stat-main-figure" id="ov-active-tasks-card">5 Tasks</div>
+              <div class="stat-caption-meta" id="ov-kanban-subtext">2 in Progress &bull; 1 in QA &bull; 1 Done</div>
+            </div>
+          </div>
+
+          <div class="apple-stat-card" onclick="switchTab('projects')">
+            <div class="card-top-indicator">
+              <span class="apple-category-pill" style="background: rgba(255, 149, 0, 0.12); color: var(--apple-orange);">Sprint Stepper</span>
+              <span class="card-arrow-link">Open &rarr;</span>
+            </div>
+            <div>
+              <div class="stat-main-figure" id="ov-completion-card">40%</div>
+              <div class="stat-caption-meta">Deliverables Completed Across Clients</div>
+            </div>
+          </div>
+
+          <div class="apple-stat-card" onclick="switchTab('timeline')">
+            <div class="card-top-indicator">
+              <span class="apple-category-pill" style="background: rgba(175, 82, 222, 0.12); color: var(--apple-purple);">Gantt Schedule</span>
+              <span class="card-arrow-link">Open &rarr;</span>
+            </div>
+            <div>
+              <div class="stat-main-figure">4 Divisions</div>
+              <div class="stat-caption-meta">Creative, Performance, UGC, Tech</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px;">
+          <div class="apple-panel-card">
+            <div class="panel-header-row">
+              <span class="panel-title-label">Kanban Stage Distribution</span>
+              <span class="panel-view-more" onclick="switchTab('kanban')">View Board &rarr;</span>
+            </div>
+
+            <div class="kanban-summary-grid">
+              <div class="kanban-box-unit">
+                <span class="kanban-unit-label">Backlog</span>
+                <span class="kanban-unit-number" id="ov-cnt-backlog">1</span>
+              </div>
+              <div class="kanban-box-unit" style="border-left: 2.5px solid var(--apple-blue);">
+                <span class="kanban-unit-label">In Progress</span>
+                <span class="kanban-unit-number" id="ov-cnt-progress" style="color: var(--apple-blue);">2</span>
+              </div>
+              <div class="kanban-box-unit" style="border-left: 2.5px solid var(--apple-orange);">
+                <span class="kanban-unit-label">Review / QA</span>
+                <span class="kanban-unit-number" id="ov-cnt-review" style="color: var(--apple-orange);">1</span>
+              </div>
+              <div class="kanban-box-unit" style="border-left: 2.5px solid var(--apple-green);">
+                <span class="kanban-unit-label">Done</span>
+                <span class="kanban-unit-number" id="ov-cnt-done" style="color: var(--apple-green);">1</span>
+              </div>
+            </div>
+
+            <p style="font-size: 11.5px; color: var(--apple-secondary); line-height: 1.45;">
+              Distribusi tugas berjalan normal dengan SLA respon rata-rata di bawah 3 menit untuk eskalasi klien.
+            </p>
+          </div>
+
+          <div class="apple-panel-card">
+            <div class="panel-header-row">
+              <span class="panel-title-label">Client Sprint Stepper</span>
+              <span class="panel-view-more" onclick="switchTab('projects')">Tracklist &rarr;</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;" id="ov-stepper-client-list"></div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="apple-panel-card">
+            <div class="panel-header-row">
+              <span class="panel-title-label">Active Deliverable SLA Watchlist</span>
+              <span style="font-size: 10.5px; color: var(--apple-secondary);">Priority Queue</span>
+            </div>
+            <div id="ov-sla-watchlist-box"></div>
+          </div>
+
+          <div class="apple-panel-card">
+            <div class="panel-header-row">
+              <span class="panel-title-label">Department Capacity Matrix</span>
+              <span class="panel-view-more" onclick="switchTab('timeline')">Open Gantt &rarr;</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="dept-stat-row">
+                <span style="display: flex; align-items: center; gap: 8px;"><span class="dept-circle-bullet" style="background: #be185d;"></span><b>Creative &amp; Copywriting</b></span>
+                <span style="color: var(--apple-secondary); font-weight: 600;">Active</span>
+              </div>
+              <div class="dept-stat-row">
+                <span style="display: flex; align-items: center; gap: 8px;"><span class="dept-circle-bullet" style="background: var(--apple-blue);"></span><b>Performance &amp; Media Buying</b></span>
+                <span style="color: var(--apple-secondary); font-weight: 600;">Active</span>
+              </div>
+              <div class="dept-stat-row">
+                <span style="display: flex; align-items: center; gap: 8px;"><span class="dept-circle-bullet" style="background: #15803d;"></span><b>Video Production &amp; UGC</b></span>
+                <span style="color: var(--apple-secondary); font-weight: 600;">Active</span>
+              </div>
+              <div class="dept-stat-row">
+                <span style="display: flex; align-items: center; gap: 8px;"><span class="dept-circle-bullet" style="background: #d97706;"></span><b>Tech, Dev &amp; Web Slicing</b></span>
+                <span style="color: var(--apple-secondary); font-weight: 600;">Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 01: PROJECTS -->
+      <div id="view-projects" style="display: none; flex-direction: column; gap: 1.25rem;"></div>
+
+      <!-- VIEW 02: HOME & FUNNELS -->
+      <div id="view-home" style="display: none; flex-direction: column; gap: 1.25rem;"></div>
+
+      <!-- VIEW 03: TIMELINE GANTT -->
+      <div id="view-timeline" style="display: none; flex-direction: column; gap: 1.25rem;">
+        <div class="apple-card-box" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div class="filter-pills-wrap">
+            <span style="font-size: 10px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase;">Range:</span>
+            <button onclick="setGanttZoom('7D')" id="zoom-7D" class="filter-tab-pill active">Sprint 7D</button>
+            <button onclick="setGanttZoom('12D')" id="zoom-12D" class="filter-tab-pill">Cycle 12D</button>
+            <button onclick="setGanttZoom('30D')" id="zoom-30D" class="filter-tab-pill">Month 30D</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; font-size: 10.5px; font-weight: 600; color: var(--apple-secondary);">
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #be185d;"></span> Creative</span>
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--apple-blue);"></span> Performance</span>
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #15803d;"></span> Video UGC</span>
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d97706;"></span> Tech</span>
+          </div>
+        </div>
+        <div id="gantt-cards-container" style="display: flex; flex-direction: column; gap: 1.25rem;"></div>
+      </div>
+
+      <!-- VIEW 04: KANBAN BOARD -->
+      <div id="view-kanban" style="display: none; flex-direction: column; gap: 1rem;">
+        <div class="kanban-root-wrap" id="kanban-columns-container"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ----------------------------------------------------
+    // 1. KONSTANTA UTAMA (WAJIB DI ATAS AGAR BEBAS BUG)
+    // ----------------------------------------------------
+    const GANTT_SCALES = {
+      '7D': [
+        { d: "16", w: false }, { d: "17", w: true }, { d: "18", w: true, today: true },
+        { d: "19", w: false }, { d: "20", w: false }, { d: "21", w: false }, { d: "22", w: false }
+      ],
+      '12D': [
+        { d: "14", w: false }, { d: "15", w: false }, { d: "16", w: false }, { d: "17", w: true }, { d: "18", w: true, today: true },
+        { d: "19", w: false }, { d: "20", w: false }, { d: "21", w: false }, { d: "22", w: false }, { d: "23", w: false }, { d: "24", w: true }, { d: "25", w: true }
+      ],
+      '30D': Array.from({ length: 30 }, (_, i) => ({
+        d: (i + 1).toString().padStart(2, '0'),
+        w: (i % 7 === 5 || i % 7 === 6),
+        today: i + 1 === 18
+      }))
+    };
+
+    const DEPARTMENTS = {
+      creative: { label: "Creative & Copy", colorClass: "cap-pink" },
+      performance: { label: "Performance Ads", colorClass: "cap-blue" },
+      video: { label: "Video & UGC", colorClass: "cap-green" },
+      tech: { label: "Tech & Dev", colorClass: "cap-orange" },
+      operations: { label: "CRM & Ops", colorClass: "cap-purple" }
+    };
+
+    const KANBAN_STATUSES = [
+      { id: "backlog", title: "Backlog / Brief", badgeClass: "badge-backlog" },
+      { id: "in_progress", title: "In Progress", badgeClass: "badge-progress" },
+      { id: "review", title: "Review & QA", badgeClass: "badge-review" },
+      { id: "done", title: "Done", badgeClass: "badge-done" }
+    ];
+
+    const TALENTS_DB = {
+      andrew: {
+        name: "Andrew Smith, 28",
+        role: "Product Designer @ Agency Studio",
+        photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=600&auto=format&fit=crop",
+        tags: ["macOS HIG", "Design Systems", "UI Architecture", "Prototyping"],
+        bio: "Focused on native Apple interface precision and frictionless conversion flows."
+      },
+      razaan: {
+        name: "Razaan Al-Ghifari, 26",
+        role: "Performance Marketer @ WA Commerce",
+        photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=600&auto=format&fit=crop",
+        tags: ["Meta CTWA", "CAPI Server", "Funnel Scaling", "High ROAS"],
+        bio: "Data over opinions. Scaling Direct-to-WhatsApp campaigns with strict SLA."
+      },
+      arif: {
+        name: "Arif Kurniawan, 27",
+        role: "Tech Lead & Full-Stack @ Agency",
+        photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=600&auto=format&fit=crop",
+        tags: ["JavaScript", "Speed < 1.5s", "Zero Layout Shift", "CAPI Integration"],
+        bio: "Speed and stability are core features. Obsessed with sub-second page loads."
+      }
+    };
+
+    const INITIAL_PROJECTS = [
+      {
+        id: "proj-1",
+        clientName: "Pink Flamingo",
+        description: "Optimasi funnel performance WhatsApp Commerce, scale broad audience CAPI Meta Ads & testing variasi hook UGC 9:16.",
+        lead: "Razaan Al-Ghifari",
+        isCollapsed: false,
+        stepLabels: ["Brief", "Production", "Review/QA", "Live Scale"],
+        actions: [
+          { id: "act-1", text: "Pink Flamingo Copywriting & Hook", notes: "Testing 3 variasi hook problem-aware.", duration: "4d", deadlineISO: "2026-10-22T17:30:00+07:00", pic: "Razaan Al-Ghifari", department: "creative", startCol: 0, spanCol: 4, done: true, status: "done" },
+          { id: "act-2", text: "Meta Broad CAPI Setup", notes: "Integrasi server-side event deduplication.", duration: "3d", deadlineISO: "2026-10-23T14:00:00+07:00", pic: "Razaan Al-Ghifari", department: "performance", startCol: 2, spanCol: 3, done: true, status: "review" },
+          { id: "act-3", text: "UGC Video Creative Direction", notes: "Naskah skrip 9:16 berorientasi pain point.", duration: "4d", deadlineISO: "2026-10-24T15:00:00+07:00", pic: "Jireh Pratama", department: "video", startCol: 3, spanCol: 4, done: false, status: "in_progress" }
+        ]
+      },
+      {
+        id: "proj-2",
+        clientName: "Sibersih",
+        description: "Ekspansi akuisisi jasa cleaning service area residensial Tangerang Selatan, speed load landing page & otomasi booking CS.",
+        lead: "Arif Kurniawan",
+        isCollapsed: false,
+        stepLabels: ["Brief", "Production", "Review/QA", "Live Scale"],
+        actions: [
+          { id: "act-4", text: "Landing Page Slicing", notes: "Speed load test di bawah 1.5 detik.", duration: "4d", deadlineISO: "2026-10-21T12:00:00+07:00", pic: "Arif Kurniawan", department: "tech", startCol: 0, spanCol: 4, done: false, status: "in_progress" },
+          { id: "act-5", text: "Hook Script Revisi 9:16", notes: "Penyesuaian hook awal video sesuai arahan klien.", duration: "5d", deadlineISO: "2026-10-23T18:00:00+07:00", pic: "Jireh Pratama", department: "creative", startCol: 2, spanCol: 5, done: false, status: "backlog" }
+        ]
+      }
+    ];
+
+    const DEFAULT_HOME_CLIENTS = [
+      {
+        id: "cli-1",
+        title: "Pink Flamingo",
+        lead: "Razaan Al-Ghifari",
+        revenueNum: 79550000,
+        beRoas: 2.50,
+        funnelTitle: "The Ecommerce Funnel",
+        isCollapsed: false,
+        dropRates: [0.80, 0.02, 0.76, 0.73],
+        funnelStages: [
+          { name: "Awareness", val: 5000, color: "#0e3a66", spend: 8500000, description: "Testing 3 angle hook video 9:16 broad & lookalike" },
+          { name: "Interest", val: 1000, color: "#0284c7", spend: 4200000, description: "Meta Advantage+ catalog ads carousel benefit" },
+          { name: "Consideration", val: 980, color: "#0d9488", spend: 3800000, description: "Retargeting penonton video >50% promo ongkir" },
+          { name: "Conversion", val: 240, color: "#16a34a", spend: 15000000, description: "Direct-to-WhatsApp automation CS reminder" },
+          { name: "Loyalty", val: 65, color: "#84cc16", spend: 500000, description: "Broadcast WA CRM voucher diskon repeat order" }
+        ]
+      },
+      {
+        id: "cli-2",
+        title: "Sibersih",
+        lead: "Arif Kurniawan",
+        revenueNum: 41000000,
+        beRoas: 2.80,
+        funnelTitle: "Home Cleaning Funnel",
+        isCollapsed: false,
+        dropRates: [0.85, 0.67, 0.78, 0.80],
+        funnelStages: [
+          { name: "Awareness", val: 8500, color: "#0e3a66", spend: 6000000, description: "Video problem-aware rumah kotor & deep clean" },
+          { name: "Interest", val: 1200, color: "#0284c7", spend: 3200000, description: "UGC testimoni pelanggan area Jakarta Selatan" },
+          { name: "Consideration", val: 400, color: "#0d9488", spend: 2100000, description: "Landing page load <1.5 detik & price breakdown" },
+          { name: "Conversion", val: 90, color: "#16a34a", spend: 1200000, description: "Booking via form WA otomatis jadwal petugas" },
+          { name: "Loyalty", val: 18, color: "#84cc16", spend: 300000, description: "Langganan rutin mingguan membership program" }
+        ]
+      }
+    ];
+
+    // Load LocalStorage dengan Fallback Aman
+    let parsedProjects = INITIAL_PROJECTS;
+    let parsedClients = DEFAULT_HOME_CLIENTS;
+    try {
+      const sp = localStorage.getItem('agency_hub_projects_v2');
+      const sc = localStorage.getItem('agency_hub_clients_v2');
+      if (sp) parsedProjects = JSON.parse(sp);
+      if (sc) parsedClients = JSON.parse(sc);
+    } catch (e) {}
+
+    let APP_STATE = {
+      projects: parsedProjects,
+      homeClients: parsedClients,
+      activeTab: 'overview',
+      zoomRange: '7D',
+      picFilter: 'ALL',
+      searchQuery: '',
+      sidebarCollapsed: false,
+      isMuted: localStorage.getItem('agency_sound_muted') === 'true',
+      isDark: localStorage.getItem('agency_app_dark') === 'true'
+    };
+
+    // ----------------------------------------------------
+    // 2. AUDIO & UTILITY ENGINE
+    // ----------------------------------------------------
+    let audioCtx = null;
+    function playAppleSound(type = 'click') {
+      if (APP_STATE.isMuted) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type === 'done' ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(type === 'done' ? 660 : 180, now);
+        osc.frequency.exponentialRampToValueAtTime(type === 'done' ? 880 : 45, now + (type === 'done' ? 0.12 : 0.04));
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + (type === 'done' ? 0.12 : 0.04));
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + (type === 'done' ? 0.12 : 0.04));
+      } catch (e) {}
+    }
+
+    function triggerToast(msg) {
+      const toast = document.getElementById('dynamic-island');
+      const text = document.getElementById('island-message');
+      if (toast && text) {
+        text.innerText = msg;
+        toast.classList.add('active');
+        setTimeout(() => toast.classList.remove('active'), 2200);
+      }
+    }
+
+    function notifySync() {
+      try {
+        localStorage.setItem('agency_hub_projects_v2', JSON.stringify(APP_STATE.projects));
+        localStorage.setItem('agency_hub_clients_v2', JSON.stringify(APP_STATE.homeClients));
+      } catch (e) {}
+      const dot = document.getElementById('persist-dot');
+      const text = document.getElementById('persist-text');
+      if (dot && text) {
+        dot.style.background = 'var(--apple-orange)';
+        text.innerText = 'Syncing...';
+        setTimeout(() => {
+          dot.style.background = 'var(--apple-green)';
+          text.innerText = 'Local Store Synced';
+        }, 250);
+      }
+      checkPacingAlert();
+    }
+
+    function resetDefaultData() {
+      localStorage.removeItem('agency_hub_projects_v2');
+      localStorage.removeItem('agency_hub_clients_v2');
+      APP_STATE.projects = JSON.parse(JSON.stringify(INITIAL_PROJECTS));
+      APP_STATE.homeClients = JSON.parse(JSON.stringify(DEFAULT_HOME_CLIENTS));
+      APP_STATE.picFilter = 'ALL';
+      playAppleSound('done');
+      triggerToast('Data di-reset ke pengaturan awal');
+      renderAllViews();
+    }
+
+    function formatRupiahShort(amount) {
+      if (!amount) return 'Rp 0';
+      if (amount >= 1000000) return 'Rp ' + (amount / 1000000).toFixed(1) + 'M';
+      if (amount >= 1000) return 'Rp ' + (amount / 1000).toFixed(0) + 'K';
+      return 'Rp ' + amount.toLocaleString('id-ID');
+    }
+
+    function parseNumericRupiah(str) {
+      if (!str) return 0;
+      let clean = String(str).toLowerCase().replace(/rp|\s/g, '').replace(',', '.');
+      if (clean.endsWith('m')) return (parseFloat(clean) || 0) * 1000000;
+      if (clean.endsWith('k')) return (parseFloat(clean) || 0) * 1000;
+      return parseFloat(clean.replace(/\./g, '')) || 0;
+    }
+
+    function calculateTimeRemaining(deadlineISO) {
+      if (!deadlineISO) return { text: "No deadline", isUrgent: false, isOverdue: false };
+      const diff = new Date(deadlineISO).getTime() - Date.now();
+      const diffHours = diff / (1000 * 60 * 60);
+      if (diff <= 0) return { text: "Overdue", isUrgent: true, isOverdue: true };
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      return { text: days > 0 ? `${days}d ${hours}h left` : `${hours}h left`, isUrgent: diffHours < 48, isOverdue: false };
+    }
+
+    // Enter Key Listener untuk Semua Inline Editable
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.target && e.target.classList.contains('inline-editable')) {
+        e.preventDefault();
+        e.target.blur();
+      }
+    });
+
+    // ----------------------------------------------------
+    // 3. MODAL & POPOVER HANDLERS
+    // ----------------------------------------------------
+    function openSheetModal() {
+      const dateEl = document.getElementById('modal-task-date');
+      if (dateEl) dateEl.value = new Date(Date.now() + 72 * 3600 * 1000).toISOString().split('T')[0];
+      document.getElementById('apple-sheet-modal').classList.add('active');
+      playAppleSound('click');
+    }
+
+    function hideSheetModal() {
+      document.getElementById('apple-sheet-modal').classList.remove('active');
+      playAppleSound('click');
+    }
+
+    function saveNewDeliverableFromModal() {
+      const cIdx = parseInt(document.getElementById('modal-target-client').value) || 0;
+      const taskName = document.getElementById('modal-task-name').value.trim();
+      const dept = document.getElementById('modal-task-dept').value;
+      const pic = document.getElementById('modal-task-pic').value;
+      const duration = parseInt(document.getElementById('modal-task-duration').value) || 3;
+      const deadlineDate = document.getElementById('modal-task-date').value || new Date().toISOString();
+
+      if (!taskName) {
+        triggerToast("Masukkan nama deliverable terlebih dahulu");
+        return;
+      }
+
+      APP_STATE.projects[cIdx].actions.push({
+        id: "act-" + Date.now(),
+        text: taskName,
+        notes: `Deliverable untuk divisi ${DEPARTMENTS[dept].label}.`,
+        duration: `${duration}d`,
+        deadlineISO: new Date(deadlineDate).toISOString(),
+        pic: pic,
+        department: dept,
+        startCol: 1,
+        spanCol: Math.min(6, duration),
+        done: false,
+        status: "in_progress"
+      });
+
+      document.getElementById('modal-task-name').value = '';
+      playAppleSound('done');
+      hideSheetModal();
+      notifySync();
+      renderAllViews();
+      triggerToast("Deliverable baru berhasil disimpan");
+    }
+
+    function openTalentModal(key) {
+      const t = TALENTS_DB[key] || TALENTS_DB.andrew;
+      document.getElementById('talent-photo').style.backgroundImage = `url('${t.photo}')`;
+      document.getElementById('talent-name').innerText = t.name;
+      document.getElementById('talent-role').innerText = t.role;
+      document.getElementById('talent-bio').innerText = `"${t.bio}"`;
+      document.getElementById('talent-tags').innerHTML = t.tags.map(tag => `<span class="talent-tag">${tag}</span>`).join('');
+      document.getElementById('talent-profile-modal').classList.add('active');
+      playAppleSound('click');
+    }
+
+    function hideTalentModal() {
+      document.getElementById('talent-profile-modal').classList.remove('active');
+      playAppleSound('click');
+    }
+
+    function likeTalent(label) {
+      playAppleSound('done');
+      triggerToast(`${label} dikirim!`);
+      hideTalentModal();
+    }
+
+    function sendAnonFeedback() {
+      const val = document.getElementById('talent-anon-text').value.trim();
+      if (!val) {
+        triggerToast("Tulis pesan feedback terlebih dahulu");
+        return;
+      }
+      document.getElementById('talent-anon-text').value = '';
+      playAppleSound('done');
+      triggerToast("Feedback anonim terkirim secara rahasia");
+      hideTalentModal();
+    }
+
+    function showTaskHover(e, pIdx, actId) {
+      if (dragState) return;
+      const p = APP_STATE.projects[pIdx];
+      const act = p.actions.find(a => a.id === actId);
+      if (!act) return;
+      const pop = document.getElementById('task-hover-popover');
+      document.getElementById('pop-title').innerText = act.text;
+      document.getElementById('pop-pic').innerText = act.pic;
+      document.getElementById('pop-dept').innerText = DEPARTMENTS[act.department]?.label || 'General';
+      document.getElementById('pop-notes').innerText = act.notes || '-';
+      const rem = calculateTimeRemaining(act.deadlineISO);
+      const slaEl = document.getElementById('pop-sla');
+      slaEl.innerText = rem.text;
+      slaEl.className = `time-left-badge ${rem.isOverdue ? 'overdue' : rem.isUrgent ? 'urgent' : 'on-track'}`;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      pop.style.left = `${Math.max(12, Math.min(window.innerWidth - 295, rect.left))}px`;
+      pop.style.top = `${rect.top}px`;
+      pop.classList.add('active');
+    }
+
+    function hideTaskHover() {
+      document.getElementById('task-hover-popover').classList.remove('active');
+    }
+
+    // ----------------------------------------------------
+    // 4. RENDER VIEWS (OVERVIEW, PROJECTS, FUNNELS, GANTT, KANBAN)
+    // ----------------------------------------------------
+    function checkPacingAlert() {
+      let totalRev = 0, totalSpend = 0;
+      APP_STATE.homeClients.forEach(c => {
+        totalRev += c.revenueNum || 0;
+        totalSpend += c.funnelStages.reduce((acc, st) => acc + (st.spend || 0), 0);
+      });
+      const avgRoas = totalSpend > 0 ? (totalRev / totalSpend) : 0;
+      const banner = document.getElementById('pacing-warning-banner');
+      if (banner) banner.style.display = (avgRoas < 2.75) ? 'flex' : 'none';
+    }
+
+    function renderOverviewView() {
+      let totalRev = 0, totalSpend = 0;
+      APP_STATE.homeClients.forEach(c => {
+        totalRev += c.revenueNum || 0;
+        totalSpend += c.funnelStages.reduce((acc, st) => acc + (st.spend || 0), 0);
+      });
+      const avgRoas = totalSpend > 0 ? (totalRev / totalSpend).toFixed(2) : "0.00";
+
+      document.getElementById('ov-total-revenue-card').innerText = formatRupiahShort(totalRev);
+      document.getElementById('ov-roas-subtext').innerHTML = `Total Spend: ${formatRupiahShort(totalSpend)} &bull; ROAS: <b style="color: var(--apple-green);">${avgRoas}x</b>`;
+
+      let cntBacklog = 0, cntProgress = 0, cntReview = 0, cntDone = 0;
+      const allTasks = [];
+      APP_STATE.projects.forEach(p => {
+        p.actions.forEach(a => {
+          allTasks.push({ ...a, clientName: p.clientName });
+          const st = a.status || (a.done ? 'done' : 'in_progress');
+          if (st === 'backlog') cntBacklog++;
+          else if (st === 'in_progress') cntProgress++;
+          else if (st === 'review') cntReview++;
+          else if (st === 'done') cntDone++;
+        });
+      });
+
+      document.getElementById('ov-cnt-backlog').innerText = cntBacklog;
+      document.getElementById('ov-cnt-progress').innerText = cntProgress;
+      document.getElementById('ov-cnt-review').innerText = cntReview;
+      document.getElementById('ov-cnt-done').innerText = cntDone;
+
+      document.getElementById('ov-active-tasks-card').innerText = `${allTasks.length} Tasks`;
+      document.getElementById('ov-kanban-subtext').innerHTML = `<b>${cntProgress}</b> in Progress &bull; <b>${cntReview}</b> in QA &bull; <b>${cntDone}</b> Done`;
+
+      let totalCompletedAll = 0;
+      const stepperListBox = document.getElementById('ov-stepper-client-list');
+      if (stepperListBox) {
+        stepperListBox.innerHTML = APP_STATE.projects.map(p => {
+          const tCount = p.actions.length;
+          const dCount = p.actions.filter(a => a.done).length;
+          totalCompletedAll += dCount;
+          const pct = tCount ? Math.round((dCount / tCount) * 100) : 0;
+          let step = pct >= 100 ? 4 : pct >= 65 ? 3 : pct >= 25 ? 2 : 1;
+
+          return `
+            <div class="stepper-summary-item" onclick="switchTab('projects')">
+              <div>
+                <span class="client-title-text">${p.clientName}</span>
+                <span class="client-stage-sub" style="display: block;">${p.stepLabels[step - 1]} &bull; ${pct}% complete</span>
+              </div>
+              <div class="apple-mini-stepper">
+                <span class="mini-step-circle ${step >= 1 ? 'done' : 'pending'}">1</span>
+                <span class="mini-step-bar ${step >= 2 ? 'active' : ''}"></span>
+                <span class="mini-step-circle ${step >= 2 ? 'done' : 'pending'}">2</span>
+                <span class="mini-step-bar ${step >= 3 ? 'active' : ''}"></span>
+                <span class="mini-step-circle ${step >= 3 ? 'done' : 'pending'}">3</span>
+                <span class="mini-step-bar ${step >= 4 ? 'active' : ''}"></span>
+                <span class="mini-step-circle ${step >= 4 ? 'done' : 'pending'}">4</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const totalPct = allTasks.length ? Math.round((totalCompletedAll / allTasks.length) * 100) : 0;
+      document.getElementById('ov-completion-card').innerText = `${totalPct}%`;
+
+      const watchlistEl = document.getElementById('ov-sla-watchlist-box');
+      if (watchlistEl) {
+        const urgentTasks = allTasks.filter(t => !t.done).slice(0, 4);
+        watchlistEl.innerHTML = urgentTasks.map(t => {
+          const rem = calculateTimeRemaining(t.deadlineISO);
+          const badgeClass = rem.isUrgent ? 'urgent' : 'on-track';
+          return `
+            <div class="sla-summary-row">
+              <div style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <span style="font-weight: 600; color: var(--apple-text);">${t.text}</span>
+                <span style="font-size: 10.5px; color: var(--apple-secondary); display: block;">${t.clientName} &bull; PIC: ${t.pic}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="sla-tag-badge ${badgeClass}">${rem.text}</span>
+                <span onclick="pingWA('${t.pic}', '${t.text}', '${rem.text}', '${t.clientName}')" style="cursor: pointer; color: var(--apple-green); font-weight: 700; font-size: 11px;">WA</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderProjectsView() {
+      const container = document.getElementById('view-projects');
+      if (!container) return;
+      const q = APP_STATE.searchQuery;
+
+      container.innerHTML = APP_STATE.projects.map((p, pIdx) => {
+        const filteredActions = p.actions.filter(act => {
+          const matchPic = (APP_STATE.picFilter === 'ALL' || act.pic === APP_STATE.picFilter);
+          const matchSearch = (!q || act.text.toLowerCase().includes(q) || act.notes.toLowerCase().includes(q) || act.pic.toLowerCase().includes(q));
+          return matchPic && matchSearch;
+        });
+
+        const total = p.actions.length;
+        const done = p.actions.filter(a => a.done).length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        let step = pct >= 100 ? 4 : pct >= 65 ? 3 : pct >= 25 ? 2 : 1;
+
+        return `
+          <div class="apple-card-box">
+            <div class="notion-breadcrumb-bar">
+              <span style="font-weight: 700; color: var(--apple-text);">${p.clientName}</span>
+              <span>/</span>
+              <span>Sprint Tracklist</span>
+            </div>
+
+            <div class="card-collapsible-header" onclick="toggleCollapse(${pIdx})">
+              <h2 class="inline-editable" contenteditable="true" onclick="event.stopPropagation()" onblur="updateClientName(${pIdx}, this.innerText)">
+                ${p.clientName}
+              </h2>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="apple-pill-btn" style="font-size: 10px;">Stage ${step}: ${p.stepLabels[step - 1]} (${pct}%)</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--apple-secondary); transform: ${p.isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'}; transition: transform 0.2s ease;">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+
+            <div style="padding: 0 1.25rem 0.65rem; margin-top: -6px;">
+              <span class="inline-editable" contenteditable="true" onclick="event.stopPropagation()" onblur="updateProjectDescription(${pIdx}, this.innerText)" style="font-size: 11.5px; color: var(--apple-secondary); display: block;">${p.description || 'Tambahkan objektif proyek...'}</span>
+            </div>
+
+            <div class="card-body-drawer ${p.isCollapsed ? 'collapsed' : ''}">
+              <div class="apple-stepper-wrap">
+                <div style="display: flex; align-items: center; width: 100%; max-width: 580px;">
+                  ${p.stepLabels.map((label, sIdx) => `
+                    <div class="step-item">
+                      <div class="step-dot ${step > sIdx + 1 ? 'done' : step === sIdx + 1 ? 'active' : 'pending'}">${sIdx + 1}</div>
+                      <span class="inline-editable" contenteditable="true" onblur="updateStepLabel(${pIdx}, ${sIdx}, this.innerText)" style="font-size: 11px; margin-top: 6px; font-weight: ${step === sIdx + 1 ? '700' : '500'}; color: ${step === sIdx + 1 ? 'var(--apple-blue)' : 'var(--apple-secondary)'};">
+                        ${label}
+                      </span>
+                    </div>
+                    ${sIdx < 3 ? `<div class="step-connector ${step > sIdx + 1 ? 'active' : 'pending'}"></div>` : ''}
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="tracklist-header">
+                <div style="flex: 2.2; padding-left: 28px;">Deliverable</div>
+                <div style="flex: 2;">Action Plan / Notes</div>
+                <div style="width: 75px; text-align: center;">Duration</div>
+                <div style="width: 95px; text-align: center;">SLA</div>
+                <div style="flex: 1.2;">Assignee (PIC)</div>
+                <div style="width: 75px; text-align: right;">Action</div>
+              </div>
+
+              <div>
+                ${filteredActions.map((act) => {
+                  const aIdx = p.actions.findIndex(x => x.id === act.id);
+                  const rem = calculateTimeRemaining(act.deadlineISO);
+                  const badgeClass = rem.isOverdue ? 'overdue' : rem.isUrgent ? 'urgent' : 'on-track';
+
+                  return `
+                    <div class="tracklist-item">
+                      <div style="flex: 2.2; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" ${act.done ? 'checked' : ''} onchange="toggleTask(${pIdx}, ${aIdx})" class="apple-checkbox">
+                        <span class="inline-editable" contenteditable="true" onblur="updateTaskText(${pIdx}, ${aIdx}, this.innerText)" style="${act.done ? 'text-decoration: line-through; opacity: 0.5;' : 'font-weight: 600;'}">
+                          ${act.text}
+                        </span>
+                      </div>
+                      <div style="flex: 2; color: var(--apple-secondary); font-size: 11px;">
+                        <span class="inline-editable" contenteditable="true" onblur="updateTaskNotes(${pIdx}, ${aIdx}, this.innerText)">
+                          ${act.notes || '-'}
+                        </span>
+                      </div>
+                      <div style="width: 75px; text-align: center; font-size: 11px; color: var(--apple-secondary);">
+                        <span class="inline-editable" contenteditable="true" onblur="updateTaskDuration(${pIdx}, ${aIdx}, this.innerText)">
+                          ${act.duration || `${act.spanCol}d`}
+                        </span>
+                      </div>
+                      <div style="width: 95px; text-align: center;">
+                        <span class="time-left-badge ${badgeClass}">${rem.text}</span>
+                      </div>
+                      <div style="flex: 1.2; font-weight: 600;">
+                        <span class="inline-editable" contenteditable="true" onblur="updateTaskPic(${pIdx},${aIdx}, this.innerText)">
+                          ${act.pic}
+                        </span>
+                      </div>
+                      <div style="width: 75px; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                        <span onclick="pingWA('${act.pic}', '${act.text}', '${rem.text}', '${p.clientName}')" style="cursor: pointer; color: var(--apple-green); font-weight: 700; font-size: 11px;">WA</span>
+                        <span onclick="deleteTask(${pIdx},${aIdx})" style="cursor: pointer; color: var(--apple-red); font-size: 11px;">Del</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; padding-top: 4px;">
+                <button onclick="openSheetModal()" class="apple-pill-btn" style="color: var(--apple-blue);">+ Add Deliverable</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderHomeView() {
+      const container = document.getElementById('view-home');
+      if (!container) return;
+
+      container.innerHTML = APP_STATE.homeClients.map((c, cIdx) => {
+        const calculatedTotalSpend = c.funnelStages.reduce((acc, st) => acc + (st.spend || 0), 0);
+        const roas = calculatedTotalSpend > 0 ? (c.revenueNum / calculatedTotalSpend).toFixed(2) : "0.00";
+        const isBleeding = parseFloat(roas) < c.beRoas;
+        const stages = c.funnelStages;
+        const leaks = [
+          Math.max(0, Math.round(((stages[0].val - stages[1].val) / stages[0].val) * 100)),
+          Math.max(0, Math.round(((stages[1].val - stages[2].val) / stages[1].val) * 100)),
+          Math.max(0, Math.round(((stages[2].val - stages[3].val) / stages[2].val) * 100)),
+          Math.max(0, Math.round(((stages[3].val - stages[4].val) / stages[3].val) * 100))
+        ];
+
+        return `
+          <div class="apple-card-box">
+            <div class="card-collapsible-header" onclick="toggleHomeCollapse(${cIdx})">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0, 113, 227, 0.12); color: var(--apple-blue); font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center;">
+                  ${c.title.substring(0, 2).toUpperCase()}
+                </span>
+                <div>
+                  <h3 style="font-size: 14px; font-weight: 700;">${c.title}</h3>
+                  <p style="font-size: 11px; color: var(--apple-secondary);">Lead: <b>${c.lead}</b></p>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 14px; font-size: 11.5px;">
+                <span>Total Spend: <b>${formatRupiahShort(calculatedTotalSpend)}</b></span>
+                <span>Omset: <b>${formatRupiahShort(c.revenueNum)}</b></span>
+                <span>ROAS: <b style="color: ${isBleeding ? 'var(--apple-red)' : 'var(--apple-green)'};">${roas}x</b></span>
+              </div>
+            </div>
+
+            <div class="card-body-drawer ${c.isCollapsed ? 'collapsed' : ''}">
+              <div class="metrics-ribbon">
+                <div class="metric-cell">
+                  <span class="metric-label">TOTAL OMSET (REVENUE) — KLIK EDIT</span>
+                  <span class="metric-val inline-editable" contenteditable="true" onblur="updateTotalRevenue(${cIdx}, this.innerText)">${formatRupiahShort(c.revenueNum)}</span>
+                </div>
+                <div class="metric-cell">
+                  <span class="metric-label">TOTAL AD SPEND (AUTO SUM)</span>
+                  <span class="metric-val" style="color: var(--apple-blue);">${formatRupiahShort(calculatedTotalSpend)}</span>
+                </div>
+                <div class="metric-cell">
+                  <span class="metric-label">ACTUAL ROAS / BREAK-EVEN</span>
+                  <span class="metric-val" style="color: ${isBleeding ? 'var(--apple-red)' : 'var(--apple-green)'};">
+                    ${roas}x <span style="font-size: 10.5px; color: var(--apple-secondary); font-weight: 500;">(BE: ${c.beRoas.toFixed(2)}x)</span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="funnel-hero-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--apple-border); padding-bottom: 8px;">
+                  <span style="font-size: 12.5px; font-weight: 700;">${c.funnelTitle}</span>
+                  <span style="font-size: 10px; color: var(--apple-secondary);">Tekan Enter setelah selesai edit angka</span>
+                </div>
+                <div class="funnel-layout-split">
+                  <div style="display: flex; justify-content: center;">
+                    <svg viewBox="0 0 260 250" style="width: 100%; max-width: 200px;">
+                      <path d="M 15,15 L 245,15 L 225,55 L 35,55 Z" fill="#0e3a66"/><text x="130" y="40" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${stages[0].val.toLocaleString()}</text>
+                      <path d="M 36,57 L 224,57 L 204,95 L 56,95 Z" fill="#0284c7"/><text x="130" y="81" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${stages[1].val.toLocaleString()}</text>
+                      <path d="M 57,97 L 203,97 L 183,135 L 77,135 Z" fill="#0d9488"/><text x="130" y="121" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${stages[2].val.toLocaleString()}</text>
+                      <path d="M 78,137 L 182,137 L 162,175 L 98,175 Z" fill="#16a34a"/><text x="130" y="161" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${stages[3].val.toLocaleString()}</text>
+                      <path d="M 99,177 L 161,177 L 140,210 L 130,225 L 120,210 Z" fill="#84cc16"/><text x="130" y="200" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">${stages[4].val.toLocaleString()}</text>
+                    </svg>
+                  </div>
+
+                  <div class="funnel-steps-stack">
+                    ${stages.map((st, sIdx) => `
+                      <div class="funnel-step-row">
+                        <div class="funnel-indicator-bar" style="background: ${st.color};"></div>
+                        <span class="funnel-step-name">${st.name}</span>
+                        <div class="funnel-desc-cell">
+                          <span class="inline-editable" contenteditable="true" onblur="updateStageDescription(${cIdx}, ${sIdx}, this.innerText)">${st.description || '-'}</span>
+                        </div>
+                        <div class="funnel-spend-cell">
+                          <span class="funnel-spend-tag">SPEND</span>
+                          <span class="inline-editable" contenteditable="true" onblur="updateStageSpend(${cIdx}, ${sIdx}, this.innerText)">${formatRupiahShort(st.spend || 0)}</span>
+                        </div>
+                        <span class="funnel-step-num inline-editable" contenteditable="true" onblur="recalculateFunnelCascade(${cIdx},${sIdx}, this.innerText)">${st.val.toLocaleString()}</span>${sIdx < 4 ? `<span class="funnel-leak-badge">&darr; -${leaks[sIdx]}%</span>` : `<span style="width: 58px;"></span>`}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTimelineView() {
+      const container = document.getElementById('gantt-cards-container');
+      if (!container) return;
+      const currentDays = GANTT_SCALES[APP_STATE.zoomRange];
+      const numCols = currentDays.length;
+      const todayIdx = currentDays.findIndex(d => d.today);
+      const q = APP_STATE.searchQuery;
+
+      container.innerHTML = APP_STATE.projects.map((p, pIdx) => {
+        const visibleActions = p.actions.filter(act => {
+          const matchPic = (APP_STATE.picFilter === 'ALL' || act.pic === APP_STATE.picFilter);
+          const matchSearch = (!q || act.text.toLowerCase().includes(q) || act.notes.toLowerCase().includes(q));
+          return matchPic && matchSearch;
+        });
+
+        return `
+          <div class="apple-card-box">
+            <div class="card-collapsible-header" onclick="toggleCollapse(${pIdx})">
+              <h3 style="font-size: 13px; font-weight: 700;">${p.clientName} &bull; Gantt Schedule Matrix</h3>
+              <span style="font-size: 10.5px; color: var(--apple-secondary);">Drag untuk geser hari &bull; Tarik ujung kanan untuk durasi</span>
+            </div>
+
+            <div class="card-body-drawer ${p.isCollapsed ? 'collapsed' : ''}" style="padding: 0 1.25rem 1.25rem;">
+              <div class="gantt-root-container">
+                <div class="gantt-inner-scroll">
+                  <div class="gantt-row-container header-row">
+                    <div class="gantt-left-column">DELIVERABLE / TASK</div>
+                    <div class="gantt-timeline-stage">
+                      <div class="gantt-background-grid" style="grid-template-columns: repeat(${numCols}, 1fr);">
+                        ${currentDays.map(d => `<div class="gantt-cell ${d.w ? 'weekend' : ''}" style="${d.today ? 'color: var(--apple-red); font-weight: 800;' : ''}">${d.d}</div>`).join('')}
+                      </div>
+                      ${todayIdx !== -1 ? `<div class="gantt-today-line" style="left: calc((${todayIdx} / ${numCols}) * 100\% + (${0.5 / numCols}) * 100%);"><span class="gantt-today-pin">Today</span></div>` : ''}
+                    </div>
+                  </div>
+
+                  ${visibleActions.map((act) => {
+                    const validStart = Math.max(0, Math.min(numCols - 1, act.startCol));
+                    const validSpan = Math.max(1, Math.min(numCols - validStart, act.spanCol));
+                    const leftPct = (validStart / numCols) * 100;
+                    const widthPct = (validSpan / numCols) * 100;
+                    const deptInfo = DEPARTMENTS[act.department] || DEPARTMENTS.creative;
+
+                    return `
+                      <div class="gantt-row-container">
+                        <div class="gantt-left-column" onmouseenter="showTaskHover(event, ${pIdx}, '${act.id}')" onmouseleave="hideTaskHover()" onclick="switchTab('projects')">
+                          ${act.text}
+                        </div>
+                        <div class="gantt-timeline-stage" id="stage-${pIdx}-${act.id}">
+                          <div class="gantt-background-grid" style="grid-template-columns: repeat(${numCols}, 1fr);">
+                            ${currentDays.map(d => `<div class="gantt-cell ${d.w ? 'weekend' : ''}"></div>`).join('')}
+                          </div>
+                          <div class="gantt-fixed-capsule ${deptInfo.colorClass}" id="capsule-${pIdx}-${act.id}" style="left: calc(${leftPct}\% + 3px); width: calc(${widthPct}% - 6px);" onmouseenter="showTaskHover(event, ${pIdx}, '${act.id}')" onmouseleave="hideTaskHover()" onmousedown="initGanttDrag(event, ${pIdx}, '${act.id}')">
+                            <span class="capsule-dept-tag">${deptInfo.label}</span>
+                            <span class="capsule-dur-label" id="dur-label-${act.id}">${validSpan}d</span>
+                            <div class="gantt-resize-grip" onmousedown="initGanttResize(event, ${pIdx}, '${act.id}')"></div>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderKanbanView() {
+      const container = document.getElementById('kanban-columns-container');
+      if (!container) return;
+      const q = APP_STATE.searchQuery;
+
+      const allTasks = [];
+      APP_STATE.projects.forEach((p, pIdx) => {
+        p.actions.forEach((act, aIdx) => {
+          const matchPic = (APP_STATE.picFilter === 'ALL' || act.pic === APP_STATE.picFilter);
+          const matchSearch = (!q || act.text.toLowerCase().includes(q) || act.notes.toLowerCase().includes(q));
+          if (matchPic && matchSearch) {
+            allTasks.push({ ...act, clientName: p.clientName, pIdx, aIdx });
+          }
+        });
+      });
+
+      container.innerHTML = KANBAN_STATUSES.map(col => {
+        const colTasks = allTasks.filter(t => (t.status || (t.done ? 'done' : 'in_progress')) === col.id);
+
+        return `
+          <div class="kanban-column" ondragover="event.preventDefault()" ondrop="handleKanbanDrop(event, '${col.id}')">
+            <div class="kanban-col-header">
+              <div style="display: flex; align-items: center; gap: 7px;">
+                <span class="kanban-status-badge ${col.badgeClass}">${col.title}</span>
+                <span style="font-size: 11px; color: var(--apple-secondary); font-weight: 700;">${colTasks.length}</span>
+              </div>
+              <button onclick="openSheetModal()" style="background: none; border: none; cursor: pointer; color: var(--apple-secondary); font-size: 14px; font-weight: 700;">+</button>
+            </div>
+
+            <div class="kanban-cards-stack">
+              ${colTasks.map(t => {
+                const rem = calculateTimeRemaining(t.deadlineISO);
+                const badgeClass = rem.isOverdue ? 'overdue' : rem.isUrgent ? 'urgent' : 'on-track';
+
+                return `
+                  <div class="kanban-card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', JSON.stringify({pIdx:${t.pIdx}, actId:'${t.id}'}))">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                      <span style="font-size: 9px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase;">${t.clientName}</span>
+                      <span class="time-left-badge ${badgeClass}">${rem.text}</span>
+                    </div>
+
+                    <div class="kanban-card-title inline-editable" contenteditable="true" onblur="updateTaskText(${t.pIdx},${t.aIdx}, this.innerText)">
+                      ${t.text}
+                    </div>
+
+                    <div class="kanban-card-notes inline-editable" contenteditable="true" onblur="updateTaskNotes(${t.pIdx},${t.aIdx}, this.innerText)">
+                      ${t.notes || '-'}
+                    </div>
+
+                    <div class="kanban-card-footer">
+                      <span style="font-size: 10.5px; font-weight: 600;">${t.pic}</span>
+                      <span style="font-size: 10px; color: var(--apple-secondary); font-weight: 700;">${t.duration || `${t.spanCol}d`}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <button class="apple-pill-btn" onclick="openSheetModal()" style="margin-top: auto; width: 100%; border-style: dashed;">
+              + Add Task
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ----------------------------------------------------
+    // 5. GANTT DRAG & RESIZE INTERACTION ENGINE
+    // ----------------------------------------------------
+    let dragState = null;
+    const tooltip = document.getElementById('drag-tooltip');
+
+    function initGanttDrag(e, pIdx, actId) {
+      if (e.target.closest('.gantt-resize-grip') || e.button !== 0) return;
+      e.preventDefault();
+      hideTaskHover();
+      const act = APP_STATE.projects[pIdx].actions.find(a => a.id === actId);
+      const stageEl = document.getElementById(`stage-${pIdx}-${actId}`);
+      const capsuleEl = document.getElementById(`capsule-${pIdx}-${actId}`);
+      const numCols = GANTT_SCALES[APP_STATE.zoomRange].length;
+      const cellWidth = stageEl.offsetWidth / numCols;
+
+      dragState = { type: 'move', pIdx, actId, act, capsuleEl, startX: e.clientX, numCols, initialCol: act.startCol, spanCol: act.spanCol, currentCol: act.startCol, cellWidth };
+      playAppleSound('click');
+      tooltip.style.display = 'block';
+      window.addEventListener('mousemove', handleGanttMouseMove);
+      window.addEventListener('mouseup', handleGanttMouseUp);
+    }
+
+    function initGanttResize(e, pIdx, actId) {
+      if (e.button !== 0) return;
+      e.stopPropagation();
+      e.preventDefault();
+      hideTaskHover();
+      const act = APP_STATE.projects[pIdx].actions.find(a => a.id === actId);
+      const stageEl = document.getElementById(`stage-${pIdx}-${actId}`);
+      const capsuleEl = document.getElementById(`capsule-${pIdx}-${actId}`);
+      const numCols = GANTT_SCALES[APP_STATE.zoomRange].length;
+      const cellWidth = stageEl.offsetWidth / numCols;
+
+      dragState = { type: 'resize', pIdx, actId, act, capsuleEl, startX: e.clientX, numCols, startCol: act.startCol, initialSpan: act.spanCol, currentSpan: act.spanCol, cellWidth };
+      playAppleSound('click');
+      tooltip.style.display = 'block';
+      window.addEventListener('mousemove', handleGanttMouseMove);
+      window.addEventListener('mouseup', handleGanttMouseUp);
+    }
+
+    function handleGanttMouseMove(e) {
+      if (!dragState) return;
+      const deltaCols = Math.round((e.clientX - dragState.startX) / dragState.cellWidth);
+      const days = GANTT_SCALES[APP_STATE.zoomRange];
+
+      if (dragState.type === 'move') {
+        const targetCol = Math.max(0, Math.min(dragState.numCols - dragState.spanCol, dragState.initialCol + deltaCols));
+        dragState.currentCol = targetCol;
+        dragState.capsuleEl.style.left = `calc(${(targetCol / dragState.numCols) * 100}% + 3px)`;
+        tooltip.innerText = `Start: Day ${days[targetCol].d}`;
+      } else if (dragState.type === 'resize') {
+        const maxSpan = dragState.numCols - dragState.startCol;
+        const targetSpan = Math.max(1, Math.min(maxSpan, dragState.initialSpan + deltaCols));
+        dragState.currentSpan = targetSpan;
+        dragState.capsuleEl.style.width = `calc(${(targetSpan / dragState.numCols) * 100}% - 6px)`;
+        const durLabel = document.getElementById(`dur-label-${dragState.actId}`);
+        if (durLabel) durLabel.innerText = `${targetSpan}d`;
+        tooltip.innerText = `Duration: ${targetSpan}d`;
+      }
+      tooltip.style.left = `${e.clientX}px`;
+      tooltip.style.top = `${e.clientY}px`;
+    }
+
+    function handleGanttMouseUp() {
+      if (!dragState) return;
+      tooltip.style.display = 'none';
+      if (dragState.type === 'move') dragState.act.startCol = dragState.currentCol;
+      else if (dragState.type === 'resize') {
+        dragState.act.spanCol = dragState.currentSpan;
+        dragState.act.duration = `${dragState.currentSpan}d`;
+      }
+      window.removeEventListener('mousemove', handleGanttMouseMove);
+      window.removeEventListener('mouseup', handleGanttMouseUp);
+      dragState = null;
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+    }
+
+    // ----------------------------------------------------
+    // 6. STATE MUTATORS & NAVIGATION
+    // ----------------------------------------------------
+    function handleKanbanDrop(e, targetStatus) {
+      e.preventDefault();
+      try {
+        const raw = e.dataTransfer.getData('text/plain');
+        if (!raw) return;
+        const { pIdx, actId } = JSON.parse(raw);
+        const act = APP_STATE.projects[pIdx].actions.find(a => a.id === actId);
+        if (act) {
+          act.status = targetStatus;
+          act.done = (targetStatus === 'done');
+          playAppleSound('done');
+          notifySync();
+          renderAllViews();
+          triggerToast(`Moved to ${targetStatus.replace('_', ' ').toUpperCase()}`);
+        }
+      } catch (err) {}
+    }
+
+    function updateTotalRevenue(cIdx, rawText) {
+      APP_STATE.homeClients[cIdx].revenueNum = parseNumericRupiah(rawText);
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateStageSpend(cIdx, sIdx, rawText) {
+      APP_STATE.homeClients[cIdx].funnelStages[sIdx].spend = parseNumericRupiah(rawText);
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateStageDescription(cIdx, sIdx, rawText) {
+      APP_STATE.homeClients[cIdx].funnelStages[sIdx].description = rawText.trim();
+      notifySync();
+    }
+
+    function recalculateFunnelCascade(cIdx, changedStageIdx, newRawValue) {
+      const client = APP_STATE.homeClients[cIdx];
+      const stages = client.funnelStages;
+      const numVal = parseInt(String(newRawValue).replace(/[^0-9]/g, '')) || 0;
+      stages[changedStageIdx].val = Math.max(1, numVal);
+
+      if (changedStageIdx > 0 && stages[changedStageIdx - 1].val > 0) {
+        client.dropRates[changedStageIdx - 1] = Math.max(0, Math.min(0.99, (stages[changedStageIdx - 1].val - stages[changedStageIdx].val) / stages[changedStageIdx - 1].val));
+      }
+      for (let i = changedStageIdx; i < stages.length - 1; i++) {
+        stages[i + 1].val = Math.max(1, Math.round(stages[i].val * (1 - client.dropRates[i])));
+      }
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+    }
+
+    function toggleCollapse(pIdx) {
+      APP_STATE.projects[pIdx].isCollapsed = !APP_STATE.projects[pIdx].isCollapsed;
+      playAppleSound('click');
+      renderAllViews();
+    }
+
+    function toggleHomeCollapse(cIdx) {
+      APP_STATE.homeClients[cIdx].isCollapsed = !APP_STATE.homeClients[cIdx].isCollapsed;
+      playAppleSound('click');
+      renderHomeView();
+    }
+
+    function toggleAllCards() {
+      const target = !APP_STATE.projects[0]?.isCollapsed;
+      APP_STATE.projects.forEach(p => p.isCollapsed = target);
+      APP_STATE.homeClients.forEach(c => c.isCollapsed = target);
+      playAppleSound('click');
+      renderAllViews();
+    }
+
+    function toggleTask(pIdx, aIdx) {
+      const act = APP_STATE.projects[pIdx].actions[aIdx];
+      act.done = !act.done;
+      act.status = act.done ? 'done' : 'in_progress';
+      playAppleSound(act.done ? 'done' : 'click');
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateClientName(pIdx, val) {
+      const clean = val.trim();
+      if (clean) APP_STATE.projects[pIdx].clientName = clean;
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateProjectDescription(pIdx, val) {
+      APP_STATE.projects[pIdx].description = val.trim();
+      notifySync();
+    }
+
+    function updateStepLabel(pIdx, sIdx, val) {
+      const clean = val.trim();
+      if (clean) APP_STATE.projects[pIdx].stepLabels[sIdx] = clean;
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateTaskText(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].text = val.trim() || APP_STATE.projects[pIdx].actions[aIdx].text;
+      notifySync();
+      renderOverviewView();
+    }
+
+    function updateTaskNotes(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].notes = val.trim();
+      notifySync();
+    }
+
+    function updateTaskDuration(pIdx, aIdx, val) {
+      const clean = val.trim();
+      APP_STATE.projects[pIdx].actions[aIdx].duration = clean || "3d";
+      const match = clean.match(/([0-9]+)/);
+      if (match) {
+        APP_STATE.projects[pIdx].actions[aIdx].spanCol = Math.max(1, Math.min(7, parseInt(match[1])));
+      }
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateTaskPic(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].pic = val.trim() || APP_STATE.projects[pIdx].lead;
+      notifySync();
+      renderAllViews();
+    }
+
+    function deleteTask(pIdx, aIdx) {
+      APP_STATE.projects[pIdx].actions.splice(aIdx, 1);
+      playAppleSound('click');
+      notifySync();
+      renderAllViews();
+    }
+
+    function pingWA(pic, task, timeLeft, clientName) {
+      playAppleSound('click');
+      const message = `Halo ${pic}, reminder deliverable: "${task}" untuk klien *${clientName}* memiliki sisa waktu: *${timeLeft}*. Mohon konfirmasi progress terbaru.`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    function setPicFilterFromSidebar(picName) {
+      APP_STATE.picFilter = (APP_STATE.picFilter === picName) ? 'ALL' : picName;
+      playAppleSound('click');
+      document.getElementById('sb-member-razaan').classList.toggle('active', APP_STATE.picFilter === 'Razaan Al-Ghifari');
+      document.getElementById('sb-member-arif').classList.toggle('active', APP_STATE.picFilter === 'Arif Kurniawan');
+      triggerToast(APP_STATE.picFilter === 'ALL' ? 'Menampilkan semua PIC' : `Filter PIC: ${APP_STATE.picFilter}`);
+      renderAllViews();
+    }
+
+    function updateSidebarMemberCounters() {
+      let rCount = 0, aCount = 0;
+      APP_STATE.projects.forEach(p => {
+        p.actions.forEach(act => {
+          if (!act.done) {
+            if (act.pic.includes("Razaan")) rCount++;
+            if (act.pic.includes("Arif")) aCount++;
+          }
+        });
+      });
+      document.getElementById('sb-cnt-razaan').innerText = rCount;
+      document.getElementById('sb-cnt-arif').innerText = aCount;
+    }
+
+    function handleSearch(query) {
+      APP_STATE.searchQuery = query.toLowerCase().trim();
+      renderAllViews();
+    }
+
+    function setGanttZoom(range) {
+      APP_STATE.zoomRange = range;
+      playAppleSound('click');
+      ['7D', '12D', '30D'].forEach(r => {
+        const el = document.getElementById(`zoom-${r}`);
+        if (el) el.classList.toggle('active', r === range);
+      });
+      renderTimelineView();
+    }
+
+    function toggleSidebar() {
+      APP_STATE.sidebarCollapsed = !APP_STATE.sidebarCollapsed;
+      document.getElementById('app-sidebar').classList.toggle('collapsed', APP_STATE.sidebarCollapsed);
+      playAppleSound('click');
+    }
+
+    function toggleAudio() {
+      APP_STATE.isMuted = !APP_STATE.isMuted;
+      localStorage.setItem('agency_sound_muted', APP_STATE.isMuted ? 'true' : 'false');
+      document.getElementById('audio-toggle-btn').innerText = APP_STATE.isMuted ? 'Sound: OFF' : 'Sound: ON';
+      triggerToast(APP_STATE.isMuted ? 'Audio Muted' : 'Audio Active');
+    }
+
+    function toggleTheme() {
+      APP_STATE.isDark = !APP_STATE.isDark;
+      localStorage.setItem('agency_app_dark', APP_STATE.isDark ? 'true' : 'false');
+      document.documentElement.classList.toggle('dark', APP_STATE.isDark);
+      playAppleSound('click');
+    }
+
+    function exportClientReport() {
+      playAppleSound('click');
+      window.print();
+    }
+
+    function switchTab(tabId) {
+      APP_STATE.activeTab = tabId;
+      playAppleSound('click');
+
+      const tabs = ['overview', 'projects', 'home', 'timeline', 'kanban'];
+      const idx = tabs.indexOf(tabId);
+      const pill = document.getElementById('segPill');
+      if (pill && idx !== -1) pill.style.transform = `translateX(${idx * 100}%)`;
+
+      tabs.forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const seg = document.getElementById(`segBtn-${t}`);
+        const sub = document.getElementById(`subBtn-${t}`);
+        if (view) view.style.display = (t === tabId) ? 'flex' : 'none';
+        if (seg) seg.classList.toggle('active', t === tabId);
+        if (sub) sub.classList.toggle('active', t === tabId);
+      });
+
+      renderAllViews();
+    }
+
+    function renderAllViews() {
+      renderOverviewView();
+      renderProjectsView();
+      renderHomeView();
+      renderTimelineView();
+      renderKanbanView();
+      updateSidebarMemberCounters();
+      checkPacingAlert();
+    }
+
+    // Inisialisasi Saat Halaman Dimuat
+    if (APP_STATE.isDark) document.documentElement.classList.add('dark');
+    if (APP_STATE.isMuted) document.getElementById('audio-toggle-btn').innerText = 'Sound: OFF';
+    renderAllViews();
+  </script>
+</body>
+</html>
