@@ -1,0 +1,3087 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Operations Hub — Analytics Overview Suite</title>
+  <style>
+    :root {
+      --apple-canvas: #f3f4f8;
+      --apple-card: #ffffff;
+      --apple-card-subtle: #f8f9fc;
+      --apple-card-inset: rgba(0, 0, 0, 0.03);
+      --apple-card-hover: rgba(0, 0, 0, 0.025);
+      --apple-text: #1d1d1f;
+      --apple-secondary: #86868b;
+      --apple-border: rgba(0, 0, 0, 0.07);
+      --apple-border-strong: rgba(0, 0, 0, 0.14);
+      --apple-header: rgba(255, 255, 255, 0.86);
+      --apple-glass-menu: rgba(255, 255, 255, 0.94);
+      
+      --apple-blue: #0071e3;
+      --apple-indigo: #4f46e5;
+      --apple-green: #10b981;
+      --apple-red: #f43f5e;
+      --apple-orange: #f97316;
+      --apple-purple: #8b5cf6;
+      --apple-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+      --sb-bg: #ffffff;
+      --sb-text: #1d1d1f;
+      --sb-muted: #86868b;
+      --sb-hover: rgba(249, 115, 22, 0.06);
+      --sb-active-card: rgba(249, 115, 22, 0.1);
+      --sb-card-box: rgba(0, 0, 0, 0.025);
+      --sb-tree-line: rgba(0, 0, 0, 0.1);
+
+      --kanban-col-bg: rgba(0, 0, 0, 0.025);
+      --apple-funnel-canvas: rgba(0, 0, 0, 0.018);
+    }
+
+    .dark {
+      --apple-canvas: #09090b;
+      --apple-card: #18181b;
+      --apple-card-subtle: #27272a;
+      --apple-card-inset: rgba(255, 255, 255, 0.04);
+      --apple-card-hover: rgba(255, 255, 255, 0.035);
+      --apple-text: #f4f4f5;
+      --apple-secondary: #a1a1aa;
+      --apple-border: rgba(255, 255, 255, 0.1);
+      --apple-border-strong: rgba(255, 255, 255, 0.2);
+      --apple-header: rgba(24, 24, 27, 0.86);
+      --apple-glass-menu: rgba(36, 36, 40, 0.95);
+
+      --apple-blue: #38bdf8;
+      --apple-indigo: #6366f1;
+      --apple-green: #34d399;
+      --apple-red: #fb7185;
+      --apple-orange: #fb923c;
+      --apple-purple: #a78bfa;
+
+      --sb-bg: #18181b;
+      --sb-text: #f4f4f5;
+      --sb-muted: #a1a1aa;
+      --sb-hover: rgba(255, 255, 255, 0.06);
+      --sb-active-card: rgba(251, 146, 60, 0.15);
+      --sb-card-box: rgba(255, 255, 255, 0.04);
+      --sb-tree-line: rgba(255, 255, 255, 0.15);
+
+      --kanban-col-bg: rgba(255, 255, 255, 0.03);
+      --apple-funnel-canvas: rgba(255, 255, 255, 0.02);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      letter-spacing: -0.015em;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(134, 134, 139, 0.25); border-radius: 10px; }
+
+    body {
+      background-color: var(--apple-canvas);
+      color: var(--apple-text);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      padding: 12px;
+      gap: 12px;
+      position: relative;
+    }
+
+    .view-module { animation: appleViewEnter 0.22s var(--apple-spring); }
+    @keyframes appleViewEnter {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------------------------------------------------- */
+    /* ANALYTICS OVERVIEW REFERENCE LAYOUT                  */
+    /* ---------------------------------------------------- */
+    .analytics-overview-shell {
+      display: grid;
+      grid-template-columns: 1fr 290px;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 1180px) {
+      .analytics-overview-shell { grid-template-columns: 1fr; }
+    }
+
+    .analytics-main-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    /* Top 3 KPI Cards (Matches Reference) */
+    .ref-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 820px) {
+      .ref-kpi-grid { grid-template-columns: 1fr; }
+    }
+    .ref-kpi-card {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 20px;
+      padding: 18px 20px;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.025);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .ref-kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+    }
+    .ref-kpi-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .ref-kpi-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+    .ref-kpi-label {
+      font-size: 11px;
+      color: var(--apple-secondary);
+      font-weight: 600;
+    }
+    .ref-kpi-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--apple-text);
+      font-variant-numeric: tabular-nums;
+      margin-top: 2px;
+    }
+    .ref-kpi-bar-bg {
+      width: 100%;
+      height: 5px;
+      background: var(--apple-card-inset);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .ref-kpi-bar-fill {
+      height: 100%;
+      background: var(--apple-indigo);
+      border-radius: 10px;
+      transition: width 0.4s ease;
+    }
+    .ref-kpi-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--apple-indigo);
+    }
+
+    /* Middle Analytics Chart + 3 Side Boxes */
+    .ref-chart-section {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 22px;
+      padding: 20px 22px;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.025);
+      display: grid;
+      grid-template-columns: 1fr 195px;
+      gap: 22px;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .ref-chart-section { grid-template-columns: 1fr; }
+    }
+    .ref-chart-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .ref-meta-item span {
+      display: block;
+      font-size: 11px;
+      color: var(--apple-secondary);
+      font-weight: 600;
+    }
+    .ref-meta-item strong {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--apple-text);
+      font-variant-numeric: tabular-nums;
+    }
+    .ref-side-boxes {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .ref-mini-stat-box {
+      background: var(--apple-card-subtle);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 14px;
+      padding: 11px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .ref-mini-stat-box span {
+      font-size: 10.5px;
+      color: var(--apple-secondary);
+      font-weight: 600;
+    }
+    .ref-mini-stat-box strong {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--apple-text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Bottom Split: Latest Deliverables & Professional Status Rings */
+    .ref-bottom-split {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 900px) {
+      .ref-bottom-split { grid-template-columns: 1fr; }
+    }
+    .ref-panel-box {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 22px;
+      padding: 18px 20px;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.025);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .ref-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ref-panel-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--apple-text);
+    }
+    .ref-customer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ref-customer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: var(--apple-card-subtle);
+      border: 0.5px solid var(--apple-border);
+      gap: 10px;
+      transition: transform 0.12s ease;
+    }
+    .ref-customer-row:hover { transform: translateX(2px); }
+    .ref-cust-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 11px;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+    .ref-mail-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 0.5px solid var(--apple-border);
+      background: var(--apple-card);
+      color: var(--apple-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .ref-mail-btn:hover { background: var(--apple-green); color: #ffffff; border-color: var(--apple-green); }
+
+    .ref-offer-banner {
+      background: rgba(249, 115, 22, 0.1);
+      color: #ea580c;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .dark .ref-offer-banner { color: #fb923c; }
+
+    /* Right Column Panel (Profile, Stats, Menu Rows, Semi-Circle Gauge) */
+    .analytics-right-col {
+      background: var(--apple-card);
+      border: 0.5px solid var(--apple-border);
+      border-radius: 24px;
+      padding: 20px 18px;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.025);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .ref-right-top-icons {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ref-icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 0.5px solid var(--apple-border);
+      background: var(--apple-card-subtle);
+      color: var(--apple-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .ref-profile-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+    }
+    .ref-avatar-ring {
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      padding: 4px;
+      border: 2.5px solid var(--apple-indigo);
+      border-left-color: var(--apple-orange);
+      position: relative;
+      cursor: pointer;
+    }
+    .ref-avatar-ring img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .ref-profile-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      width: 100%;
+      text-align: center;
+      padding: 10px 0;
+      border-bottom: 0.5px solid var(--apple-border);
+    }
+    .ref-profile-stats strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--apple-text);
+    }
+    .ref-profile-stats span {
+      font-size: 10px;
+      color: var(--apple-secondary);
+      font-weight: 600;
+    }
+    .ref-action-links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .ref-link-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .ref-link-row:hover { background: var(--apple-card-subtle); }
+    .ref-link-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .ref-link-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+    .ref-gauge-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding-top: 6px;
+      border-top: 0.5px solid var(--apple-border);
+    }
+
+    /* ---------------------------------------------------- */
+    /* SIDEBAR & EXISTING MODULES STYLING                   */
+    /* ---------------------------------------------------- */
+    .notion-side-drawer {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      bottom: 12px;
+      width: 400px;
+      background: var(--apple-glass-menu);
+      backdrop-filter: blur(45px) saturate(200%);
+      border: 0.5px solid var(--apple-border-strong);
+      border-radius: 20px;
+      box-shadow: -16px 0 48px rgba(0, 0, 0, 0.18);
+      z-index: 9500;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(440px);
+      transition: transform 0.3s var(--apple-spring);
+      overflow: hidden;
+    }
+    .notion-side-drawer.open { transform: translateX(0); }
+    .drawer-top-bar { padding: 14px 18px; border-bottom: 0.5px solid var(--apple-border); display: flex; align-items: center; justify-content: space-between; }
+    .drawer-content { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+    .notion-callout-box { background: var(--apple-card-inset); border: 0.5px solid var(--apple-border); border-left: 3px solid var(--apple-blue); border-radius: 10px; padding: 10px 12px; font-size: 11px; line-height: 1.45; color: var(--apple-secondary); }
+    .notion-prop-grid { display: grid; grid-template-columns: 110px 1fr; row-gap: 8px; font-size: 11.5px; align-items: center; padding-bottom: 12px; border-bottom: 0.5px solid var(--apple-border); }
+    .notion-prop-label { color: var(--apple-secondary); font-weight: 600; font-size: 11px; }
+    .subtask-list-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .subtask-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--apple-card-inset); border-radius: 8px; font-size: 11.5px; }
+
+    .kb-quicklinks-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 1.25rem; background: var(--apple-card-inset); border-bottom: 0.5px solid var(--apple-border); flex-wrap: wrap; gap: 8px; }
+    .kb-links-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .kb-link-pill { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 6px; background: var(--apple-card); border: 0.5px solid var(--apple-border); color: var(--apple-text); text-decoration: none; cursor: pointer; }
+    .kb-link-pill:hover { border-color: var(--apple-blue); color: var(--apple-blue); }
+    .brand-swatch-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: var(--apple-card); border: 0.5px solid var(--apple-border); }
+
+    .freq-badge { font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; cursor: pointer; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; }
+    .freq-healthy { background: rgba(16, 185, 129, 0.12); color: var(--apple-green); }
+    .freq-fatigue { background: rgba(244, 63, 94, 0.15); color: var(--apple-red); border: 0.5px solid rgba(244, 63, 94, 0.4); font-weight: 800; }
+
+    .checklist-mini-wrap { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: var(--apple-secondary); }
+    .checklist-mini-bar { flex: 1; height: 4px; background: rgba(134, 134, 139, 0.2); border-radius: 4px; overflow: hidden; }
+    .checklist-mini-fill { height: 100%; background: var(--apple-green); transition: width 0.25s ease; }
+    .kanban-column.wip-exceeded { border-color: rgba(249, 115, 22, 0.65); background: rgba(249, 115, 22, 0.04); }
+    .wip-warning-tag { font-size: 9px; font-weight: 800; background: var(--apple-orange); color: #fff; padding: 1px 5px; border-radius: 4px; text-transform: uppercase; }
+    .swimlane-section { display: flex; flex-direction: column; gap: 8px; padding-bottom: 14px; border-bottom: 1px dashed var(--apple-border-strong); }
+
+    .apple-pill-btn.focus-active { background: var(--apple-purple); color: #ffffff; border-color: var(--apple-purple); }
+
+    .apple-modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.42); backdrop-filter: blur(20px) saturate(180%); z-index: 10000; display: none !important; align-items: center; justify-content: center; padding: 16px; }
+    .apple-modal-backdrop.active { display: flex !important; }
+
+    .spotlight-dialog { width: 100%; max-width: 520px; background: var(--apple-glass-menu); backdrop-filter: blur(40px) saturate(200%); border-radius: 18px; border: 0.5px solid var(--apple-border-strong); box-shadow: 0 28px 70px rgba(0, 0, 0, 0.35); overflow: hidden; display: flex; flex-direction: column; margin-top: -12vh; }
+    .spotlight-input-bar { display: flex; align-items: center; padding: 14px 18px; border-bottom: 0.5px solid var(--apple-border); gap: 12px; }
+    .spotlight-input { flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 500; color: var(--apple-text); outline: none; }
+    .spotlight-results { max-height: 320px; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+    .spotlight-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: 10px; cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--apple-text); }
+    .spotlight-item:hover { background: var(--apple-blue); color: #ffffff; }
+    .spotlight-sub { font-size: 10.5px; color: var(--apple-secondary); font-weight: 600; }
+
+    .apple-context-menu { position: fixed; width: 215px; background: var(--apple-glass-menu); backdrop-filter: blur(35px) saturate(200%); border: 0.5px solid var(--apple-border-strong); border-radius: 12px; padding: 5px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22); z-index: 10050; display: none !important; flex-direction: column; gap: 1px; }
+    .apple-context-menu.active { display: flex !important; }
+    .ctx-item { padding: 6px 10px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--apple-text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: transparent; border: none; width: 100%; text-align: left; }
+    .ctx-item:hover { background: var(--apple-blue); color: #ffffff; }
+    .ctx-item.danger { color: var(--apple-red); }
+    .ctx-item.danger:hover { background: var(--apple-red); color: #ffffff; }
+    .ctx-divider { height: 0.5px; background: var(--apple-border); margin: 4px 6px; }
+    .ctx-section-label { font-size: 9.5px; font-weight: 700; color: var(--apple-secondary); padding: 4px 10px 2px; text-transform: uppercase; }
+
+    .apple-sheet-dialog { width: 100%; max-width: 450px; background: var(--apple-card); border-radius: 20px; border: 0.5px solid var(--apple-border); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; overflow: hidden; }
+    .sheet-header { padding: 16px 20px; border-bottom: 0.5px solid var(--apple-border); display: flex; align-items: center; justify-content: space-between; }
+    .sheet-title { font-size: 15px; font-weight: 700; color: var(--apple-text); }
+    .sheet-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+    .sheet-field-group { display: flex; flex-direction: column; gap: 4px; }
+    .sheet-field-label { font-size: 10px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; }
+    .sheet-text-input, .sheet-select { width: 100%; height: 34px; border-radius: 8px; border: 0.5px solid var(--apple-border-strong); background: var(--apple-card-inset); padding: 0 10px; font-size: 12px; color: var(--apple-text); outline: none; }
+    .sheet-footer { padding: 14px 20px; border-top: 0.5px solid var(--apple-border); display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* Talent Profile Modal */
+    .talent-card-frame { width: 100%; max-width: 360px; background: var(--apple-card); border-radius: 30px; border: 0.5px solid var(--apple-border-strong); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35); overflow: hidden; display: flex; flex-direction: column; }
+    .talent-hero-photo { width: 100%; height: 250px; background-size: cover; background-position: center; position: relative; display: flex; flex-direction: column; justify-content: flex-end; padding: 18px; color: #ffffff; }
+    .talent-hero-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%); pointer-events: none; }
+    .talent-close-btn { position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; border-radius: 50%; background: rgba(0, 0, 0, 0.5); color: #ffffff; border: none; cursor: pointer; z-index: 10; font-weight: 700; }
+    .talent-body { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+    .talent-anon-textarea { width: 100%; height: 54px; border-radius: 8px; border: 0.5px solid var(--apple-border); background: var(--apple-card-inset); padding: 8px; font-size: 11.5px; color: var(--apple-text); resize: none; outline: none; }
+
+    .apple-dynamic-island { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-90px); background: rgba(29, 29, 31, 0.94); backdrop-filter: blur(25px) saturate(180%); color: #ffffff; padding: 7px 16px; border-radius: 30px; font-size: 11.5px; font-weight: 600; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35); display: flex; align-items: center; gap: 10px; transition: transform 0.3s var(--apple-spring); z-index: 9999; }
+    .apple-dynamic-island.active { transform: translateX(-50%) translateY(0); }
+    .island-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--apple-green); }
+    .island-undo-btn { background: var(--apple-blue); color: #ffffff; border: none; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; cursor: pointer; display: none; }
+
+    .persistence-badge { position: fixed; bottom: 24px; right: 28px; display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--apple-secondary); background: var(--apple-card); border: 0.5px solid var(--apple-border); padding: 5px 12px; border-radius: 20px; z-index: 50; pointer-events: none; }
+    .persistence-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--apple-green); }
+
+    .gantt-drag-tooltip { position: fixed; background: rgba(29, 29, 31, 0.92); color: #ffffff; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 600; pointer-events: none; z-index: 9998; display: none; transform: translate(-50%, -130%); }
+
+    /* Sidebar Reference Style */
+    .apple-sidebar-frame { width: 224px; height: 100%; background: var(--sb-bg); border: 0.5px solid var(--apple-border); border-radius: 24px; display: flex; flex-direction: column; flex-shrink: 0; z-index: 30; transition: width 0.3s var(--apple-spring); position: relative; padding: 18px 14px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); }
+    .apple-sidebar-frame.collapsed { width: 68px; padding: 18px 10px; }
+    .sb-edge-toggle { position: absolute; right: -10px; top: 56px; width: 20px; height: 20px; border-radius: 50%; background: var(--apple-card); border: 0.5px solid var(--apple-border-strong); color: var(--apple-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 35; }
+    .apple-sidebar-frame.collapsed .sb-edge-toggle svg { transform: rotate(180deg); }
+    .apple-traffic-lights { display: flex; align-items: center; gap: 7px; margin-bottom: 18px; padding-left: 4px; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; cursor: pointer; }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .sb-profile-card { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding: 6px 8px; border-radius: 14px; cursor: pointer; }
+    .sb-profile-card:hover { background: var(--sb-hover); }
+    .sb-avatar { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #f97316, #fb923c); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #ffffff; flex-shrink: 0; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3); }
+    .sb-profile-info { display: flex; flex-direction: column; overflow: hidden; white-space: nowrap; }
+    .sb-profile-role { font-size: 10px; font-weight: 600; color: var(--sb-muted); }
+    .sb-profile-name { font-size: 13px; font-weight: 800; color: var(--sb-text); }
+
+    .sb-section-title { font-size: 10px; font-weight: 700; color: var(--sb-muted); margin: 10px 0 6px 8px; white-space: nowrap; }
+    .sb-menu-group { display: flex; flex-direction: column; gap: 4px; }
+    .sb-nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: none; background: transparent; color: var(--sb-text); font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; width: 100%; }
+    .sb-nav-item:hover { background: var(--sb-hover); }
+    .sb-nav-item.active { background: var(--sb-active-card); color: var(--apple-orange); font-weight: 700; }
+    .sb-icon-wrap { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    .sb-member-btn { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; border: none; background: transparent; cursor: pointer; width: 100%; text-align: left; }
+    .sb-member-btn:hover { background: var(--sb-hover); }
+    .sb-member-btn.active { background: var(--sb-active-card); }
+
+    /* Dashed Add New Invoice / Deliverable Box from Reference */
+    .sb-dashed-cta {
+      margin-top: auto;
+      border: 1.5px dashed var(--apple-border-strong);
+      border-radius: 18px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .sb-dashed-cta:hover { border-color: var(--apple-orange); background: var(--sb-hover); }
+    .sb-plus-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--apple-orange);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35);
+    }
+
+    .sb-theme-switcher {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--apple-card-inset);
+      padding: 3px;
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    .sb-theme-btn {
+      border: none;
+      background: transparent;
+      padding: 6px;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--apple-secondary);
+      cursor: pointer;
+    }
+    .sb-theme-btn.active {
+      background: var(--apple-card);
+      color: var(--apple-text);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .apple-sidebar-frame.collapsed .sb-profile-info,
+    .apple-sidebar-frame.collapsed .sb-section-title,
+    .apple-sidebar-frame.collapsed .sb-item-text,
+    .apple-sidebar-frame.collapsed .sb-member-name,
+    .apple-sidebar-frame.collapsed .sb-member-count,
+    .apple-sidebar-frame.collapsed .sb-dashed-text,
+    .apple-sidebar-frame.collapsed .sb-theme-switcher { display: none !important; }
+
+    /* Main Canvas */
+    .apple-canvas-area { flex: 1; height: 100%; display: flex; flex-direction: column; min-width: 0; background: var(--apple-card); border-radius: 24px; border: 0.5px solid var(--apple-border); position: relative; overflow: hidden; box-shadow: 0 2px 14px rgba(0, 0, 0, 0.02); }
+    .apple-navbar-header { height: 58px; background: var(--apple-header); backdrop-filter: blur(25px); border-bottom: 0.5px solid var(--apple-border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0; z-index: 15; gap: 10px; }
+    .apple-canvas-content { flex: 1; overflow-y: auto; padding: 1.5rem 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .macos-segmented-bar { position: relative; background: rgba(0, 0, 0, 0.05); border-radius: 10px; padding: 2.5px; display: flex; align-items: center; border: 0.5px solid var(--apple-border); }
+    .dark .macos-segmented-bar { background: rgba(255, 255, 255, 0.08); }
+    .seg-pill-bg { position: absolute; top: 2.5px; bottom: 2.5px; left: 2.5px; width: calc((100% - 5px) / 5); background: var(--apple-card); border-radius: 8px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); transition: transform 0.25s var(--apple-spring); z-index: 1; }
+    .seg-btn { position: relative; flex: 1; text-align: center; font-size: 11.5px; font-weight: 600; padding: 5px 8px; background: transparent; border: none; color: var(--apple-secondary); cursor: pointer; z-index: 2; }
+    .seg-btn.active { color: var(--apple-text); font-weight: 700; }
+
+    .apple-search-wrap { position: relative; display: flex; align-items: center; max-width: 220px; flex: 1; }
+    .apple-search-input { width: 100%; height: 34px; background: var(--apple-card-subtle); border: 0.5px solid var(--apple-border); border-radius: 10px; padding: 0 36px 0 30px; font-size: 11.5px; color: var(--apple-text); outline: none; }
+    .search-icon-svg { position: absolute; left: 10px; color: var(--apple-secondary); pointer-events: none; }
+    .search-kbd-shortcut { position: absolute; right: 7px; font-size: 9px; color: var(--apple-secondary); background: rgba(0, 0, 0, 0.05); border-radius: 4px; padding: 2px 5px; cursor: pointer; font-weight: 700; }
+
+    .apple-pill-btn { padding: 5px 11px; border-radius: 20px; border: 0.5px solid var(--apple-border-strong); background: var(--apple-card); color: var(--apple-text); font-size: 11px; font-weight: 600; cursor: pointer; }
+    .apple-cta-btn { background: var(--apple-orange); color: #ffffff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+
+    .apple-card-box { background: var(--apple-card); border: 0.5px solid var(--apple-border); border-radius: 18px; display: flex; flex-direction: column; overflow: hidden; }
+    .card-collapsible-header { padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .card-body-drawer { padding: 0 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 1.15rem; border-top: 0.5px solid var(--apple-border); }
+    .card-body-drawer.collapsed { display: none !important; }
+
+    .inline-editable { cursor: text; border-radius: 4px; padding: 2px 5px; outline: none; overflow-wrap: anywhere; word-break: break-word; }
+    .inline-editable:hover { background: rgba(0, 113, 227, 0.08); }
+    .inline-editable:focus { box-shadow: 0 0 0 1.5px var(--apple-blue); background: var(--apple-card); }
+    .apple-inline-select { appearance: none; background: var(--apple-card-inset); border: 0.5px solid var(--apple-border); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: var(--apple-text); cursor: pointer; outline: none; }
+
+    .blocker-badge { background: rgba(244, 63, 94, 0.14); color: var(--apple-red); border: 0.5px solid rgba(244, 63, 94, 0.35); font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 5px; text-transform: uppercase; cursor: pointer; }
+    .blocker-toggle-btn { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 5px; cursor: pointer; border: 0.5px solid var(--apple-border); background: transparent; color: var(--apple-secondary); }
+    .blocker-toggle-btn.active { background: var(--apple-red); color: #ffffff; border-color: var(--apple-red); }
+
+    .apple-filter-banner { background: rgba(139, 92, 246, 0.12); border: 0.5px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 8px 14px; display: none; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--apple-purple); font-weight: 600; }
+
+    /* Financial Ribbon & Funnel */
+    .metrics-ribbon { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 1rem 1.25rem; background: var(--apple-card-inset); border: 0.5px solid var(--apple-border); border-radius: 12px; margin-top: 1rem; }
+    .metric-cell { display: flex; flex-direction: column; gap: 4px; }
+    .metric-label { font-size: 9.5px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; }
+    .metric-val { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--apple-text); width: fit-content; }
+    .funnel-hero-card { background: var(--apple-funnel-canvas); border: 0.5px solid var(--apple-border); border-radius: 14px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.15rem; }
+    .funnel-layout-split { display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem; align-items: center; }
+    .funnel-steps-stack { display: flex; flex-direction: column; gap: 8px; }
+    .funnel-step-row { display: flex; align-items: center; gap: 10px; background: var(--apple-card); border: 0.5px solid var(--apple-border); border-radius: 10px; padding: 8px 12px; }
+    .funnel-indicator-bar { width: 4px; height: 34px; border-radius: 2px; flex-shrink: 0; }
+    .funnel-step-name { font-size: 12.5px; font-weight: 700; color: var(--apple-text); width: 92px; flex-shrink: 0; }
+    .funnel-desc-cell { flex: 1; font-size: 11px; color: var(--apple-secondary); }
+    .funnel-spend-cell { width: 95px; text-align: right; font-size: 11px; font-weight: 600; display: flex; flex-direction: column; align-items: flex-end; }
+    .funnel-cpa-cell { width: 85px; text-align: right; font-size: 10.5px; font-weight: 600; color: var(--apple-blue); display: flex; flex-direction: column; align-items: flex-end; }
+    .funnel-spend-tag { font-size: 8px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; }
+    .funnel-step-num { font-size: 13px; font-weight: 700; min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+    .funnel-leak-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; background: rgba(244, 63, 94, 0.1); color: var(--apple-red); width: 55px; text-align: center; }
+
+    /* Capsules & Kanban */
+    .cap-pink { background: rgba(219, 39, 119, 0.15); color: #be185d; border: 1px solid rgba(219, 39, 119, 0.45); }
+    .cap-blue { background: rgba(0, 113, 227, 0.15); color: var(--apple-blue); border: 1px solid rgba(0, 113, 227, 0.45); }
+    .cap-green { background: rgba(16, 185, 129, 0.15); color: #15803d; border: 1px solid rgba(16, 185, 129, 0.45); }
+    .cap-orange { background: rgba(249, 115, 22, 0.15); color: #d97706; border: 1px solid rgba(249, 115, 22, 0.45); }
+    .capsule-dur-label { font-size: 10px; font-weight: 800; color: currentColor; margin-right: 14px; }
+    .gantt-resize-grip { width: 16px; height: 100%; position: absolute; right: 0; top: 0; cursor: ew-resize; border-radius: 0 16px 16px 0; display: flex; align-items: center; justify-content: center; z-index: 12; }
+    .gantt-resize-grip::after { content: ''; width: 3px; height: 12px; border-radius: 2px; background: currentColor; opacity: 0.5; }
+
+    .kanban-root-wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: start; }
+    .kanban-column { background: var(--kanban-col-bg); border: 0.5px solid var(--apple-border); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 400px; }
+    .kanban-col-header { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px; }
+    .kanban-status-badge { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .badge-backlog { background: rgba(134, 134, 139, 0.15); color: var(--apple-secondary); }
+    .badge-progress { background: rgba(0, 113, 227, 0.15); color: var(--apple-blue); }
+    .badge-review { background: rgba(249, 115, 22, 0.15); color: #d97706; }
+    .badge-done { background: rgba(16, 185, 129, 0.15); color: var(--apple-green); }
+    .kanban-cards-stack { display: flex; flex-direction: column; gap: 8px; min-height: 300px; }
+    .kanban-card { background: var(--apple-card); border: 0.5px solid var(--apple-border); border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03); display: flex; flex-direction: column; gap: 8px; cursor: grab; }
+    .kanban-card.blocked-card { border-color: rgba(244, 63, 94, 0.55); background: rgba(244, 63, 94, 0.03); }
+    .kanban-card-title { font-size: 12px; font-weight: 700; color: var(--apple-text); line-height: 1.35; cursor: pointer; }
+    .kanban-card-notes { font-size: 10.5px; color: var(--apple-secondary); line-height: 1.35; }
+    .kanban-card-footer { display: flex; align-items: center; justify-content: space-between; border-top: 0.5px solid var(--apple-border); padding-top: 7px; }
+
+    /* Gantt & Stepper */
+    .filter-pills-wrap { display: flex; align-items: center; gap: 6px; }
+    .filter-tab-pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 7px; border: none; background: transparent; color: var(--apple-secondary); cursor: pointer; }
+    .filter-tab-pill.active { background: rgba(0, 113, 227, 0.12); color: var(--apple-blue); }
+    .gantt-root-container { width: 100%; border-radius: 12px; border: 0.5px solid var(--apple-border); background: var(--apple-card); overflow-x: auto; }
+    .gantt-inner-scroll { min-width: 900px; display: flex; flex-direction: column; }
+    .gantt-row-container { display: flex; width: 100%; height: 46px; border-bottom: 0.5px solid var(--apple-border); position: relative; }
+    .gantt-row-container.header-row { height: 36px; background: var(--apple-card-inset); font-size: 10.5px; font-weight: 700; color: var(--apple-secondary); }
+    .gantt-left-column { width: 220px; min-width: 220px; max-width: 220px; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-right: 0.5px solid var(--apple-border); font-size: 11.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--apple-card); z-index: 5; cursor: pointer; }
+    .gantt-timeline-stage { flex: 1; position: relative; height: 100%; }
+    .gantt-background-grid { position: absolute; inset: 0; display: grid; height: 100%; z-index: 1; pointer-events: none; }
+    .gantt-cell { border-right: 0.5px dashed var(--apple-border); height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10.5px; }
+    .gantt-cell.weekend { background: rgba(0, 0, 0, 0.015); }
+    .gantt-today-line { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--apple-red); z-index: 12; pointer-events: none; }
+    .gantt-today-pin { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); background: var(--apple-red); color: #ffffff; font-size: 8px; font-weight: 800; padding: 1px 4px; border-radius: 4px; text-transform: uppercase; }
+    .gantt-fixed-capsule { position: absolute; top: 7px; bottom: 7px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: 10px; font-weight: 700; cursor: grab; white-space: nowrap; z-index: 8; }
+    .capsule-dept-tag { font-size: 8.5px; font-weight: 800; text-transform: uppercase; }
+
+    .apple-stepper-wrap { display: flex; align-items: center; justify-content: center; padding: 1.15rem 1rem; border-bottom: 0.5px solid var(--apple-border); }
+    .step-item { display: flex; flex-direction: column; align-items: center; min-width: 90px; }
+    .step-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; }
+    .step-dot.done { background: var(--apple-blue); color: #ffffff; }
+    .step-dot.active { border: 2px solid var(--apple-blue); color: var(--apple-blue); background: var(--apple-card); }
+    .step-dot.pending { background: rgba(0, 0, 0, 0.05); color: var(--apple-secondary); }
+    .step-connector { flex: 1; height: 1.5px; margin: 0 8px; border-radius: 2px; margin-bottom: 20px; }
+    .step-connector.active { background: var(--apple-blue); }
+    .step-connector.pending { background: rgba(0, 0, 0, 0.06); }
+    .tracklist-header { display: flex; align-items: center; padding: 0.5rem; border-bottom: 0.5px solid var(--apple-border); font-size: 9px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase; gap: 8px; }
+    .tracklist-item { display: flex; align-items: center; border-bottom: 0.5px solid var(--apple-border); font-size: 12px; padding: 0.6rem 0.5rem; gap: 8px; }
+    .tracklist-item:hover { background: var(--apple-card-hover); }
+    .tracklist-item.blocked-row { background: rgba(244, 63, 94, 0.04); }
+    .apple-checkbox { appearance: none; width: 16px; height: 16px; border: 1.5px solid #d1d1d6; border-radius: 4px; cursor: pointer; position: relative; flex-shrink: 0; }
+    .apple-checkbox:checked { background: var(--apple-blue); border-color: var(--apple-blue); }
+    .apple-checkbox:checked::after { content: ''; position: absolute; left: 4.5px; top: 1.5px; width: 4px; height: 7.5px; border: solid white; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+
+    .time-left-badge { font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .time-left-badge.on-track { background: rgba(16, 185, 129, 0.14); color: var(--apple-green); }
+    .time-left-badge.urgent { background: rgba(249, 115, 22, 0.16); color: var(--apple-orange); }
+    .time-left-badge.overdue { background: rgba(244, 63, 94, 0.16); color: var(--apple-red); }
+    .time-left-badge.completed { background: rgba(134, 134, 139, 0.14); color: var(--apple-secondary); }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Island Toast -->
+  <div id="dynamic-island" class="apple-dynamic-island">
+    <span class="island-dot"></span>
+    <span id="island-message">Ready</span>
+    <button id="island-undo-btn" class="island-undo-btn" onclick="undoLastDelete()">Undo (⌘Z)</button>
+  </div>
+
+  <div id="drag-tooltip" class="gantt-drag-tooltip"></div>
+
+  <!-- NOTION SIDE-PEEK INSPECTOR DRAWER -->
+  <aside id="notion-side-drawer" class="notion-side-drawer">
+    <div class="drawer-top-bar">
+      <span style="font-size: 11px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase;" id="drawer-client-tag">Client Deliverable</span>
+      <button class="apple-pill-btn" onclick="closeSidePeek()">Close ✕</button>
+    </div>
+    <div class="drawer-content" id="drawer-body-content"></div>
+  </aside>
+
+  <!-- Custom Right-Click Context Menu -->
+  <div id="apple-context-menu" class="apple-context-menu">
+    <div class="ctx-section-label" id="ctx-task-title">Task Options</div>
+    <button class="ctx-item" onclick="ctxOpenSidePeek()"><span>Open Side-Peek Drawer</span><span>⇥</span></button>
+    <button class="ctx-item" onclick="ctxToggleBlocker()"><span>Toggle Blocker Flag</span><span>⚑</span></button>
+    <div class="ctx-divider"></div>
+    <div class="ctx-section-label">Move Status</div>
+    <button class="ctx-item" onclick="ctxSetStatus('backlog')"><span>Backlog / Brief</span></button>
+    <button class="ctx-item" onclick="ctxSetStatus('in_progress')"><span>In Progress</span></button>
+    <button class="ctx-item" onclick="ctxSetStatus('review')"><span>Review &amp; QA</span></button>
+    <button class="ctx-item" onclick="ctxSetStatus('done')"><span>Done</span><span>✓</span></button>
+    <div class="ctx-divider"></div>
+    <button class="ctx-item" onclick="ctxDuplicateTask()"><span>Duplicate Deliverable</span><span>⌘D</span></button>
+    <button class="ctx-item" onclick="ctxPingWA()"><span>Ping Assignee via WA</span><span>↗</span></button>
+    <div class="ctx-divider"></div>
+    <button class="ctx-item danger" onclick="ctxDeleteTask()"><span>Delete Deliverable</span><span>⌫</span></button>
+  </div>
+
+  <div class="persistence-badge">
+    <span class="persistence-dot" id="persist-dot"></span>
+    <span id="persist-text">Local Store Synced</span>
+  </div>
+
+  <!-- MODAL 0: SPOTLIGHT COMMAND PALETTE -->
+  <div id="spotlight-modal" class="apple-modal-backdrop" onclick="if(event.target.id==='spotlight-modal') closeSpotlight()">
+    <div class="spotlight-dialog" onclick="event.stopPropagation()">
+      <div class="spotlight-input-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--apple-secondary);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="spotlight-input" class="spotlight-input" placeholder="Type a command or search deliverables... (Esc to close)" oninput="renderSpotlightItems(this.value)">
+      </div>
+      <div class="spotlight-results" id="spotlight-results"></div>
+    </div>
+  </div>
+
+  <!-- MODAL 1: ADD DELIVERABLE SHEET -->
+  <div id="apple-sheet-modal" class="apple-modal-backdrop" onclick="if(event.target.id==='apple-sheet-modal') hideSheetModal()">
+    <div class="apple-sheet-dialog" onclick="event.stopPropagation()">
+      <div class="sheet-header">
+        <span class="sheet-title">New Deliverable Action Plan</span>
+        <button class="apple-pill-btn" onclick="hideSheetModal()">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Load 1-Click Agency SOP Template</label>
+          <select id="modal-sop-template" class="sheet-select" onchange="applySopTemplate(this.value)">
+            <option value="">— Custom Blank Deliverable —</option>
+            <option value="capi">Meta Broad &amp; CAPI Server Setup (4 Sub-tasks)</option>
+            <option value="ugc">UGC Video 9:16 Hook Batch (4 Sub-tasks)</option>
+            <option value="slicing">Landing Page Slicing &lt; 1.5s (4 Sub-tasks)</option>
+          </select>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Target Client</label>
+          <select id="modal-target-client" class="sheet-select">
+            <option value="0">Pink Flamingo</option>
+            <option value="1">Sibersih</option>
+          </select>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Deliverable Name</label>
+          <input type="text" id="modal-task-name" class="sheet-text-input" placeholder="Misal: Hook Testing Video 9:16">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Department</label>
+            <select id="modal-task-dept" class="sheet-select">
+              <option value="creative">Creative &amp; Copy</option>
+              <option value="performance">Performance Ads</option>
+              <option value="video">Video &amp; UGC</option>
+              <option value="tech">Tech &amp; Slicing</option>
+            </select>
+          </div>
+          <div class="sheet-field-group">
+            <label class="sheet-field-label">Assignee (PIC)</label>
+            <select id="modal-task-pic" class="sheet-select">
+              <option value="Razaan Al-Ghifari">Razaan Al-Ghifari</option>
+              <option value="Arif Kurniawan">Arif Kurniawan</option>
+              <option value="Jireh Pratama">Jireh Pratama</option>
+            </select>
+          </div>
+        </div>
+        <div class="sheet-field-group">
+          <label class="sheet-field-label">Duration (Bebas Bahasa: "2 jam", "3 hours", "4 hari", "45 menit")</label>
+          <input type="text" id="modal-task-duration" class="sheet-text-input" value="3 hari" placeholder="Contoh: 2 jam, 3 hours, 4d">
+        </div>
+      </div>
+      <div class="sheet-footer">
+        <button class="apple-pill-btn" onclick="hideSheetModal()">Cancel</button>
+        <button class="apple-cta-btn" onclick="saveNewDeliverableFromModal()">Save &amp; Start Countdown</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: TALENT PROFILE CARD -->
+  <div id="talent-profile-modal" class="apple-modal-backdrop" onclick="if(event.target.id==='talent-profile-modal') hideTalentModal()">
+    <div class="talent-card-frame" onclick="event.stopPropagation()">
+      <div class="talent-hero-photo" id="talent-photo">
+        <button class="talent-close-btn" onclick="hideTalentModal()">✕</button>
+        <div style="position:relative; z-index:2;">
+          <h2 id="talent-name" style="font-size: 20px; font-weight: 800;">Andrew Smith, 28</h2>
+          <p id="talent-role" style="font-size: 11.5px; opacity: 0.9;">Sr. Visual &amp; Ops Strategist</p>
+        </div>
+      </div>
+      <div class="talent-body">
+        <p id="talent-bio" style="font-size:12px; color:var(--apple-secondary); font-style:italic;"></p>
+        <div style="background:var(--apple-card-inset); padding:10px; border-radius:12px; display:flex; flex-direction:column; gap:6px;">
+          <span style="font-size:10px; font-weight:700;">Anonymous Feedback Box</span>
+          <textarea id="talent-anon-text" class="talent-anon-textarea" placeholder="Tulis feedback objektif secara anonim..."></textarea>
+          <button class="apple-cta-btn" style="align-self:flex-end;" onclick="sendAnonFeedback()">Send Feedback</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR (MATCHING REFERENCE AESTHETICS) -->
+  <aside id="app-sidebar" class="apple-sidebar-frame">
+    <button class="sb-edge-toggle" onclick="toggleSidebar()" title="Toggle Sidebar (⌘B)">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+
+    <div class="apple-traffic-lights">
+      <span class="dot dot-red" onclick="toggleSidebar()"></span>
+      <span class="dot dot-yellow" onclick="toggleAllCards()"></span>
+      <span class="dot dot-green" onclick="toggleTheme()"></span>
+    </div>
+
+    <div class="sb-profile-card" onclick="openTalentModal('andrew')">
+      <div class="sb-avatar">AS</div>
+      <div class="sb-profile-info">
+        <span class="sb-profile-name">Andrew Smith</span>
+        <span class="sb-profile-role">Sr. Visual &amp; Ops Lead</span>
+      </div>
+    </div>
+
+    <span class="sb-section-title">Teams</span>
+    <select class="sheet-select sb-item-text" style="margin-bottom: 10px; font-weight: 700;" onchange="setPicFilterFromSidebar(this.value)">
+      <option value="ALL">All Agency Teams</option>
+      <option value="Razaan Al-Ghifari">Razaan (WA Commerce)</option>
+      <option value="Arif Kurniawan">Arif (Tech &amp; Slicing)</option>
+    </select>
+
+    <span class="sb-section-title">Menu</span>
+    <div class="sb-menu-group">
+      <button class="sb-nav-item active" id="subBtn-overview" onclick="switchTab('overview')">
+        <div class="sb-icon-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+        </div>
+        <span class="sb-item-text">Dashboard</span>
+      </button>
+      <button class="sb-nav-item" id="subBtn-projects" onclick="switchTab('projects')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <span class="sb-item-text">Sprint Stepper</span>
+      </button>
+      <button class="sb-nav-item" id="subBtn-home" onclick="switchTab('home')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></div>
+        <span class="sb-item-text">Funnel Matrix</span>
+      </button>
+      <button class="sb-nav-item" id="subBtn-timeline" onclick="switchTab('timeline')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <span class="sb-item-text">Gantt Schedule</span>
+      </button>
+      <button class="sb-nav-item" id="subBtn-kanban" onclick="switchTab('kanban')">
+        <div class="sb-icon-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+        <span class="sb-item-text" style="flex:1;">Kanban Board</span>
+        <span class="sb-item-text" style="background:var(--apple-orange); color:#fff; font-size:9px; padding:2px 6px; border-radius:6px;" id="sb-total-badge">5</span>
+      </button>
+    </div>
+
+    <span class="sb-section-title" style="margin-top: 12px;">Team Members</span>
+    <div class="sb-menu-group">
+      <button class="sb-member-btn" id="sb-member-razaan" onclick="setPicFilterFromSidebar('Razaan Al-Ghifari')" ondblclick="openTalentModal('razaan')">
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #e07a5f; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">RG</span>
+        <span class="sb-member-name" style="font-size: 11.5px; font-weight: 600; color: var(--sb-text); flex: 1;">Razaan Al-Ghifari</span>
+        <span class="sb-member-count" id="sb-cnt-razaan" style="font-size: 10px; font-weight:700; color: var(--sb-muted);">0</span>
+      </button>
+      <button class="sb-member-btn" id="sb-member-arif" onclick="setPicFilterFromSidebar('Arif Kurniawan')" ondblclick="openTalentModal('arif')">
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #3d5a80; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">AK</span>
+        <span class="sb-member-name" style="font-size: 11.5px; font-weight: 600; color: var(--sb-text); flex: 1;">Arif Kurniawan</span>
+        <span class="sb-member-count" id="sb-cnt-arif" style="font-size: 10px; font-weight:700; color: var(--sb-muted);">0</span>
+      </button>
+    </div>
+
+    <!-- Reference Dashed Box CTA -->
+    <div class="sb-dashed-cta" onclick="openSheetModal()">
+      <div class="sb-plus-circle">+</div>
+      <div class="sb-dashed-text">
+        <div style="font-size: 11.5px; font-weight: 800; color: var(--sb-text);">Add New Deliverable</div>
+        <div style="font-size: 9.5px; color: var(--sb-muted);">or load <span style="color:var(--apple-indigo); text-decoration:underline;">SOP template</span></div>
+      </div>
+    </div>
+
+    <div class="sb-theme-switcher">
+      <button class="sb-theme-btn" id="theme-dark-btn" onclick="setThemeMode(true)">Dark</button>
+      <button class="sb-theme-btn active" id="theme-light-btn" onclick="setThemeMode(false)">Light</button>
+    </div>
+  </aside>
+
+  <!-- MAIN WINDOW AREA -->
+  <div class="apple-canvas-area">
+    <header class="apple-navbar-header">
+      <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+        <div class="macos-segmented-bar" style="width: 450px;">
+          <div id="segPill" class="seg-pill-bg" style="transform: translateX(0%);"></div>
+          <button onclick="switchTab('overview')" id="segBtn-overview" class="seg-btn active">Overview</button>
+          <button onclick="switchTab('projects')" id="segBtn-projects" class="seg-btn">Projects</button>
+          <button onclick="switchTab('home')" id="segBtn-home" class="seg-btn">Funnels</button>
+          <button onclick="switchTab('timeline')" id="segBtn-timeline" class="seg-btn">Timeline</button>
+          <button onclick="switchTab('kanban')" id="segBtn-kanban" class="seg-btn">Kanban</button>
+        </div>
+
+        <div class="apple-search-wrap">
+          <svg class="search-icon-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="global-search-input" class="apple-search-input" placeholder="Search Dashboard..." oninput="handleSearch(this.value)">
+          <span class="search-kbd-shortcut" onclick="openSpotlight()">⌘K</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <button onclick="toggleFocusMode()" id="focus-mode-btn" class="apple-pill-btn">Focus Mode</button>
+        <button onclick="exportCSVGoogleSheets()" class="apple-pill-btn">CSV</button>
+        <button onclick="resetDefaultData()" class="apple-pill-btn">Reset</button>
+        <button onclick="toggleAudio()" id="audio-toggle-btn" class="apple-pill-btn">Sound: ON</button>
+      </div>
+    </header>
+
+    <div class="apple-canvas-content">
+      
+      <!-- Active Filter Banner -->
+      <div id="active-filter-banner" class="apple-filter-banner">
+        <span id="active-filter-text">Filter Aktif</span>
+        <span style="cursor: pointer; text-decoration: underline;" onclick="clearAllFilters()">Exit Filter / Focus ✕</span>
+      </div>
+
+      <!-- ==================================================== -->
+      <!-- VIEW 00: ANALYTICS OVERVIEW (MATCHING REFERENCE)     -->
+      <!-- ==================================================== -->
+      <div id="view-overview" class="view-module" style="display: flex; flex-direction: column;">
+        <div class="analytics-overview-shell">
+          
+          <!-- LEFT & CENTER ANALYTICS COLUMN -->
+          <div class="analytics-main-col">
+            <div>
+              <h1 style="font-size: 26px; font-weight: 800; color: var(--apple-text);">Analytics</h1>
+              <p style="font-size: 12.5px; color: var(--apple-secondary); margin-top: 2px;">Welcome back, Let's get back to work. All metrics are synced live from your active modules.</p>
+            </div>
+
+            <!-- 1. TOP 3 KPI CARDS -->
+            <div class="ref-kpi-grid">
+              <!-- Card 1: Funnel Traffic Connections -->
+              <div class="ref-kpi-card" onclick="switchTab('home')">
+                <div class="ref-kpi-top">
+                  <div class="ref-kpi-icon" style="background: var(--apple-indigo);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </div>
+                  <div>
+                    <div class="ref-kpi-label">Total Funnel Traffic</div>
+                    <div class="ref-kpi-val" id="ref-kpi-traffic">13,500</div>
+                  </div>
+                </div>
+                <div class="ref-kpi-bar-bg">
+                  <div class="ref-kpi-bar-fill" id="ref-bar-traffic" style="width: 72%; background: var(--apple-indigo);"></div>
+                </div>
+                <div class="ref-kpi-foot">
+                  <span id="ref-foot-traffic">lllı + 330 Conversions</span>
+                  <span>◢</span>
+                </div>
+              </div>
+
+              <!-- Card 2: SLA & Campaign Security -->
+              <div class="ref-kpi-card" onclick="switchTab('kanban')">
+                <div class="ref-kpi-top">
+                  <div class="ref-kpi-icon" style="background: var(--apple-red);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  </div>
+                  <div>
+                    <div class="ref-kpi-label">SLA &amp; Ad Health</div>
+                    <div class="ref-kpi-val" id="ref-kpi-security">80%</div>
+                  </div>
+                </div>
+                <div class="ref-kpi-bar-bg">
+                  <div class="ref-kpi-bar-fill" id="ref-bar-security" style="width: 80%; background: var(--apple-indigo);"></div>
+                </div>
+                <div class="ref-kpi-foot">
+                  <span id="ref-foot-security">lllı 1 Blocker Flagged</span>
+                  <span>◢</span>
+                </div>
+              </div>
+
+              <!-- Card 3: Total Sprint Items -->
+              <div class="ref-kpi-card" onclick="switchTab('projects')">
+                <div class="ref-kpi-top">
+                  <div class="ref-kpi-icon" style="background: var(--apple-green);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                  </div>
+                  <div>
+                    <div class="ref-kpi-label">Total Sprint Items</div>
+                    <div class="ref-kpi-val" id="ref-kpi-items">19 Items</div>
+                  </div>
+                </div>
+                <div class="ref-kpi-bar-bg">
+                  <div class="ref-kpi-bar-fill" id="ref-bar-items" style="width: 65%; background: var(--apple-indigo);"></div>
+                </div>
+                <div class="ref-kpi-foot">
+                  <span id="ref-foot-items">lllı + 14 Sub-tasks</span>
+                  <span>◢</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. CENTER COMBO CHART + 3 SIDE METRIC BOXES -->
+            <div class="ref-chart-section">
+              <div>
+                <div class="ref-chart-meta-row">
+                  <div class="ref-meta-item">
+                    <span>Total Earnings (Omset)</span>
+                    <strong id="ref-chart-omset">Rp 120.5M</strong>
+                  </div>
+                  <div class="ref-meta-item">
+                    <span>Active Period</span>
+                    <strong id="ref-chart-period">Sprint 7D</strong>
+                  </div>
+                  <div class="ref-meta-item">
+                    <span>Active Deliverables</span>
+                    <strong id="ref-chart-upcoming">5 Tasks</strong>
+                  </div>
+                </div>
+
+                <!-- Dynamic SVG Combo Chart (Orange Bars + Indigo Smooth Wave) -->
+                <div id="ref-combo-chart-box" style="width: 100%; padding-top: 6px;"></div>
+              </div>
+
+              <!-- 3 Right Boxes inside Chart Panel -->
+              <div class="ref-side-boxes">
+                <div class="ref-mini-stat-box" onclick="switchTab('home')" style="cursor:pointer;">
+                  <span>Total Ad Spend</span>
+                  <strong id="ref-box-spend">Rp 44.8M</strong>
+                </div>
+                <div class="ref-mini-stat-box" onclick="switchTab('home')" style="cursor:pointer;">
+                  <span>Avg Cost / Conv (CPA)</span>
+                  <strong id="ref-box-cpa">Rp 135K</strong>
+                </div>
+                <div class="ref-mini-stat-box" onclick="switchTab('home')" style="cursor:pointer;">
+                  <span>Net Revenue Margin</span>
+                  <strong id="ref-box-margin" style="color: var(--apple-green);">Rp 75.7M</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. BOTTOM SPLIT: LATEST DELIVERABLES & PROFESSIONAL STATUS RINGS -->
+            <div class="ref-bottom-split">
+              <!-- Bottom Left: Latest Deliverables (Customers in Reference) -->
+              <div class="ref-panel-box">
+                <div class="ref-panel-header">
+                  <span class="ref-panel-title">Latest Deliverables &amp; Time Left</span>
+                  <span style="font-size: 11px; color: var(--apple-secondary); font-weight: 700; cursor: pointer;" onclick="switchTab('projects')">View All</span>
+                </div>
+                <div class="ref-customer-list" id="ref-latest-deliverables-list"></div>
+              </div>
+
+              <!-- Bottom Center: Your Professional Status (Concentric Rings) -->
+              <div class="ref-panel-box">
+                <div class="ref-panel-header">
+                  <span class="ref-panel-title">Your Operational Status</span>
+                  <div style="display:flex; gap:6px;">
+                    <span class="apple-pill-btn" style="padding:2px 8px; font-size:10px;" onclick="switchTab('kanban')">Kanban ↗</span>
+                  </div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 6px 0;">
+                  <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div>
+                      <div style="font-size: 11px; color: var(--apple-secondary); font-weight: 600;">Actual Blended ROAS</div>
+                      <div style="font-size: 16px; font-weight: 800; color: var(--apple-text);" id="ref-status-roas">2.69x (Expert)</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 11px; color: var(--apple-secondary); font-weight: 600;">Ad Spend / Omset</div>
+                      <div style="font-size: 13px; font-weight: 800; color: var(--apple-text);" id="ref-status-spent">Rp 44.8M <span style="color:var(--apple-secondary); font-weight:500;">/ Rp 120.5M</span></div>
+                    </div>
+                  </div>
+
+                  <!-- Concentric SVG Rings -->
+                  <div id="ref-concentric-rings" style="width: 126px; height: 126px; flex-shrink: 0;"></div>
+                </div>
+
+                <div class="ref-offer-banner" id="ref-status-banner" onclick="switchTab('home')">
+                  <span>🚀</span>
+                  <span id="ref-status-banner-text">All campaigns scaling above Break-Even ROAS</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN: PROFILE, STATS, QUICK LINKS & GAUGE -->
+          <div class="analytics-right-col">
+            <div class="ref-right-top-icons">
+              <button class="ref-icon-btn" onclick="openSpotlight()" title="Command Palette">💬</button>
+              <div style="display:flex; gap:8px;">
+                <button class="ref-icon-btn" onclick="toggleFocusMode()" title="Focus Mode">🔔</button>
+                <button class="ref-icon-btn" onclick="openTalentModal('andrew')" title="Talent Profile">👤</button>
+              </div>
+            </div>
+
+            <div class="ref-profile-center">
+              <div class="ref-avatar-ring" onclick="openTalentModal('andrew')">
+                <img id="ref-right-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop" alt="Lead">
+              </div>
+              <h3 style="font-size: 15px; font-weight: 800; margin-top: 4px;" id="ref-right-name">Andrew Smith</h3>
+              <span style="font-size: 11px; color: var(--apple-secondary); font-weight: 600;" id="ref-right-role">Product &amp; Ops Lead</span>
+            </div>
+
+            <div class="ref-profile-stats">
+              <div>
+                <strong id="ref-stat-projects">2</strong>
+                <span>Clients</span>
+              </div>
+              <div>
+                <strong id="ref-stat-completed">2</strong>
+                <span>Completed</span>
+              </div>
+              <div>
+                <strong id="ref-stat-subtasks">14</strong>
+                <span>Sub-tasks</span>
+              </div>
+            </div>
+
+            <div class="ref-action-links">
+              <div class="ref-link-row" onclick="switchTab('projects')">
+                <div class="ref-link-left">
+                  <div class="ref-link-icon" style="background: rgba(79, 70, 229, 0.1); color: var(--apple-indigo);">🎯</div>
+                  <span>Sprint Goals</span>
+                </div>
+                <span style="color: var(--apple-secondary); font-weight: 800;">&rsaquo;</span>
+              </div>
+              <div class="ref-link-row" onclick="switchTab('timeline')">
+                <div class="ref-link-left">
+                  <div class="ref-link-icon" style="background: rgba(244, 63, 94, 0.1); color: var(--apple-red);">📅</div>
+                  <span>Gantt Monthly Plan</span>
+                </div>
+                <span style="color: var(--apple-secondary); font-weight: 800;">&rsaquo;</span>
+              </div>
+              <div class="ref-link-row" onclick="exportCSVGoogleSheets()">
+                <div class="ref-link-left">
+                  <div class="ref-link-icon" style="background: rgba(249, 115, 22, 0.1); color: var(--apple-orange);">⚙️</div>
+                  <span>Export Sheets CSV</span>
+                </div>
+                <span style="color: var(--apple-secondary); font-weight: 800;">&rsaquo;</span>
+              </div>
+            </div>
+
+            <!-- Semi-Circle Speedometer Gauge -->
+            <div class="ref-gauge-wrap">
+              <div style="font-size: 13px; font-weight: 800; color: var(--apple-text);">Project Status</div>
+              <div style="font-size: 15px; font-weight: 800; margin-top: 2px;" id="ref-gauge-numbers">2 <span style="color:var(--apple-secondary); font-weight:500;">/ 5</span></div>
+              <div style="font-size: 10px; color: var(--apple-secondary); margin-bottom: 8px;">tasks completed</div>
+              <div id="ref-semi-gauge-svg" style="width: 180px; height: 100px;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- VIEW 01: PROJECTS -->
+      <div id="view-projects" class="view-module" style="display: none; flex-direction: column; gap: 1.25rem;"></div>
+
+      <!-- VIEW 02: HOME & FUNNELS -->
+      <div id="view-home" class="view-module" style="display: none; flex-direction: column; gap: 1.25rem;"></div>
+
+      <!-- VIEW 03: TIMELINE GANTT -->
+      <div id="view-timeline" class="view-module" style="display: none; flex-direction: column; gap: 1.25rem;">
+        <div class="apple-card-box" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div class="filter-pills-wrap">
+            <span style="font-size: 10px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase;">Range:</span>
+            <button onclick="setGanttZoom('7D')" id="zoom-7D" class="filter-tab-pill active">Sprint 7D</button>
+            <button onclick="setGanttZoom('12D')" id="zoom-12D" class="filter-tab-pill">Cycle 12D</button>
+            <button onclick="setGanttZoom('30D')" id="zoom-30D" class="filter-tab-pill">Month 30D</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; font-size: 10.5px; font-weight: 600; color: var(--apple-secondary);">
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #be185d;"></span> Creative</span>
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--apple-blue);"></span> Performance</span>
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #15803d;"></span> Video UGC</span>
+            <span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d97706;"></span> Tech</span>
+          </div>
+        </div>
+        <div id="gantt-cards-container" style="display: flex; flex-direction: column; gap: 1.25rem;"></div>
+      </div>
+
+      <!-- VIEW 04: KANBAN BOARD -->
+      <div id="view-kanban" class="view-module" style="display: none; flex-direction: column; gap: 1rem;">
+        <div class="apple-card-box" style="padding: 8px 14px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11px; font-weight: 600; color: var(--apple-secondary);">
+            WIP Limit Kolom <b>In Progress</b>: Maksimal 3 Tugas &bull; Klik judul kartu untuk membuka <b>Notion Side-Peek</b>
+          </span>
+          <button class="apple-pill-btn" id="swimlane-toggle-btn" onclick="toggleKanbanSwimlanes()">Group by Client: OFF</button>
+        </div>
+        <div id="kanban-board-stage"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ----------------------------------------------------
+    // 1. MULTI-LANGUAGE NATURAL DURATION PARSER & LIVE COUNTDOWN
+    // ----------------------------------------------------
+    function parseFlexibleDuration(inputStr) {
+      const raw = String(inputStr || '').trim().toLowerCase();
+      if (!raw) return { ms: 24 * 3600 * 1000, spanDays: 1, cleanText: "1d" };
+
+      const numMatch = raw.match(/([0-9]+([.,][0-9]+)?)/);
+      const val = numMatch ? parseFloat(numMatch[1].replace(',', '.')) : 1;
+      const HOUR_MS = 3600 * 1000;
+      const DAY_MS = 24 * HOUR_MS;
+
+      if (/(menit|mnt|min|mins|minute|minutes|\bm\b)/.test(raw)) {
+        return { ms: Math.max(60 * 1000, val * 60 * 1000), spanDays: 1, cleanText: raw };
+      }
+      if (/(jam|jm|hour|hours|hr|hrs|\bj\b|\bh\b)/.test(raw)) {
+        return { ms: Math.max(60 * 1000, val * HOUR_MS), spanDays: Math.max(1, Math.ceil(val / 24)), cleanText: raw };
+      }
+      if (/(minggu|mgg|week|weeks|wk|\bw\b)/.test(raw)) {
+        const days = Math.round(val * 7);
+        return { ms: days * DAY_MS, spanDays: Math.max(1, days), cleanText: raw };
+      }
+      const days = Math.max(0.1, val);
+      const hasUnit = /(hari|day|days|d)/.test(raw);
+      return { ms: days * DAY_MS, spanDays: Math.max(1, Math.ceil(days)), cleanText: hasUnit ? raw : `${val}d` };
+    }
+
+    function calculateTimeRemaining(deadlineISO, isDone = false) {
+      if (isDone) return { text: "Completed ✓", isUrgent: false, isOverdue: false, isDone: true };
+      if (!deadlineISO) return { text: "No deadline", isUrgent: false, isOverdue: false, isDone: false };
+
+      const diff = new Date(deadlineISO).getTime() - Date.now();
+      if (diff <= 0) return { text: "00h 00m 00s (Overdue)", isUrgent: true, isOverdue: true, isDone: false };
+
+      const totalSeconds = Math.floor(diff / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const formatted = days > 0
+        ? `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`
+        : `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+
+      return { text: formatted, isUrgent: (diff / 3600000) < 24, isOverdue: false, isDone: false };
+    }
+
+    function tickLiveCountdowns() {
+      document.querySelectorAll('[data-live-deadline]').forEach(el => {
+        const iso = el.getAttribute('data-live-deadline');
+        const isDone = el.getAttribute('data-live-done') === 'true';
+        const rem = calculateTimeRemaining(iso, isDone);
+        el.innerText = rem.text;
+        const statusClass = rem.isDone ? 'completed' : rem.isOverdue ? 'overdue' : rem.isUrgent ? 'urgent' : 'on-track';
+        el.className = `time-left-badge ${statusClass}`;
+      });
+    }
+    setInterval(tickLiveCountdowns, 1000);
+
+    // ----------------------------------------------------
+    // 2. KONSTANTA, SOP TEMPLATES & INITIAL DATABASE
+    // ----------------------------------------------------
+    const GANTT_SCALES = {
+      '7D': [
+        { d: "16", w: false }, { d: "17", w: true }, { d: "18", w: true, today: true },
+        { d: "19", w: false }, { d: "20", w: false }, { d: "21", w: false }, { d: "22", w: false }
+      ],
+      '12D': [
+        { d: "14", w: false }, { d: "15", w: false }, { d: "16", w: false }, { d: "17", w: true }, { d: "18", w: true, today: true },
+        { d: "19", w: false }, { d: "20", w: false }, { d: "21", w: false }, { d: "22", w: false }, { d: "23", w: false }, { d: "24", w: true }, { d: "25", w: true }
+      ],
+      '30D': Array.from({ length: 30 }, (_, i) => ({
+        d: (i + 1).toString().padStart(2, '0'),
+        w: (i % 7 === 5 || i % 7 === 6),
+        today: i + 1 === 18
+      }))
+    };
+
+    const DEPARTMENTS = {
+      creative: { label: "Creative & Copy", colorClass: "cap-pink", dotColor: "#be185d" },
+      performance: { label: "Performance Ads", colorClass: "cap-blue", dotColor: "#0071e3" },
+      video: { label: "Video & UGC", colorClass: "cap-green", dotColor: "#15803d" },
+      tech: { label: "Tech & Dev", colorClass: "cap-orange", dotColor: "#d97706" }
+    };
+
+    const TEAM_PICS = ["Razaan Al-Ghifari", "Arif Kurniawan", "Jireh Pratama", "Andrew Smith"];
+
+    const KANBAN_STATUSES = [
+      { id: "backlog", title: "Backlog / Brief", badgeClass: "badge-backlog", wipLimit: 99 },
+      { id: "in_progress", title: "In Progress", badgeClass: "badge-progress", wipLimit: 3 },
+      { id: "review", title: "Review & QA", badgeClass: "badge-review", wipLimit: 99 },
+      { id: "done", title: "Done", badgeClass: "badge-done", wipLimit: 99 }
+    ];
+
+    const TALENTS_DB = {
+      andrew: {
+        name: "Andrew Smith, 28",
+        role: "Sr. Visual & Ops Lead",
+        photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=600&auto=format&fit=crop",
+        bio: "Focused on native Apple interface precision and frictionless conversion flows."
+      },
+      razaan: {
+        name: "Razaan Al-Ghifari, 26",
+        role: "Performance Marketer @ WA Commerce",
+        photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=600&auto=format&fit=crop",
+        bio: "Data over opinions. Scaling Direct-to-WhatsApp campaigns with strict SLA."
+      },
+      arif: {
+        name: "Arif Kurniawan, 27",
+        role: "Tech Lead & Full-Stack @ Agency",
+        photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=600&auto=format&fit=crop",
+        bio: "Speed and stability are core features. Obsessed with sub-second page loads."
+      }
+    };
+
+    const SOP_TEMPLATES = {
+      capi: {
+        title: "Meta Broad & CAPI Server Setup",
+        dept: "performance",
+        duration: "3 hari",
+        subtasks: [
+          { t: "Pasang Pixel & Konfigurasi Server CAPI", done: false },
+          { t: "Test Event Deduplication Score > 8.0", done: false },
+          { t: "Pasang Parameter UTM Dynamic di Ad Level", done: false },
+          { t: "Integrasi Webhook Direct-to-WA Rotator", done: false }
+        ]
+      },
+      ugc: {
+        title: "UGC Video 9:16 Hook Batch",
+        dept: "video",
+        duration: "4 hari",
+        subtasks: [
+          { t: "Riset Kompetitor di Meta Ads Library", done: false },
+          { t: "Tulis 3 Variasi Hook 3 Detik Pertama", done: false },
+          { t: "Briefing Talent & Perekaman Voiceline", done: false },
+          { t: "Editing 9:16 + Subtitle Safe Zone", done: false }
+        ]
+      },
+      slicing: {
+        title: "Landing Page Slicing < 1.5s",
+        dept: "tech",
+        duration: "2 jam",
+        subtasks: [
+          { t: "Slicing Layout Mobile-First Responsive", done: false },
+          { t: "Kompresi Semua Aset Gambar ke WebP", done: false },
+          { t: "Pasang Floating CTA Button WhatsApp", done: false },
+          { t: "Benchmark Speed Load < 1.5 Detik", done: false }
+        ]
+      }
+    };
+
+    const nowMs = Date.now();
+    const INITIAL_PROJECTS = [
+      {
+        id: "proj-1",
+        clientName: "Pink Flamingo",
+        description: "Optimasi funnel performance WhatsApp Commerce, scale broad audience CAPI Meta Ads & testing variasi hook UGC 9:16.",
+        lead: "Razaan Al-Ghifari",
+        brandHex: "#ec4899",
+        brandVoice: "Energetic, Bold, Problem-Solver, Direct-to-Point",
+        links: {
+          sheets: "https://docs.google.com/spreadsheets",
+          forms: "https://docs.google.com/forms",
+          drive: "https://drive.google.com",
+          adlib: "https://www.facebook.com/ads/library"
+        },
+        isCollapsed: false,
+        stepLabels: ["Brief", "Production", "Review/QA", "Live Scale"],
+        actions: [
+          {
+            id: "act-1", text: "Pink Flamingo Copywriting & Hook", notes: "Testing 3 variasi hook problem-aware.",
+            duration: "2 jam", deadlineISO: new Date(nowMs + 2 * 3600 * 1000).toISOString(), pic: "Razaan Al-Ghifari", department: "creative",
+            startCol: 0, spanCol: 1, done: true, status: "done", blocked: false, adFreq: 1.8,
+            subtasks: [
+              { t: "Audit kompetitor Meta Ads Library", done: true },
+              { t: "Draft 3 angle copywriting utama", done: true },
+              { t: "Approval naskah oleh klien", done: true }
+            ]
+          },
+          {
+            id: "act-2", text: "Meta Broad CAPI Setup", notes: "Integrasi server-side event deduplication.",
+            duration: "3 hari", deadlineISO: new Date(nowMs + 3 * 24 * 3600 * 1000).toISOString(), pic: "Razaan Al-Ghifari", department: "performance",
+            startCol: 2, spanCol: 3, done: true, status: "done", blocked: false, adFreq: 2.1,
+            subtasks: [
+              { t: "Setup Meta Pixel & CAPI Gateway", done: true },
+              { t: "Uji coba event Purchase & Lead", done: true },
+              { t: "Validasi UTM di Google Sheets", done: true }
+            ]
+          },
+          {
+            id: "act-3", text: "UGC Video Creative Direction", notes: "Frekuensi iklan lama sudah 2.9x, wajib refresh.",
+            duration: "4 days", deadlineISO: new Date(nowMs + 4 * 24 * 3600 * 1000).toISOString(), pic: "Jireh Pratama", department: "video",
+            startCol: 3, spanCol: 4, done: false, status: "review", blocked: false, adFreq: 2.9,
+            subtasks: [
+              { t: "Kirim produk sampel ke kreator", done: true },
+              { t: "Review raw footage 9:16", done: false },
+              { t: "Tambahkan teks hook 3 detik awal", done: false }
+            ]
+          }
+        ]
+      },
+      {
+        id: "proj-2",
+        clientName: "Sibersih",
+        description: "Ekspansi akuisisi jasa cleaning service area residensial Tangerang Selatan, speed load landing page & otomasi booking CS.",
+        lead: "Arif Kurniawan",
+        brandHex: "#0284c7",
+        brandVoice: "Hygienic, Trustworthy, Fast-Response, Family-Friendly",
+        links: {
+          sheets: "https://docs.google.com/spreadsheets",
+          forms: "https://docs.google.com/forms",
+          drive: "https://drive.google.com",
+          adlib: "https://www.facebook.com/ads/library"
+        },
+        isCollapsed: false,
+        stepLabels: ["Brief", "Production", "Review/QA", "Live Scale"],
+        actions: [
+          {
+            id: "act-4", text: "Landing Page Slicing", notes: "Speed load test di bawah 1.5 detik.",
+            duration: "5 hours", deadlineISO: new Date(nowMs + 5 * 3600 * 1000).toISOString(), pic: "Arif Kurniawan", department: "tech",
+            startCol: 0, spanCol: 1, done: false, status: "in_progress", blocked: true, adFreq: 1.4,
+            subtasks: [
+              { t: "Slicing hero section & tabel harga", done: true },
+              { t: "Kompresi gambar ke format WebP", done: true },
+              { t: "Pasang script tracking CTWA", done: false }
+            ]
+          },
+          {
+            id: "act-5", text: "Hook Script Revisi 9:16", notes: "Menunggu konfirmasi materi dari klien.",
+            duration: "5 hari", deadlineISO: new Date(nowMs + 5 * 24 * 3600 * 1000).toISOString(), pic: "Jireh Pratama", department: "creative",
+            startCol: 2, spanCol: 5, done: false, status: "backlog", blocked: false, adFreq: 2.6,
+            subtasks: [
+              { t: "Revisi klaim promo diskon", done: false },
+              { t: "Voiceover ulang bagian outro", done: false }
+            ]
+          }
+        ]
+      }
+    ];
+
+    const DEFAULT_HOME_CLIENTS = [
+      {
+        id: "cli-1",
+        title: "Pink Flamingo",
+        lead: "Razaan Al-Ghifari",
+        revenueNum: 79550000,
+        beRoas: 2.50,
+        funnelTitle: "The Ecommerce Funnel",
+        isCollapsed: false,
+        dropRates: [0.80, 0.02, 0.76, 0.73],
+        funnelStages: [
+          { name: "Awareness", val: 5000, color: "#0e3a66", spend: 8500000, description: "Testing 3 angle hook video 9:16 broad & lookalike" },
+          { name: "Interest", val: 1000, color: "#0284c7", spend: 4200000, description: "Meta Advantage+ catalog ads carousel benefit" },
+          { name: "Consideration", val: 980, color: "#0d9488", spend: 3800000, description: "Retargeting penonton video >50% promo ongkir" },
+          { name: "Conversion", val: 240, color: "#16a34a", spend: 15000000, description: "Direct-to-WhatsApp automation CS reminder" },
+          { name: "Loyalty", val: 65, color: "#84cc16", spend: 500000, description: "Broadcast WA CRM voucher diskon repeat order" }
+        ]
+      },
+      {
+        id: "cli-2",
+        title: "Sibersih",
+        lead: "Arif Kurniawan",
+        revenueNum: 41000000,
+        beRoas: 2.80,
+        funnelTitle: "Home Cleaning Funnel",
+        isCollapsed: false,
+        dropRates: [0.85, 0.67, 0.78, 0.80],
+        funnelStages: [
+          { name: "Awareness", val: 8500, color: "#0e3a66", spend: 6000000, description: "Video problem-aware rumah kotor & deep clean" },
+          { name: "Interest", val: 1200, color: "#0284c7", spend: 3200000, description: "UGC testimoni pelanggan area Jakarta Selatan" },
+          { name: "Consideration", val: 400, color: "#0d9488", spend: 2100000, description: "Landing page load <1.5 detik & price breakdown" },
+          { name: "Conversion", val: 90, color: "#16a34a", spend: 1200000, description: "Booking via form WA otomatis jadwal petugas" },
+          { name: "Loyalty", val: 18, color: "#84cc16", spend: 300000, description: "Langganan rutin mingguan membership program" }
+        ]
+      }
+    ];
+
+    let parsedProjects = INITIAL_PROJECTS;
+    let parsedClients = DEFAULT_HOME_CLIENTS;
+    try {
+      const sp = localStorage.getItem('agency_hub_projects_v6');
+      const sc = localStorage.getItem('agency_hub_clients_v6');
+      if (sp) parsedProjects = JSON.parse(sp);
+      if (sc) parsedClients = JSON.parse(sc);
+    } catch (e) {}
+
+    let APP_STATE = {
+      projects: parsedProjects,
+      homeClients: parsedClients,
+      activeTab: 'overview',
+      zoomRange: '7D',
+      picFilter: 'ALL',
+      searchQuery: '',
+      focusMode: false,
+      kanbanSwimlanes: false,
+      sidebarCollapsed: false,
+      isMuted: localStorage.getItem('agency_sound_muted') === 'true',
+      isDark: localStorage.getItem('agency_app_dark') === 'true',
+      lastDeleted: null,
+      contextTarget: null,
+      activePeek: null
+    };
+
+    // ----------------------------------------------------
+    // 3. AUDIO, TOAST UNDO & KEYBOARD SHORTCUTS
+    // ----------------------------------------------------
+    let audioCtx = null;
+    function playAppleSound(type = 'click') {
+      if (APP_STATE.isMuted) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type === 'done' ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(type === 'done' ? 660 : 180, now);
+        osc.frequency.exponentialRampToValueAtTime(type === 'done' ? 880 : 45, now + (type === 'done' ? 0.12 : 0.04));
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + (type === 'done' ? 0.12 : 0.04));
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + (type === 'done' ? 0.12 : 0.04));
+      } catch (e) {}
+    }
+
+    let toastTimer = null;
+    function triggerToast(msg, showUndo = false) {
+      const toast = document.getElementById('dynamic-island');
+      const text = document.getElementById('island-message');
+      const undoBtn = document.getElementById('island-undo-btn');
+      if (toast && text) {
+        clearTimeout(toastTimer);
+        text.innerText = msg;
+        if (undoBtn) undoBtn.style.display = showUndo ? 'inline-block' : 'none';
+        toast.classList.add('active');
+        toastTimer = setTimeout(() => toast.classList.remove('active'), showUndo ? 4200 : 2400);
+      }
+    }
+
+    function notifySync() {
+      try {
+        localStorage.setItem('agency_hub_projects_v6', JSON.stringify(APP_STATE.projects));
+        localStorage.setItem('agency_hub_clients_v6', JSON.stringify(APP_STATE.homeClients));
+      } catch (e) {}
+      const dot = document.getElementById('persist-dot');
+      const text = document.getElementById('persist-text');
+      if (dot && text) {
+        dot.style.background = 'var(--apple-orange)';
+        text.innerText = 'Syncing...';
+        setTimeout(() => {
+          dot.style.background = 'var(--apple-green)';
+          text.innerText = 'Local Store Synced';
+        }, 250);
+      }
+    }
+
+    function resetDefaultData() {
+      localStorage.removeItem('agency_hub_projects_v6');
+      localStorage.removeItem('agency_hub_clients_v6');
+      APP_STATE.projects = JSON.parse(JSON.stringify(INITIAL_PROJECTS));
+      APP_STATE.homeClients = JSON.parse(JSON.stringify(DEFAULT_HOME_CLIENTS));
+      clearAllFilters();
+      closeSidePeek();
+      playAppleSound('done');
+      triggerToast('Data di-reset ke pengaturan awal');
+    }
+
+    function formatRupiahShort(amount) {
+      if (!amount) return 'Rp 0';
+      if (amount >= 1000000) return 'Rp ' + (amount / 1000000).toFixed(1) + 'M';
+      if (amount >= 1000) return 'Rp ' + (amount / 1000).toFixed(0) + 'K';
+      return 'Rp ' + Math.round(amount).toLocaleString('id-ID');
+    }
+
+    function parseNumericRupiah(str) {
+      if (!str) return 0;
+      let clean = String(str).toLowerCase().replace(/rp|\s/g, '').replace(',', '.');
+      if (clean.endsWith('m')) return (parseFloat(clean) || 0) * 1000000;
+      if (clean.endsWith('k')) return (parseFloat(clean) || 0) * 1000;
+      return parseFloat(clean.replace(/\./g, '')) || 0;
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.target && e.target.classList.contains('inline-editable')) {
+        e.preventDefault();
+        e.target.blur();
+      }
+      if (e.key === 'Escape') {
+        closeSpotlight();
+        hideSheetModal();
+        hideTalentModal();
+        hideContextMenu();
+        closeSidePeek();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openSpotlight();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        toggleFocusMode();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        toggleSidebar();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z' && APP_STATE.lastDeleted) {
+        e.preventDefault();
+        undoLastDelete();
+      }
+    });
+
+    window.addEventListener('click', () => hideContextMenu());
+
+    // ----------------------------------------------------
+    // 4. RENDER ANALYTICS OVERVIEW (MATCHING REFERENCE)
+    // ----------------------------------------------------
+    function renderOverviewView() {
+      // 1. Aggregate Funnel & Financial Data
+      let totalRev = 0, totalSpend = 0, totalTraffic = 0, totalConversions = 0;
+      const stageSpends = [0, 0, 0, 0, 0];
+      const stageVols = [0, 0, 0, 0, 0];
+
+      APP_STATE.homeClients.forEach(c => {
+        totalRev += c.revenueNum || 0;
+        c.funnelStages.forEach((st, idx) => {
+          totalSpend += (st.spend || 0);
+          stageSpends[idx] += (st.spend || 0);
+          stageVols[idx] += (st.val || 0);
+          if (idx === 0) totalTraffic += (st.val || 0);
+          if (idx === 3) totalConversions += (st.val || 0);
+        });
+      });
+
+      const avgRoas = totalSpend > 0 ? (totalRev / totalSpend).toFixed(2) : "0.00";
+      const avgCpa = totalConversions > 0 ? (totalSpend / totalConversions) : 0;
+      const netMargin = Math.max(0, totalRev - totalSpend);
+
+      // 2. Aggregate Tasks, Subtasks, Blockers & Fatigue
+      let cntBacklog = 0, cntProgress = 0, cntReview = 0, cntDone = 0, cntBlocked = 0, cntFatigue = 0, totalSubtasks = 0;
+      const allTasks = [];
+
+      APP_STATE.projects.forEach((p, pIdx) => {
+        p.actions.forEach((a, aIdx) => {
+          if (!matchTaskFilters(a)) return;
+          allTasks.push({ ...a, clientName: p.clientName, pIdx, aIdx });
+          totalSubtasks += (a.subtasks ? a.subtasks.length : 0);
+          if (a.blocked && !a.done) cntBlocked++;
+          if ((a.adFreq || 1.5) > 2.5 && !a.done) cntFatigue++;
+
+          const st = a.status || (a.done ? 'done' : 'in_progress');
+          if (st === 'backlog') cntBacklog++;
+          else if (st === 'in_progress') cntProgress++;
+          else if (st === 'review') cntReview++;
+          else if (st === 'done') cntDone++;
+        });
+      });
+
+      const totalTasksCount = allTasks.length;
+      const healthyCount = Math.max(0, totalTasksCount - cntBlocked - cntFatigue);
+      const securityPct = totalTasksCount > 0 ? Math.round((healthyCount / totalTasksCount) * 100) : 100;
+      const completionPct = totalTasksCount > 0 ? Math.round((cntDone / totalTasksCount) * 100) : 0;
+
+      // Populate Top 3 KPI Cards
+      document.getElementById('ref-kpi-traffic').innerText = totalTraffic.toLocaleString();
+      document.getElementById('ref-foot-traffic').innerText = `lllı + ${totalConversions.toLocaleString()} Conversions`;
+
+      document.getElementById('ref-kpi-security').innerText = `${securityPct}%`;
+      document.getElementById('ref-bar-security').style.width = `${securityPct}%`;
+      document.getElementById('ref-foot-security').innerText = `lllı ${cntBlocked} Blocker • ${cntFatigue} Fatigue`;
+
+      document.getElementById('ref-kpi-items').innerText = `${totalTasksCount + totalSubtasks} Items`;
+      document.getElementById('ref-bar-items').style.width = `${completionPct}%`;
+      document.getElementById('ref-foot-items').innerText = `lllı ${totalTasksCount} Tasks + ${totalSubtasks} Sub-tasks`;
+
+      // Populate Center Chart Header & 3 Side Boxes
+      document.getElementById('ref-chart-omset').innerText = formatRupiahShort(totalRev);
+      document.getElementById('ref-chart-period').innerText = `Sprint ${APP_STATE.zoomRange}`;
+      document.getElementById('ref-chart-upcoming').innerText = `${totalTasksCount - cntDone} Active`;
+
+      document.getElementById('ref-box-spend').innerText = formatRupiahShort(totalSpend);
+      document.getElementById('ref-box-cpa').innerText = formatRupiahShort(avgCpa);
+      document.getElementById('ref-box-margin').innerText = formatRupiahShort(netMargin);
+
+      // Render Dynamic 12-Bar Orange + Indigo Line Combo Chart
+      const chartBars = [
+        Math.round(stageSpends[0] / 300000), Math.round(stageSpends[0] / 250000),
+        Math.round(stageSpends[1] / 220000), Math.round(stageSpends[1] / 180000),
+        Math.round(stageSpends[2] / 160000), Math.round(stageSpends[3] / 280000),
+        Math.round(stageSpends[2] / 260000), Math.round(stageSpends[3] / 320000),
+        Math.round(stageSpends[1] / 210000), Math.round(stageSpends[2] / 230000),
+        Math.round(stageSpends[3] / 260000), Math.round(stageSpends[4] / 80000)
+      ].map(v => Math.max(18, Math.min(82, v)));
+
+      const chartBox = document.getElementById('ref-combo-chart-box');
+      if (chartBox) {
+        const barsSvg = chartBars.map((h, i) => {
+          const x = 18 + i * 38;
+          const y = 115 - h;
+          const label = String(i + 1).padStart(2, '0');
+          return `
+            <rect x="${x}" y="${y}" width="14" height="${h}" rx="7" fill="var(--apple-orange)"/>
+            <text x="${x + 7}" y="132" text-anchor="middle" font-size="9.5" fill="var(--apple-secondary)" font-weight="600">${label}</text>
+          `;
+        }).join('');
+
+        chartBox.innerHTML = `
+          <svg viewBox="0 0 465 140" style="width: 100%; height: 145px; overflow: visible;">
+            <path d="M 25,22 C 60,55 95,55 130,32 C 165,15 200,40 235,18 C 270,5 305,45 340,28 C 375,18 410,35 445,16"
+                  fill="none" stroke="var(--apple-indigo)" stroke-width="3" stroke-linecap="round"/>
+            ${barsSvg}
+          </svg>
+        `;
+      }
+
+      // Render Bottom Left: Latest Deliverables List (4 Rows)
+      const listEl = document.getElementById('ref-latest-deliverables-list');
+      if (listEl) {
+        const avatarColors = ['#4f46e5', '#f97316', '#10b981', '#ec4899'];
+        const topDeliverables = allTasks.slice(0, 4);
+        listEl.innerHTML = topDeliverables.map((t, idx) => {
+          const rem = calculateTimeRemaining(t.deadlineISO, t.done);
+          const statusClass = rem.isDone ? 'completed' : rem.isOverdue ? 'overdue' : rem.isUrgent ? 'urgent' : 'on-track';
+          const subs = t.subtasks || [];
+          const doneSubs = subs.filter(s => s.done).length;
+          const initials = t.pic.split(' ').map(n => n[0]).join('').substring(0, 2);
+
+          return `
+            <div class="ref-customer-row" oncontextmenu="openTaskContextMenu(event, ${t.pIdx}, ${t.aIdx})">
+              <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1; cursor:pointer;" onclick="openSidePeek(${t.pIdx}, ${t.aIdx})">
+                <div class="ref-cust-avatar" style="background:${avatarColors[idx % 4]};">${initials}</div>
+                <div style="min-width:0; flex:1;">
+                  <div style="font-size:12px; font-weight:800; color:var(--apple-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    ${t.blocked ? '<span class="blocker-badge" style="margin-right:4px;">!</span>' : ''}${t.text}
+                  </div>
+                  <div style="font-size:10px; color:var(--apple-secondary); font-weight:600;">
+                    ${t.clientName} &bull; ✓ ${doneSubs}/${subs.length} Sub-tasks &bull; Freq ${t.adFreq || 1.5}x
+                  </div>
+                </div>
+              </div>
+              <span class="time-left-badge ${statusClass}" data-live-deadline="${t.deadlineISO}" data-live-done="${t.done}">${rem.text}</span>
+              <button class="ref-mail-btn" onclick="pingWA('${t.pic}', '${t.text}', '${rem.text}', '${t.clientName}')" title="Ping WhatsApp">✉</button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render Bottom Center: Concentric Status Rings
+      document.getElementById('ref-status-roas').innerText = `${avgRoas}x (${parseFloat(avgRoas) >= 2.7 ? 'Optimal' : 'Needs Audit'})`;
+      document.getElementById('ref-status-spent').innerHTML = `${formatRupiahShort(totalSpend)} <span style="color:var(--apple-secondary); font-weight:500;">/ ${formatRupiahShort(totalRev)}</span>`;
+
+      const ringsEl = document.getElementById('ref-concentric-rings');
+      if (ringsEl) {
+        const pDone = completionPct;
+        const pProg = totalTasksCount ? Math.round((cntProgress / totalTasksCount) * 100) : 0;
+        const pRev = totalTasksCount ? Math.round(((cntReview + cntDone) / totalTasksCount) * 100) : 0;
+
+        ringsEl.innerHTML = `
+          <svg viewBox="0 0 120 120" style="width:100%; height:100%;">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--apple-card-inset)" stroke-width="7"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--apple-indigo)" stroke-width="7"
+                    stroke-dasharray="${Math.round(301 * (pRev / 100))} 301" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+
+            <circle cx="60" cy="60" r="36" fill="none" stroke="var(--apple-card-inset)" stroke-width="7"/>
+            <circle cx="60" cy="60" r="36" fill="none" stroke="var(--apple-red)" stroke-width="7"
+                    stroke-dasharray="${Math.round(226 * (pProg / 100))} 226" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+
+            <circle cx="60" cy="60" r="24" fill="none" stroke="var(--apple-card-inset)" stroke-width="7"/>
+            <circle cx="60" cy="60" r="24" fill="none" stroke="var(--apple-green)" stroke-width="7"
+                    stroke-dasharray="${Math.round(150 * (pDone / 100))} 150" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+
+            <text x="60" y="64" text-anchor="middle" font-size="13" font-weight="800" fill="var(--apple-text)">${pDone}%</text>
+          </svg>
+        `;
+      }
+
+      const bannerText = document.getElementById('ref-status-banner-text');
+      if (bannerText) {
+        bannerText.innerText = cntBlocked > 0
+          ? `${cntBlocked} Deliverable Blocked • Click to Resolve`
+          : `All ${APP_STATE.projects.length} Client Funnels Scaling Profitably`;
+      }
+
+      // Render Right Column Profile & Semi-Circle Speedometer Gauge
+      const activeTalent = APP_STATE.picFilter === 'Razaan Al-Ghifari' ? TALENTS_DB.razaan : APP_STATE.picFilter === 'Arif Kurniawan' ? TALENTS_DB.arif : TALENTS_DB.andrew;
+      document.getElementById('ref-right-avatar').src = activeTalent.photo;
+      document.getElementById('ref-right-name').innerText = activeTalent.name.split(',')[0];
+      document.getElementById('ref-right-role').innerText = activeTalent.role;
+
+      document.getElementById('ref-stat-projects').innerText = APP_STATE.projects.length;
+      document.getElementById('ref-stat-completed').innerText = cntDone;
+      document.getElementById('ref-stat-subtasks').innerText = totalSubtasks;
+      document.getElementById('sb-total-badge').innerText = totalTasksCount;
+
+      document.getElementById('ref-gauge-numbers').innerHTML = `${cntDone} <span style="color:var(--apple-secondary); font-weight:500;">/ ${totalTasksCount}</span>`;
+      const gaugeEl = document.getElementById('ref-semi-gauge-svg');
+      if (gaugeEl) {
+        const arcLen = 220;
+        const fillArc = Math.round(arcLen * (completionPct / 100));
+        const angle = -90 + (completionPct / 100) * 180;
+        gaugeEl.innerHTML = `
+          <svg viewBox="0 0 180 100" style="width:100%; height:100%; overflow:visible;">
+            <path d="M 20,85 A 70,70 0 0,1 160,85" fill="none" stroke="var(--apple-card-inset)" stroke-width="18" stroke-linecap="round"/>
+            <path d="M 20,85 A 70,70 0 0,1 160,85" fill="none" stroke="var(--apple-orange)" stroke-width="18" stroke-linecap="round"
+                  stroke-dasharray="${fillArc} ${arcLen}"/>
+            <g transform="translate(90, 85) rotate(${angle})">
+              <line x1="0" y1="0" x2="0" y2="-46" stroke="var(--apple-orange)" stroke-width="3.5" stroke-linecap="round"/>
+              <circle cx="0" cy="0" r="6" fill="var(--apple-orange)"/>
+              <circle cx="0" cy="0" r="2.5" fill="#ffffff"/>
+            </g>
+          </svg>
+        `;
+      }
+    }
+
+    // ----------------------------------------------------
+    // 5. NOTION SIDE-PEEK DRAWER & SLASH COMMANDS
+    // ----------------------------------------------------
+    function openSidePeek(pIdx, aIdx) {
+      APP_STATE.activePeek = { pIdx, aIdx };
+      const drawer = document.getElementById('notion-side-drawer');
+      renderSidePeekContent();
+      drawer.classList.add('open');
+      playAppleSound('click');
+    }
+
+    function closeSidePeek() {
+      APP_STATE.activePeek = null;
+      document.getElementById('notion-side-drawer').classList.remove('open');
+    }
+
+    function renderSidePeekContent() {
+      if (!APP_STATE.activePeek) return;
+      const { pIdx, aIdx } = APP_STATE.activePeek;
+      const p = APP_STATE.projects[pIdx];
+      const act = p?.actions[aIdx];
+      if (!act) { closeSidePeek(); return; }
+
+      document.getElementById('drawer-client-tag').innerText = `${p.clientName} • Inspector`;
+      const subtasks = act.subtasks || [];
+      const doneSub = subtasks.filter(s => s.done).length;
+      const pctSub = subtasks.length ? Math.round((doneSub / subtasks.length) * 100) : 0;
+      const isFatigue = (act.adFreq || 1.5) > 2.5;
+      const rem = calculateTimeRemaining(act.deadlineISO, act.done);
+      const statusClass = rem.isDone ? 'completed' : rem.isOverdue ? 'overdue' : rem.isUrgent ? 'urgent' : 'on-track';
+
+      const body = document.getElementById('drawer-body-content');
+      body.innerHTML = `
+        <div>
+          <h2 class="inline-editable" contenteditable="true" onblur="updateTaskText(${pIdx}, ${aIdx}, this.innerText)" style="font-size:18px; font-weight:800;">${act.text}</h2>
+        </div>
+
+        <div class="notion-callout-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <strong style="color:var(--apple-text);">Brand Identity Guidelines</strong>
+            <span class="brand-swatch-pill"><span style="width:8px; height:8px; border-radius:50%; background:${p.brandHex || '#0071e3'};"></span> ${p.brandHex || '#0071e3'}</span>
+          </div>
+          <div>Voice: <b>${p.brandVoice || 'Professional & Data-Driven'}</b></div>
+        </div>
+
+        <div class="notion-prop-grid">
+          <span class="notion-prop-label">Assignee (PIC)</span>
+          <select class="apple-inline-select" onchange="updateTaskPic(${pIdx}, ${aIdx}, this.value)">
+            ${TEAM_PICS.map(tp => `<option value="${tp}" ${act.pic === tp ? 'selected' : ''}>${tp}</option>`).join('')}
+          </select>
+
+          <span class="notion-prop-label">Department</span>
+          <select class="apple-inline-select" onchange="updateTaskDept(${pIdx}, ${aIdx}, this.value)">
+            ${Object.keys(DEPARTMENTS).map(dk => `<option value="${dk}" ${act.department === dk ? 'selected' : ''}>${DEPARTMENTS[dk].label}</option>`).join('')}
+          </select>
+
+          <span class="notion-prop-label">Duration Input</span>
+          <input type="text" value="${act.duration || '3d'}" onchange="updateTaskDuration(${pIdx}, ${aIdx}, this.value)" style="padding:4px 8px; border-radius:6px; border:0.5px solid var(--apple-border); background:var(--apple-card-inset); color:var(--apple-text); font-size:11.5px; font-weight:600;">
+
+          <span class="notion-prop-label">Time Left (Live)</span>
+          <div>
+            <span class="time-left-badge ${statusClass}" data-live-deadline="${act.deadlineISO}" data-live-done="${act.done}">${rem.text}</span>
+          </div>
+
+          <span class="notion-prop-label">Ad Frequency</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="number" step="0.1" value="${act.adFreq || 1.5}" onchange="updateTaskFreq(${pIdx}, ${aIdx}, this.value)" style="width:65px; padding:3px 6px; border-radius:6px; border:0.5px solid var(--apple-border); background:var(--apple-card-inset); color:var(--apple-text); font-size:11.5px; font-weight:700;">
+            <span class="freq-badge ${isFatigue ? 'freq-fatigue' : 'freq-healthy'}">${isFatigue ? 'Refresh Creative!' : 'Healthy'}</span>
+          </div>
+
+          <span class="notion-prop-label">Blocker Status</span>
+          <div>
+            <button class="blocker-toggle-btn ${act.blocked ? 'active' : ''}" onclick="toggleBlocker(${pIdx}, ${aIdx})">
+              ${act.blocked ? '⚑ BLOCKED (Click to Clear)' : 'Normal (Click to Flag Blocker)'}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--apple-secondary);">Trello Sub-task Checklist (${doneSub}/${subtasks.length})</span>
+            <span style="font-size:11px; font-weight:700; color:var(--apple-green);">${pctSub}%</span>
+          </div>
+          <div class="checklist-mini-bar" style="height:6px; margin-bottom:10px;">
+            <div class="checklist-mini-fill" style="width:${pctSub}%;"></div>
+          </div>
+          <div class="subtask-list-wrap">
+            ${subtasks.map((st, sIdx) => `
+              <div class="subtask-row">
+                <input type="checkbox" class="apple-checkbox" ${st.done ? 'checked' : ''} onchange="toggleSubtask(${pIdx}, ${aIdx}, ${sIdx})">
+                <span style="flex:1; ${st.done ? 'text-decoration:line-through; opacity:0.5;' : ''}">${st.t}</span>
+                <span style="cursor:pointer; color:var(--apple-red); font-size:10px;" onclick="deleteSubtask(${pIdx}, ${aIdx}, ${sIdx})">✕</span>
+              </div>
+            `).join('')}
+          </div>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <input type="text" id="new-subtask-input" class="sheet-text-input" style="height:30px; font-size:11.5px;" placeholder="Tambah langkah checklist..." onkeydown="if(event.key==='Enter') addSubtask(${pIdx}, ${aIdx})">
+            <button class="apple-pill-btn" onclick="addSubtask(${pIdx}, ${aIdx})">+ Add</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleSubtask(pIdx, aIdx, sIdx) {
+      const act = APP_STATE.projects[pIdx].actions[aIdx];
+      act.subtasks[sIdx].done = !act.subtasks[sIdx].done;
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+      renderSidePeekContent();
+    }
+
+    function addSubtask(pIdx, aIdx) {
+      const inp = document.getElementById('new-subtask-input');
+      const val = inp ? inp.value.trim() : '';
+      if (!val) return;
+      const act = APP_STATE.projects[pIdx].actions[aIdx];
+      if (!act.subtasks) act.subtasks = [];
+      act.subtasks.push({ t: val, done: false });
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+      renderSidePeekContent();
+    }
+
+    function deleteSubtask(pIdx, aIdx, sIdx) {
+      APP_STATE.projects[pIdx].actions[aIdx].subtasks.splice(sIdx, 1);
+      playAppleSound('click');
+      notifySync();
+      renderAllViews();
+      renderSidePeekContent();
+    }
+
+    function updateTaskFreq(pIdx, aIdx, val) {
+      const num = parseFloat(val) || 1.0;
+      APP_STATE.projects[pIdx].actions[aIdx].adFreq = num;
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+      renderSidePeekContent();
+    }
+
+    // ----------------------------------------------------
+    // 6. OTHER VIEWS (PROJECTS, FUNNELS, GANTT, KANBAN)
+    // ----------------------------------------------------
+    function renderProjectsView() {
+      const container = document.getElementById('view-projects');
+      if (!container) return;
+
+      container.innerHTML = APP_STATE.projects.map((p, pIdx) => {
+        const filteredActions = p.actions.filter(act => matchTaskFilters(act));
+        const total = p.actions.length;
+        const done = p.actions.filter(a => a.done).length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        let step = pct >= 100 ? 4 : pct >= 65 ? 3 : pct >= 25 ? 2 : 1;
+
+        return `
+          <div class="apple-card-box">
+            <div class="kb-quicklinks-bar">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="brand-swatch-pill">
+                  <span style="width:8px; height:8px; border-radius:50%; background:${p.brandHex || '#0071e3'};"></span>
+                  ${p.clientName} Brand Vault
+                </span>
+                <span style="font-size:10.5px; color:var(--apple-secondary);">Voice: <b>${p.brandVoice || 'Direct & Data-Driven'}</b></span>
+              </div>
+              <div class="kb-links-group">
+                <a href="${p.links?.sheets || '#'}" target="_blank" class="kb-link-pill">Google Sheets KPI ↗</a>
+                <a href="${p.links?.forms || '#'}" target="_blank" class="kb-link-pill">Google Forms Brief ↗</a>
+                <a href="${p.links?.drive || '#'}" target="_blank" class="kb-link-pill">Asset Drive ↗</a>
+                <a href="${p.links?.adlib || '#'}" target="_blank" class="kb-link-pill">Meta Ads Library ↗</a>
+              </div>
+            </div>
+
+            <div class="card-collapsible-header" onclick="toggleCollapse(${pIdx})">
+              <h2 class="inline-editable" contenteditable="true" onclick="event.stopPropagation()" onblur="updateClientName(${pIdx}, this.innerText)">
+                ${p.clientName}
+              </h2>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="apple-pill-btn" style="font-size: 10px;">Stage ${step}: ${p.stepLabels[step - 1]} (${pct}%)</span>
+              </div>
+            </div>
+
+            <div style="padding: 0 1.25rem 0.65rem; margin-top: -6px;">
+              <span class="inline-editable" contenteditable="true" onclick="event.stopPropagation()" onblur="updateProjectDescription(${pIdx}, this.innerText)" style="font-size: 11.5px; color: var(--apple-secondary); display: block;">${p.description || 'Tambahkan objektif proyek...'}</span>
+            </div>
+
+            <div class="card-body-drawer ${p.isCollapsed ? 'collapsed' : ''}">
+              <div class="apple-stepper-wrap">
+                <div style="display: flex; align-items: center; width: 100%; max-width: 580px;">
+                  ${p.stepLabels.map((label, sIdx) => `
+                    <div class="step-item">
+                      <div class="step-dot ${step > sIdx + 1 ? 'done' : step === sIdx + 1 ? 'active' : 'pending'}">${sIdx + 1}</div>
+                      <span class="inline-editable" contenteditable="true" onblur="updateStepLabel(${pIdx}, ${sIdx}, this.innerText)" style="font-size: 11px; margin-top: 6px; font-weight: ${step === sIdx + 1 ? '700' : '500'}; color: ${step === sIdx + 1 ? 'var(--apple-blue)' : 'var(--apple-secondary)'};">
+                        ${label}
+                      </span>
+                    </div>
+                    ${sIdx < 3 ? `<div class="step-connector ${step > sIdx + 1 ? 'active' : 'pending'}"></div>` : ''}
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="tracklist-header">
+                <div style="flex: 2; padding-left: 24px;">DELIVERABLE</div>
+                <div style="flex: 1.6;">ACTION PLAN / NOTES</div>
+                <div style="width: 90px; text-align: center;">DURATION</div>
+                <div style="width: 125px; text-align: center;">TIME LEFT</div>
+                <div style="width: 135px;">ASSIGNEE (PIC)</div>
+                <div style="width: 80px; text-align: right;">ACTION</div>
+              </div>
+
+              <div>
+                ${filteredActions.map((act) => {
+                  const aIdx = p.actions.findIndex(x => x.id === act.id);
+                  const rem = calculateTimeRemaining(act.deadlineISO, act.done);
+                  const statusClass = rem.isDone ? 'completed' : rem.isOverdue ? 'overdue' : rem.isUrgent ? 'urgent' : 'on-track';
+
+                  return `
+                    <div class="tracklist-item ${act.blocked ? 'blocked-row' : ''}" oncontextmenu="openTaskContextMenu(event, ${pIdx}, ${aIdx})">
+                      <div style="flex: 2; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" ${act.done ? 'checked' : ''} onchange="toggleTask(${pIdx}, ${aIdx})" class="apple-checkbox">
+                        ${act.blocked ? `<span class="blocker-badge" onclick="toggleBlocker(${pIdx}, ${aIdx})">BLOCKED</span>` : ''}
+                        <span class="inline-editable" contenteditable="true" onblur="updateTaskText(${pIdx}, ${aIdx}, this.innerText)" style="${act.done ? 'text-decoration: line-through; opacity: 0.5;' : 'font-weight: 600;'}">
+                          ${act.text}
+                        </span>
+                      </div>
+                      <div style="flex: 1.6; color: var(--apple-secondary); font-size: 11.5px;">
+                        <span class="inline-editable" contenteditable="true" onblur="updateTaskNotes(${pIdx}, ${aIdx}, this.innerText)">
+                          ${act.notes || '-'}
+                        </span>
+                      </div>
+                      <div style="width: 90px; text-align: center; font-size: 11.5px; color: var(--apple-secondary); font-weight: 600;">
+                        <span class="inline-editable" contenteditable="true" onblur="updateTaskDuration(${pIdx}, ${aIdx}, this.innerText)" title="Ketik bahasa apapun: 2 jam, 2 hour, 45 menit, 3 hari">
+                          ${act.duration || `${act.spanCol}d`}
+                        </span>
+                      </div>
+                      <div style="width: 125px; text-align: center;">
+                        <span class="time-left-badge ${statusClass}" data-live-deadline="${act.deadlineISO}" data-live-done="${act.done}">
+                          ${rem.text}
+                        </span>
+                      </div>
+                      <div style="width: 135px;">
+                        <select class="apple-inline-select" onchange="updateTaskPic(${pIdx}, ${aIdx}, this.value)">
+                          ${TEAM_PICS.map(tp => `<option value="${tp}" ${act.pic === tp ? 'selected' : ''}>${tp}</option>`).join('')}
+                        </select>
+                      </div>
+                      <div style="width: 80px; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                        <span onclick="pingWA('${act.pic}', '${act.text}', '${rem.text}', '${p.clientName}')" style="cursor: pointer; color: var(--apple-green); font-weight: 700; font-size: 11px;">WA</span>
+                        <span onclick="deleteTask(${pIdx}, ${aIdx})" style="cursor: pointer; color: var(--apple-red); font-size: 11px;">Del</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; padding-top: 4px;">
+                <button onclick="openSheetModal()" class="apple-pill-btn" style="color: var(--apple-blue);">+ Add Deliverable</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderHomeView() {
+      const container = document.getElementById('view-home');
+      if (!container) return;
+
+      container.innerHTML = APP_STATE.homeClients.map((c, cIdx) => {
+        const calculatedTotalSpend = c.funnelStages.reduce((acc, st) => acc + (st.spend || 0), 0);
+        const roas = calculatedTotalSpend > 0 ? (c.revenueNum / calculatedTotalSpend).toFixed(2) : "0.00";
+        const isBleeding = parseFloat(roas) < c.beRoas;
+        const stages = c.funnelStages;
+        const leaks = [
+          Math.max(0, Math.round(((stages[0].val - stages[1].val) / stages[0].val) * 100)),
+          Math.max(0, Math.round(((stages[1].val - stages[2].val) / stages[1].val) * 100)),
+          Math.max(0, Math.round(((stages[2].val - stages[3].val) / stages[2].val) * 100)),
+          Math.max(0, Math.round(((stages[3].val - stages[4].val) / stages[3].val) * 100))
+        ];
+
+        return `
+          <div class="apple-card-box">
+            <div class="card-collapsible-header" onclick="toggleHomeCollapse(${cIdx})">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0, 113, 227, 0.12); color: var(--apple-blue); font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center;">
+                  ${c.title.substring(0, 2).toUpperCase()}
+                </span>
+                <div>
+                  <h3 style="font-size: 14px; font-weight: 700;">${c.title}</h3>
+                  <p style="font-size: 11px; color: var(--apple-secondary);">Lead: <b>${c.lead}</b></p>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 14px; font-size: 11.5px;">
+                <span>Total Spend: <b>${formatRupiahShort(calculatedTotalSpend)}</b></span>
+                <span>Omset: <b>${formatRupiahShort(c.revenueNum)}</b></span>
+                <span>ROAS: <b style="color: ${isBleeding ? 'var(--apple-red)' : 'var(--apple-green)'};">${roas}x</b></span>
+              </div>
+            </div>
+
+            <div class="card-body-drawer ${c.isCollapsed ? 'collapsed' : ''}">
+              <div class="metrics-ribbon">
+                <div class="metric-cell">
+                  <span class="metric-label">TOTAL OMSET (REVENUE) — KLIK EDIT</span>
+                  <span class="metric-val inline-editable" contenteditable="true" onblur="updateTotalRevenue(${cIdx}, this.innerText)">${formatRupiahShort(c.revenueNum)}</span>
+                </div>
+                <div class="metric-cell">
+                  <span class="metric-label">TOTAL AD SPEND (AUTO SUM)</span>
+                  <span class="metric-val" style="color: var(--apple-blue);">${formatRupiahShort(calculatedTotalSpend)}</span>
+                </div>
+                <div class="metric-cell">
+                  <span class="metric-label">ACTUAL ROAS / BREAK-EVEN</span>
+                  <span class="metric-val" style="color: ${isBleeding ? 'var(--apple-red)' : 'var(--apple-green)'};">
+                    ${roas}x <span style="font-size: 10.5px; color: var(--apple-secondary); font-weight: 500;">(BE: ${c.beRoas.toFixed(2)}x)</span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="funnel-hero-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--apple-border); padding-bottom: 8px;">
+                  <span style="font-size: 12.5px; font-weight: 700;">${c.funnelTitle}</span>
+                  <span style="font-size: 10px; color: var(--apple-secondary);">Perubahan angka langsung mengupdate grafik di Overview</span>
+                </div>
+                <div class="funnel-layout-split">
+                  <div style="display: flex; justify-content: center;">
+                    <svg viewBox="0 0 260 250" style="width: 100%; max-width: 195px;">
+                      <path d="M 15,15 L 245,15 L 225,55 L 35,55 Z" fill="#0e3a66"/><text x="130" y="40" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${stages[0].val.toLocaleString()}</text>
+                      <path d="M 36,57 L 224,57 L 204,95 L 56,95 Z" fill="#0284c7"/><text x="130" y="81" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${stages[1].val.toLocaleString()}</text>
+                      <path d="M 57,97 L 203,97 L 183,135 L 77,135 Z" fill="#0d9488"/><text x="130" y="121" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${stages[2].val.toLocaleString()}</text>
+                      <path d="M 78,137 L 182,137 L 162,175 L 98,175 Z" fill="#16a34a"/><text x="130" y="161" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${stages[3].val.toLocaleString()}</text>
+                      <path d="M 99,177 L 161,177 L 140,210 L 130,225 L 120,210 Z" fill="#84cc16"/><text x="130" y="200" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">${stages[4].val.toLocaleString()}</text>
+                    </svg>
+                  </div>
+
+                  <div class="funnel-steps-stack">
+                    ${stages.map((st, sIdx) => {
+                      const costPerAction = st.val > 0 ? (st.spend / st.val) : 0;
+                      return `
+                        <div class="funnel-step-row">
+                          <div class="funnel-indicator-bar" style="background: ${st.color};"></div>
+                          <span class="funnel-step-name">${st.name}</span>
+                          <div class="funnel-desc-cell">
+                            <span class="inline-editable" contenteditable="true" onblur="updateStageDescription(${cIdx}, ${sIdx}, this.innerText)">${st.description || '-'}</span>
+                          </div>
+                          <div class="funnel-spend-cell">
+                            <span class="funnel-spend-tag">SPEND</span>
+                            <span class="inline-editable" contenteditable="true" onblur="updateStageSpend(${cIdx}, ${sIdx}, this.innerText)">${formatRupiahShort(st.spend || 0)}</span>
+                          </div>
+                          <div class="funnel-cpa-cell">
+                            <span class="funnel-spend-tag">COST/ACT</span>
+                            <span>${formatRupiahShort(costPerAction)}</span>
+                          </div>
+                          <span class="funnel-step-num inline-editable" contenteditable="true" onblur="recalculateFunnelCascade(${cIdx}, ${sIdx}, this.innerText)">${st.val.toLocaleString()}</span>
+                          ${sIdx < 4 ? `<span class="funnel-leak-badge">&darr; -${leaks[sIdx]}%</span>` : `<span style="width: 55px;"></span>`}
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTimelineView() {
+      const container = document.getElementById('gantt-cards-container');
+      if (!container) return;
+      const currentDays = GANTT_SCALES[APP_STATE.zoomRange];
+      const numCols = currentDays.length;
+      const todayIdx = currentDays.findIndex(d => d.today);
+
+      container.innerHTML = APP_STATE.projects.map((p, pIdx) => {
+        const visibleActions = p.actions.filter(act => matchTaskFilters(act));
+
+        return `
+          <div class="apple-card-box">
+            <div class="card-collapsible-header" onclick="toggleCollapse(${pIdx})">
+              <h3 style="font-size: 13px; font-weight: 700;">${p.clientName} &bull; Gantt Schedule Matrix</h3>
+              <span style="font-size: 10.5px; color: var(--apple-secondary);">Klik nama tugas untuk Side-Peek</span>
+            </div>
+
+            <div class="card-body-drawer ${p.isCollapsed ? 'collapsed' : ''}" style="padding: 0 1.25rem 1.25rem;">
+              <div class="gantt-root-container">
+                <div class="gantt-inner-scroll">
+                  <div class="gantt-row-container header-row">
+                    <div class="gantt-left-column">DELIVERABLE / TASK</div>
+                    <div class="gantt-timeline-stage">
+                      <div class="gantt-background-grid" style="grid-template-columns: repeat(${numCols}, 1fr);">
+                        ${currentDays.map(d => `<div class="gantt-cell ${d.w ? 'weekend' : ''}" style="${d.today ? 'color: var(--apple-red); font-weight: 800;' : ''}">${d.d}</div>`).join('')}
+                      </div>
+                      ${todayIdx !== -1 ? `<div class="gantt-today-line" style="left: calc((${todayIdx} / ${numCols}) * 100% + (${0.5 / numCols}) * 100%);"><span class="gantt-today-pin">Today</span></div>` : ''}
+                    </div>
+                  </div>
+
+                  ${visibleActions.map((act) => {
+                    const aIdx = p.actions.findIndex(x => x.id === act.id);
+                    const validStart = Math.max(0, Math.min(numCols - 1, act.startCol));
+                    const validSpan = Math.max(1, Math.min(numCols - validStart, act.spanCol));
+                    const leftPct = (validStart / numCols) * 100;
+                    const widthPct = (validSpan / numCols) * 100;
+                    const deptInfo = DEPARTMENTS[act.department] || DEPARTMENTS.creative;
+
+                    return `
+                      <div class="gantt-row-container" oncontextmenu="openTaskContextMenu(event, ${pIdx}, ${aIdx})">
+                        <div class="gantt-left-column" onclick="openSidePeek(${pIdx}, ${aIdx})">
+                          ${act.blocked ? '<span class="blocker-badge">!</span>' : ''}
+                          <span>${act.text}</span>
+                        </div>
+                        <div class="gantt-timeline-stage" id="stage-${pIdx}-${act.id}">
+                          <div class="gantt-background-grid" style="grid-template-columns: repeat(${numCols}, 1fr);">
+                            ${currentDays.map(d => `<div class="gantt-cell ${d.w ? 'weekend' : ''}"></div>`).join('')}
+                          </div>
+                          <div class="gantt-fixed-capsule ${deptInfo.colorClass}" id="capsule-${pIdx}-${act.id}" style="left: calc(${leftPct}% + 3px); width: calc(${widthPct}% - 6px);" onmousedown="initGanttDrag(event, ${pIdx}, '${act.id}')">
+                            <span class="capsule-dept-tag">${deptInfo.label}</span>
+                            <span class="capsule-dur-label" id="dur-label-${act.id}">${act.duration || validSpan + 'd'}</span>
+                            <div class="gantt-resize-grip" onmousedown="initGanttResize(event, ${pIdx}, '${act.id}')"></div>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderKanbanCardHTML(t) {
+      const rem = calculateTimeRemaining(t.deadlineISO, t.done);
+      const statusClass = rem.isDone ? 'completed' : rem.isOverdue ? 'overdue' : rem.isUrgent ? 'urgent' : 'on-track';
+      const subs = t.subtasks || [];
+      const doneSubs = subs.filter(s => s.done).length;
+      const pctSubs = subs.length ? Math.round((doneSubs / subs.length) * 100) : 0;
+      const freqVal = t.adFreq || 1.5;
+      const isFatigue = freqVal > 2.5;
+
+      return `
+        <div class="kanban-card ${t.blocked ? 'blocked-card' : ''}" draggable="true" oncontextmenu="openTaskContextMenu(event, ${t.pIdx}, ${t.aIdx})" ondragstart="event.dataTransfer.setData('text/plain', JSON.stringify({pIdx:${t.pIdx}, actId:'${t.id}'}))">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <span style="font-size: 9px; font-weight: 700; color: var(--apple-secondary); text-transform: uppercase;">${t.clientName}</span>
+            <div style="display:flex; gap:4px; align-items:center;">
+              ${t.blocked ? `<span class="blocker-badge" onclick="toggleBlocker(${t.pIdx}, ${t.aIdx})">BLOCKED</span>` : ''}
+              <span class="time-left-badge ${statusClass}" data-live-deadline="${t.deadlineISO}" data-live-done="${t.done}">${rem.text}</span>
+            </div>
+          </div>
+
+          <div class="kanban-card-title" onclick="openSidePeek(${t.pIdx}, ${t.aIdx})">
+            ${t.text}
+          </div>
+
+          <div class="kanban-card-notes">
+            ${t.notes || '-'}
+          </div>
+
+          <div class="checklist-mini-wrap" onclick="openSidePeek(${t.pIdx}, ${t.aIdx})" style="cursor:pointer;">
+            <span>✓ ${doneSubs}/${subs.length}</span>
+            <div class="checklist-mini-bar">
+              <div class="checklist-mini-fill" style="width:${pctSubs}%;"></div>
+            </div>
+            <span class="freq-badge ${isFatigue ? 'freq-fatigue' : 'freq-healthy'}">${freqVal}x</span>
+          </div>
+
+          <div class="kanban-card-footer">
+            <span style="font-size: 10.5px; font-weight: 600;">${t.pic}</span>
+            <span style="font-size: 10px; color: var(--apple-secondary); font-weight: 700;">${t.duration || `${t.spanCol}d`}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderKanbanView() {
+      const stage = document.getElementById('kanban-board-stage');
+      if (!stage) return;
+
+      if (APP_STATE.kanbanSwimlanes) {
+        stage.innerHTML = APP_STATE.projects.map((p, pIdx) => {
+          const clientTasks = [];
+          p.actions.forEach((act, aIdx) => {
+            if (matchTaskFilters(act)) clientTasks.push({ ...act, clientName: p.clientName, pIdx, aIdx });
+          });
+
+          return `
+            <div class="swimlane-section">
+              <div style="display:flex; align-items:center; gap:8px; padding:4px 6px;">
+                <span style="width:10px; height:10px; border-radius:50%; background:${p.brandHex || '#0071e3'};"></span>
+                <h3 style="font-size:13.5px; font-weight:800;">${p.clientName} Swimlane (${clientTasks.length} Tasks)</h3>
+              </div>
+              <div class="kanban-root-wrap">
+                ${KANBAN_STATUSES.map(col => {
+                  const colTasks = clientTasks.filter(t => (t.status || (t.done ? 'done' : 'in_progress')) === col.id);
+                  const wipExceeded = colTasks.length > col.wipLimit;
+                  return `
+                    <div class="kanban-column ${wipExceeded ? 'wip-exceeded' : ''}" ondragover="event.preventDefault()" ondrop="handleKanbanDrop(event, '${col.id}')">
+                      <div class="kanban-col-header">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                          <span class="kanban-status-badge ${col.badgeClass}">${col.title}</span>
+                          <span style="font-size: 11px; color: var(--apple-secondary); font-weight: 700;">${colTasks.length}</span>
+                          ${wipExceeded ? '<span class="wip-warning-tag">WIP Limit!</span>' : ''}
+                        </div>
+                      </div>
+                      <div class="kanban-cards-stack">
+                        ${colTasks.map(t => renderKanbanCardHTML(t)).join('')}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        const allTasks = [];
+        APP_STATE.projects.forEach((p, pIdx) => {
+          p.actions.forEach((act, aIdx) => {
+            if (matchTaskFilters(act)) allTasks.push({ ...act, clientName: p.clientName, pIdx, aIdx });
+          });
+        });
+
+        stage.innerHTML = `
+          <div class="kanban-root-wrap">
+            ${KANBAN_STATUSES.map(col => {
+              const colTasks = allTasks.filter(t => (t.status || (t.done ? 'done' : 'in_progress')) === col.id);
+              const wipExceeded = colTasks.length > col.wipLimit;
+
+              return `
+                <div class="kanban-column ${wipExceeded ? 'wip-exceeded' : ''}" ondragover="event.preventDefault()" ondrop="handleKanbanDrop(event, '${col.id}')">
+                  <div class="kanban-col-header">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span class="kanban-status-badge ${col.badgeClass}">${col.title}</span>
+                      <span style="font-size: 11px; color: var(--apple-secondary); font-weight: 700;">${colTasks.length}</span>
+                      ${wipExceeded ? '<span class="wip-warning-tag">WIP Limit!</span>' : ''}
+                    </div>
+                    <button onclick="openSheetModal()" style="background: none; border: none; cursor: pointer; color: var(--apple-secondary); font-size: 14px; font-weight: 700;">+</button>
+                  </div>
+                  <div class="kanban-cards-stack">
+                    ${colTasks.map(t => renderKanbanCardHTML(t)).join('')}
+                  </div>
+                  <button class="apple-pill-btn" onclick="openSheetModal()" style="margin-top: auto; width: 100%; border-style: dashed;">+ Add Task</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+    }
+
+    // ----------------------------------------------------
+    // 7. INTERACTION HANDLERS & MUTATORS
+    // ----------------------------------------------------
+    function matchTaskFilters(act) {
+      const q = APP_STATE.searchQuery;
+      const matchPic = (APP_STATE.picFilter === 'ALL' || act.pic === APP_STATE.picFilter);
+      const matchSearch = (!q || act.text.toLowerCase().includes(q) || (act.notes || '').toLowerCase().includes(q) || act.pic.toLowerCase().includes(q));
+      if (!matchPic || !matchSearch) return false;
+      if (APP_STATE.focusMode) {
+        const rem = calculateTimeRemaining(act.deadlineISO, act.done);
+        return (!act.done && (act.blocked || rem.isUrgent || (act.adFreq || 1) > 2.5));
+      }
+      return true;
+    }
+
+    function toggleFocusMode() {
+      APP_STATE.focusMode = !APP_STATE.focusMode;
+      const btn = document.getElementById('focus-mode-btn');
+      if (btn) btn.classList.toggle('focus-active', APP_STATE.focusMode);
+      playAppleSound('done');
+      renderAllViews();
+    }
+
+    function toggleKanbanSwimlanes() {
+      APP_STATE.kanbanSwimlanes = !APP_STATE.kanbanSwimlanes;
+      const btn = document.getElementById('swimlane-toggle-btn');
+      if (btn) btn.innerText = `Group by Client: ${APP_STATE.kanbanSwimlanes ? 'ON' : 'OFF'}`;
+      playAppleSound('click');
+      renderKanbanView();
+    }
+
+    function applySopTemplate(tplKey) {
+      if (!tplKey || !SOP_TEMPLATES[tplKey]) return;
+      const tpl = SOP_TEMPLATES[tplKey];
+      document.getElementById('modal-task-name').value = tpl.title;
+      document.getElementById('modal-task-dept').value = tpl.dept;
+      document.getElementById('modal-task-duration').value = tpl.duration;
+      playAppleSound('click');
+    }
+
+    function openSpotlight() {
+      const modal = document.getElementById('spotlight-modal');
+      const input = document.getElementById('spotlight-input');
+      modal.classList.add('active');
+      input.value = '';
+      renderSpotlightItems('');
+      setTimeout(() => input.focus(), 50);
+      playAppleSound('click');
+    }
+
+    function closeSpotlight() {
+      document.getElementById('spotlight-modal').classList.remove('active');
+    }
+
+    function renderSpotlightItems(q) {
+      const query = q.toLowerCase().trim();
+      const box = document.getElementById('spotlight-results');
+      const commands = [
+        { label: "New SOP Deliverable Action Plan", sub: "Action", act: () => { closeSpotlight(); openSheetModal(); } },
+        { label: "Toggle Focus Mode (Blocker & Urgent Only)", sub: "Shortcut ⌘F", act: () => { closeSpotlight(); toggleFocusMode(); } },
+        { label: "Export CSV for Google Sheets", sub: "Operations", act: () => { closeSpotlight(); exportCSVGoogleSheets(); } }
+      ];
+
+      APP_STATE.projects.forEach((p, pIdx) => {
+        p.actions.forEach((a, aIdx) => {
+          commands.push({
+            label: `${a.blocked ? '⚑ [BLOCKED] ' : ''}${a.text}`,
+            sub: `Inspect Side-Peek • ${p.clientName}`,
+            act: () => { closeSpotlight(); openSidePeek(pIdx, aIdx); }
+          });
+        });
+      });
+
+      const filtered = commands.filter(c => !query || c.label.toLowerCase().includes(query) || c.sub.toLowerCase().includes(query));
+      box.innerHTML = filtered.slice(0, 8).map((item, i) => `
+        <div class="spotlight-item" onclick="executeSpotlightCmd(${i})">
+          <span>${item.label}</span>
+          <span class="spotlight-sub">${item.sub}</span>
+        </div>
+      `).join('');
+      window._currentSpotlightList = filtered.slice(0, 8);
+    }
+
+    function executeSpotlightCmd(idx) {
+      if (window._currentSpotlightList && window._currentSpotlightList[idx]) {
+        window._currentSpotlightList[idx].act();
+      }
+    }
+
+    function openTaskContextMenu(e, pIdx, aIdx) {
+      e.preventDefault();
+      e.stopPropagation();
+      APP_STATE.contextTarget = { pIdx, aIdx };
+      const act = APP_STATE.projects[pIdx].actions[aIdx];
+      const menu = document.getElementById('apple-context-menu');
+      document.getElementById('ctx-task-title').innerText = act.text.substring(0, 22);
+      menu.style.left = `${Math.min(window.innerWidth - 225, e.clientX)}px`;
+      menu.style.top = `${Math.min(window.innerHeight - 300, e.clientY)}px`;
+      menu.classList.add('active');
+      playAppleSound('click');
+    }
+
+    function hideContextMenu() {
+      document.getElementById('apple-context-menu').classList.remove('active');
+    }
+
+    function ctxOpenSidePeek() {
+      if (!APP_STATE.contextTarget) return;
+      const { pIdx, aIdx } = APP_STATE.contextTarget;
+      hideContextMenu();
+      openSidePeek(pIdx, aIdx);
+    }
+
+    function ctxToggleBlocker() {
+      if (!APP_STATE.contextTarget) return;
+      const { pIdx, aIdx } = APP_STATE.contextTarget;
+      toggleBlocker(pIdx, aIdx);
+      hideContextMenu();
+    }
+
+    function ctxSetStatus(st) {
+      if (!APP_STATE.contextTarget) return;
+      const { pIdx, aIdx } = APP_STATE.contextTarget;
+      const act = APP_STATE.projects[pIdx].actions[aIdx];
+      act.status = st;
+      act.done = (st === 'done');
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+      hideContextMenu();
+    }
+
+    function ctxDuplicateTask() {
+      if (!APP_STATE.contextTarget) return;
+      const { pIdx, aIdx } = APP_STATE.contextTarget;
+      const orig = APP_STATE.projects[pIdx].actions[aIdx];
+      const copy = JSON.parse(JSON.stringify(orig));
+      copy.id = "act-" + Date.now();
+      copy.text = orig.text + " (Copy)";
+      APP_STATE.projects[pIdx].actions.splice(aIdx + 1, 0, copy);
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+      hideContextMenu();
+    }
+
+    function ctxPingWA() {
+      if (!APP_STATE.contextTarget) return;
+      const { pIdx, aIdx } = APP_STATE.contextTarget;
+      const p = APP_STATE.projects[pIdx];
+      const act = p.actions[aIdx];
+      const rem = calculateTimeRemaining(act.deadlineISO, act.done);
+      pingWA(act.pic, act.text, rem.text, p.clientName);
+      hideContextMenu();
+    }
+
+    function ctxDeleteTask() {
+      if (!APP_STATE.contextTarget) return;
+      const { pIdx, aIdx } = APP_STATE.contextTarget;
+      deleteTask(pIdx, aIdx);
+      hideContextMenu();
+    }
+
+    function openTalentModal(key) {
+      const t = TALENTS_DB[key] || TALENTS_DB.andrew;
+      document.getElementById('talent-photo').style.backgroundImage = `url('${t.photo}')`;
+      document.getElementById('talent-name').innerText = t.name;
+      document.getElementById('talent-role').innerText = t.role;
+      document.getElementById('talent-bio').innerText = `"${t.bio}"`;
+      document.getElementById('talent-profile-modal').classList.add('active');
+      playAppleSound('click');
+    }
+
+    function hideTalentModal() {
+      document.getElementById('talent-profile-modal').classList.remove('active');
+    }
+
+    function sendAnonFeedback() {
+      document.getElementById('talent-anon-text').value = '';
+      playAppleSound('done');
+      triggerToast("Feedback anonim terkirim!");
+      hideTalentModal();
+    }
+
+    let dragState = null;
+    const tooltip = document.getElementById('drag-tooltip');
+
+    function initGanttDrag(e, pIdx, actId) {
+      if (e.target.closest('.gantt-resize-grip') || e.button !== 0) return;
+      e.preventDefault();
+      const act = APP_STATE.projects[pIdx].actions.find(a => a.id === actId);
+      const stageEl = document.getElementById(`stage-${pIdx}-${actId}`);
+      const capsuleEl = document.getElementById(`capsule-${pIdx}-${actId}`);
+      const numCols = GANTT_SCALES[APP_STATE.zoomRange].length;
+      const cellWidth = stageEl.offsetWidth / numCols;
+
+      dragState = { type: 'move', pIdx, actId, act, capsuleEl, startX: e.clientX, numCols, initialCol: act.startCol, spanCol: act.spanCol, currentCol: act.startCol, cellWidth };
+      playAppleSound('click');
+      tooltip.style.display = 'block';
+      window.addEventListener('mousemove', handleGanttMouseMove);
+      window.addEventListener('mouseup', handleGanttMouseUp);
+    }
+
+    function initGanttResize(e, pIdx, actId) {
+      if (e.button !== 0) return;
+      e.stopPropagation();
+      e.preventDefault();
+      const act = APP_STATE.projects[pIdx].actions.find(a => a.id === actId);
+      const stageEl = document.getElementById(`stage-${pIdx}-${actId}`);
+      const capsuleEl = document.getElementById(`capsule-${pIdx}-${actId}`);
+      const numCols = GANTT_SCALES[APP_STATE.zoomRange].length;
+      const cellWidth = stageEl.offsetWidth / numCols;
+
+      dragState = { type: 'resize', pIdx, actId, act, capsuleEl, startX: e.clientX, numCols, startCol: act.startCol, initialSpan: act.spanCol, currentSpan: act.spanCol, cellWidth };
+      playAppleSound('click');
+      tooltip.style.display = 'block';
+      window.addEventListener('mousemove', handleGanttMouseMove);
+      window.addEventListener('mouseup', handleGanttMouseUp);
+    }
+
+    function handleGanttMouseMove(e) {
+      if (!dragState) return;
+      const deltaCols = Math.round((e.clientX - dragState.startX) / dragState.cellWidth);
+      const days = GANTT_SCALES[APP_STATE.zoomRange];
+
+      if (dragState.type === 'move') {
+        const targetCol = Math.max(0, Math.min(dragState.numCols - dragState.spanCol, dragState.initialCol + deltaCols));
+        dragState.currentCol = targetCol;
+        dragState.capsuleEl.style.left = `calc(${(targetCol / dragState.numCols) * 100}% + 3px)`;
+        tooltip.innerText = `Start: Day ${days[targetCol].d}`;
+      } else if (dragState.type === 'resize') {
+        const maxSpan = dragState.numCols - dragState.startCol;
+        const targetSpan = Math.max(1, Math.min(maxSpan, dragState.initialSpan + deltaCols));
+        dragState.currentSpan = targetSpan;
+        dragState.capsuleEl.style.width = `calc(${(targetSpan / dragState.numCols) * 100}% - 6px)`;
+        const durLabel = document.getElementById(`dur-label-${dragState.actId}`);
+        if (durLabel) durLabel.innerText = `${targetSpan}d`;
+        tooltip.innerText = `Duration: ${targetSpan}d`;
+      }
+      tooltip.style.left = `${e.clientX}px`;
+      tooltip.style.top = `${e.clientY}px`;
+    }
+
+    function handleGanttMouseUp() {
+      if (!dragState) return;
+      tooltip.style.display = 'none';
+      if (dragState.type === 'move') dragState.act.startCol = dragState.currentCol;
+      else if (dragState.type === 'resize') {
+        dragState.act.spanCol = dragState.currentSpan;
+        dragState.act.duration = `${dragState.currentSpan}d`;
+        dragState.act.deadlineISO = new Date(Date.now() + dragState.currentSpan * 24 * 3600 * 1000).toISOString();
+      }
+      window.removeEventListener('mousemove', handleGanttMouseMove);
+      window.removeEventListener('mouseup', handleGanttMouseUp);
+      dragState = null;
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+    }
+
+    function openSheetModal() {
+      document.getElementById('modal-sop-template').value = '';
+      document.getElementById('apple-sheet-modal').classList.add('active');
+      playAppleSound('click');
+    }
+
+    function hideSheetModal() {
+      document.getElementById('apple-sheet-modal').classList.remove('active');
+    }
+
+    function saveNewDeliverableFromModal() {
+      const tplKey = document.getElementById('modal-sop-template').value;
+      const cIdx = parseInt(document.getElementById('modal-target-client').value) || 0;
+      const taskName = document.getElementById('modal-task-name').value.trim();
+      const dept = document.getElementById('modal-task-dept').value;
+      const pic = document.getElementById('modal-task-pic').value;
+      const rawDur = document.getElementById('modal-task-duration').value || '3 hari';
+
+      if (!taskName) {
+        triggerToast("Masukkan nama deliverable terlebih dahulu");
+        return;
+      }
+
+      const parsed = parseFlexibleDuration(rawDur);
+      const defaultSubtasks = (tplKey && SOP_TEMPLATES[tplKey])
+        ? JSON.parse(JSON.stringify(SOP_TEMPLATES[tplKey].subtasks))
+        : [{ t: "Siapkan brief & materi utama", done: false }, { t: "QC internal sebelum rilis", done: false }];
+
+      APP_STATE.projects[cIdx].actions.push({
+        id: "act-" + Date.now(),
+        text: taskName,
+        notes: `Deliverable untuk divisi ${DEPARTMENTS[dept].label}.`,
+        duration: parsed.cleanText,
+        deadlineISO: new Date(Date.now() + parsed.ms).toISOString(),
+        pic: pic,
+        department: dept,
+        startCol: 1,
+        spanCol: Math.min(6, parsed.spanDays),
+        done: false,
+        status: "in_progress",
+        blocked: false,
+        adFreq: 1.2,
+        subtasks: defaultSubtasks
+      });
+
+      document.getElementById('modal-task-name').value = '';
+      playAppleSound('done');
+      hideSheetModal();
+      notifySync();
+      renderAllViews();
+      triggerToast(`Countdown dimulai: ${parsed.cleanText}`);
+    }
+
+    function updateTaskDuration(pIdx, aIdx, val) {
+      const parsed = parseFlexibleDuration(val);
+      const act = APP_STATE.projects[pIdx].actions[aIdx];
+      act.duration = parsed.cleanText;
+      act.deadlineISO = new Date(Date.now() + parsed.ms).toISOString();
+      const numCols = GANTT_SCALES[APP_STATE.zoomRange].length;
+      act.spanCol = Math.max(1, Math.min(numCols - act.startCol, parsed.spanDays));
+
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+      if (APP_STATE.activePeek) renderSidePeekContent();
+      triggerToast(`Durasi di-set "${parsed.cleanText}" • Live Countdown direset!`);
+    }
+
+    function toggleBlocker(pIdx, aIdx) {
+      const act = APP_STATE.projects[pIdx].actions[aIdx];
+      act.blocked = !act.blocked;
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+      if (APP_STATE.activePeek) renderSidePeekContent();
+    }
+
+    function updateTaskDept(pIdx, aIdx, newDept) {
+      APP_STATE.projects[pIdx].actions[aIdx].department = newDept;
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+      if (APP_STATE.activePeek) renderSidePeekContent();
+    }
+
+    function handleKanbanDrop(e, targetStatus) {
+      e.preventDefault();
+      try {
+        const raw = e.dataTransfer.getData('text/plain');
+        if (!raw) return;
+        const { pIdx, actId } = JSON.parse(raw);
+        const act = APP_STATE.projects[pIdx].actions.find(a => a.id === actId);
+        if (act) {
+          act.status = targetStatus;
+          act.done = (targetStatus === 'done');
+          playAppleSound('done');
+          notifySync();
+          renderAllViews();
+        }
+      } catch (err) {}
+    }
+
+    function updateTotalRevenue(cIdx, rawText) {
+      APP_STATE.homeClients[cIdx].revenueNum = parseNumericRupiah(rawText);
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateStageSpend(cIdx, sIdx, rawText) {
+      APP_STATE.homeClients[cIdx].funnelStages[sIdx].spend = parseNumericRupiah(rawText);
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateStageDescription(cIdx, sIdx, rawText) {
+      APP_STATE.homeClients[cIdx].funnelStages[sIdx].description = rawText.trim();
+      notifySync();
+    }
+
+    function recalculateFunnelCascade(cIdx, changedStageIdx, newRawValue) {
+      const client = APP_STATE.homeClients[cIdx];
+      const stages = client.funnelStages;
+      const numVal = parseInt(String(newRawValue).replace(/[^0-9]/g, '')) || 0;
+      stages[changedStageIdx].val = Math.max(1, numVal);
+
+      if (changedStageIdx > 0 && stages[changedStageIdx - 1].val > 0) {
+        client.dropRates[changedStageIdx - 1] = Math.max(0, Math.min(0.99, (stages[changedStageIdx - 1].val - stages[changedStageIdx].val) / stages[changedStageIdx - 1].val));
+      }
+      for (let i = changedStageIdx; i < stages.length - 1; i++) {
+        stages[i + 1].val = Math.max(1, Math.round(stages[i].val * (1 - client.dropRates[i])));
+      }
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+    }
+
+    function toggleCollapse(pIdx) {
+      APP_STATE.projects[pIdx].isCollapsed = !APP_STATE.projects[pIdx].isCollapsed;
+      playAppleSound('click');
+      renderAllViews();
+    }
+
+    function toggleHomeCollapse(cIdx) {
+      APP_STATE.homeClients[cIdx].isCollapsed = !APP_STATE.homeClients[cIdx].isCollapsed;
+      playAppleSound('click');
+      renderHomeView();
+    }
+
+    function toggleAllCards() {
+      const target = !APP_STATE.projects[0]?.isCollapsed;
+      APP_STATE.projects.forEach(p => p.isCollapsed = target);
+      APP_STATE.homeClients.forEach(c => c.isCollapsed = target);
+      playAppleSound('click');
+      renderAllViews();
+    }
+
+    function toggleTask(pIdx, aIdx) {
+      const act = APP_STATE.projects[pIdx].actions[aIdx];
+      act.done = !act.done;
+      act.status = act.done ? 'done' : 'in_progress';
+      if (act.done) act.blocked = false;
+      playAppleSound(act.done ? 'done' : 'click');
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateClientName(pIdx, val) {
+      const clean = val.trim();
+      if (clean) APP_STATE.projects[pIdx].clientName = clean;
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateProjectDescription(pIdx, val) {
+      APP_STATE.projects[pIdx].description = val.trim();
+      notifySync();
+    }
+
+    function updateStepLabel(pIdx, sIdx, val) {
+      const clean = val.trim();
+      if (clean) APP_STATE.projects[pIdx].stepLabels[sIdx] = clean;
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateTaskText(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].text = val.trim() || APP_STATE.projects[pIdx].actions[aIdx].text;
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateTaskNotes(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].notes = val.trim();
+      notifySync();
+      renderAllViews();
+    }
+
+    function updateTaskPic(pIdx, aIdx, val) {
+      APP_STATE.projects[pIdx].actions[aIdx].pic = val.trim() || APP_STATE.projects[pIdx].lead;
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+    }
+
+    function deleteTask(pIdx, aIdx) {
+      const removed = APP_STATE.projects[pIdx].actions.splice(aIdx, 1)[0];
+      APP_STATE.lastDeleted = { pIdx, aIdx, task: removed };
+      playAppleSound('click');
+      notifySync();
+      renderAllViews();
+      triggerToast(`Dihapus: ${removed.text.substring(0, 18)}...`, true);
+    }
+
+    function undoLastDelete() {
+      if (!APP_STATE.lastDeleted) return;
+      const { pIdx, aIdx, task } = APP_STATE.lastDeleted;
+      APP_STATE.projects[pIdx].actions.splice(aIdx, 0, task);
+      APP_STATE.lastDeleted = null;
+      playAppleSound('done');
+      notifySync();
+      renderAllViews();
+      triggerToast("Deliverable berhasil dikembalikan!");
+    }
+
+    function exportCSVGoogleSheets() {
+      playAppleSound('done');
+      let csv = "Client,Deliverable,Department,PIC,Duration,TimeLeft,AdFrequency,Status,Blocker,Notes\n";
+      APP_STATE.projects.forEach(p => {
+        p.actions.forEach(a => {
+          const rem = calculateTimeRemaining(a.deadlineISO, a.done);
+          const row = [
+            `"${p.clientName}"`, `"${a.text}"`, `"${DEPARTMENTS[a.department]?.label || a.department}"`,
+            `"${a.pic}"`, `"${a.duration}"`, `"${rem.text}"`, `"${a.adFreq || 1.5}"`, `"${a.status}"`,
+            `"${a.blocked ? 'BLOCKED' : 'Normal'}"`, `"${(a.notes || '').replace(/"/g, '""')}"`
+          ];
+          csv += row.join(",") + "\n";
+        });
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Agency_Tracker_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      triggerToast("CSV berhasil diunduh untuk Google Sheets");
+    }
+
+    function pingWA(pic, task, timeLeft, clientName) {
+      playAppleSound('click');
+      const message = `Halo ${pic}, reminder deliverable: "${task}" untuk klien *${clientName}* memiliki sisa waktu (Time Left): *${timeLeft}*. Mohon konfirmasi progress terbaru.`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    function setPicFilterFromSidebar(picName) {
+      APP_STATE.picFilter = (APP_STATE.picFilter === picName && picName !== 'ALL') ? 'ALL' : picName;
+      playAppleSound('click');
+      document.getElementById('sb-member-razaan').classList.toggle('active', APP_STATE.picFilter === 'Razaan Al-Ghifari');
+      document.getElementById('sb-member-arif').classList.toggle('active', APP_STATE.picFilter === 'Arif Kurniawan');
+      renderAllViews();
+    }
+
+    function clearAllFilters() {
+      APP_STATE.picFilter = 'ALL';
+      APP_STATE.searchQuery = '';
+      APP_STATE.focusMode = false;
+      document.getElementById('global-search-input').value = '';
+      document.getElementById('focus-mode-btn').classList.remove('focus-active');
+      document.getElementById('sb-member-razaan').classList.remove('active');
+      document.getElementById('sb-member-arif').classList.remove('active');
+      playAppleSound('click');
+      renderAllViews();
+    }
+
+    function updateSidebarMemberCounters() {
+      let rCount = 0, aCount = 0;
+      APP_STATE.projects.forEach(p => {
+        p.actions.forEach(act => {
+          if (!act.done) {
+            if (act.pic.includes("Razaan")) rCount++;
+            if (act.pic.includes("Arif")) aCount++;
+          }
+        });
+      });
+      document.getElementById('sb-cnt-razaan').innerText = rCount;
+      document.getElementById('sb-cnt-arif').innerText = aCount;
+
+      const filterBanner = document.getElementById('active-filter-banner');
+      const filterText = document.getElementById('active-filter-text');
+      if (APP_STATE.focusMode || APP_STATE.picFilter !== 'ALL' || APP_STATE.searchQuery !== '') {
+        filterBanner.style.display = 'flex';
+        filterText.innerText = `${APP_STATE.focusMode ? '[FOCUS MODE] ' : ''}${APP_STATE.picFilter !== 'ALL' ? 'PIC: ' + APP_STATE.picFilter + ' ' : ''}${APP_STATE.searchQuery ? 'Search: "' + APP_STATE.searchQuery + '"' : ''}`;
+      } else {
+        filterBanner.style.display = 'none';
+      }
+    }
+
+    function handleSearch(query) {
+      APP_STATE.searchQuery = query.toLowerCase().trim();
+      renderAllViews();
+    }
+
+    function setGanttZoom(range) {
+      APP_STATE.zoomRange = range;
+      playAppleSound('click');
+      ['7D', '12D', '30D'].forEach(r => {
+        const el = document.getElementById(`zoom-${r}`);
+        if (el) el.classList.toggle('active', r === range);
+      });
+      renderTimelineView();
+      renderOverviewView();
+    }
+
+    function toggleSidebar() {
+      APP_STATE.sidebarCollapsed = !APP_STATE.sidebarCollapsed;
+      document.getElementById('app-sidebar').classList.toggle('collapsed', APP_STATE.sidebarCollapsed);
+      playAppleSound('click');
+    }
+
+    function toggleAudio() {
+      APP_STATE.isMuted = !APP_STATE.isMuted;
+      localStorage.setItem('agency_sound_muted', APP_STATE.isMuted ? 'true' : 'false');
+      document.getElementById('audio-toggle-btn').innerText = APP_STATE.isMuted ? 'Sound: OFF' : 'Sound: ON';
+    }
+
+    function setThemeMode(isDark) {
+      APP_STATE.isDark = isDark;
+      localStorage.setItem('agency_app_dark', APP_STATE.isDark ? 'true' : 'false');
+      document.documentElement.classList.toggle('dark', APP_STATE.isDark);
+      document.getElementById('theme-dark-btn').classList.toggle('active', APP_STATE.isDark);
+      document.getElementById('theme-light-btn').classList.toggle('active', !APP_STATE.isDark);
+      playAppleSound('click');
+    }
+
+    function toggleTheme() {
+      setThemeMode(!APP_STATE.isDark);
+    }
+
+    function switchTab(tabId) {
+      APP_STATE.activeTab = tabId;
+      playAppleSound('click');
+
+      const tabs = ['overview', 'projects', 'home', 'timeline', 'kanban'];
+      const idx = tabs.indexOf(tabId);
+      const pill = document.getElementById('segPill');
+      if (pill && idx !== -1) pill.style.transform = `translateX(${idx * 100}%)`;
+
+      tabs.forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const seg = document.getElementById(`segBtn-${t}`);
+        const sub = document.getElementById(`subBtn-${t}`);
+        if (view) view.style.display = (t === tabId) ? 'flex' : 'none';
+        if (seg) seg.classList.toggle('active', t === tabId);
+        if (sub) sub.classList.toggle('active', t === tabId);
+      });
+
+      renderAllViews();
+    }
+
+    function renderAllViews() {
+      renderOverviewView();
+      renderProjectsView();
+      renderHomeView();
+      renderTimelineView();
+      renderKanbanView();
+      updateSidebarMemberCounters();
+    }
+
+    if (APP_STATE.isDark) setThemeMode(true);
+    if (APP_STATE.isMuted) document.getElementById('audio-toggle-btn').innerText = 'Sound: OFF';
+    switchTab('overview');
+  </script>
+</body>
+</html>
