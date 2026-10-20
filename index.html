@@ -954,11 +954,12 @@
       '30D': Array.from({ length: 30 }, (_, i) => ({ d: (i + 1).toString().padStart(2, '0'), w: (i % 7 === 5 || i % 7 === 6), today: i + 1 === 18 }))
     };
 
-    const DEPARTMENTS = {
-      creative: { label: "Creative & Copy", short: "COPY", colorClass: "cap-pink", dotColor: "#be185d" },
-      performance: { label: "Performance Ads", short: "ADS", colorClass: "cap-blue", dotColor: "#0071e3" },
-      video: { label: "Video & UGC", short: "UGC", colorClass: "cap-green", dotColor: "#15803d" },
-      tech: { label: "Tech & Dev", short: "TECH", colorClass: "cap-orange", dotColor: "#d97706" }
+   const DEPARTMENTS = {
+      creative: { label: "Production", short: "PROD", colorClass: "cap-blue", dotColor: "#0071e3" },
+      performance: { label: "DM", short: "DM", colorClass: "cap-pink", dotColor: "#be185d" },
+      video: { label: "Management", short: "MGMT", colorClass: "cap-yellow", dotColor: "#eab308" },
+      tech: { label: "HRGA", short: "HRGA", colorClass: "cap-purple", dotColor: "#8b5cf6" },
+      abd: { label: "ABD", short: "ABD", colorClass: "cap-lightgreen", dotColor: "#4ade80" }
     };
 
     const TEAM_PICS = ["Razaan Al-Ghifari", "Arif Kurniawan", "Jireh Pratama", "Andrew Smith"];
