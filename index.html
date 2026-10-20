@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Operations Hub — 100% Functional</title>
+  <style>
+    :root {
+      --bg-canvas: #f4f5f7;
+      --bg-card: #ffffff;
+      --bg-subtle: #f8fafc;
+      --bg-inset: rgba(0, 0, 0, 0.04);
+      --bg-hover: rgba(0, 0, 0, 0.025);
+      --text-main: #18181b;
+      --text-muted: #71717a;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --border-strong: rgba(0, 0, 0, 0.16);
+      
+      --blue: #0071e3;
+      --indigo: #4f46e5;
+      --green: #10b981;
+      --red: #f43f5e;
+      --orange: #f97316;
+      --purple: #8b5cf6;
+    }
+
+    .dark {
+      --bg-canvas: #09090b;
+      --bg-card: #141417;
+      --bg-subtle: #1e1e24;
+      --bg-inset: rgba(255, 255, 255, 0.06);
+      --bg-hover: rgba(255, 255, 255, 0.03);
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --border-color: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.18);
+
+      --blue: #38bdf8;
+      --indigo: #6366f1;
+      --green: #34d399;
+      --red: #fb7185;
+      --orange: #fb923c;
+      --purple: #a78bfa;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(134, 134, 139, 0.3); border-radius: 8px; }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      padding: 10px;
+      gap: 10px;
+    }
+
+    /* INPUT TANPA GANGGUAN KLIK */
+    .live-input {
+      background: transparent;
+      border: 1px solid transparent;
+      color: inherit;
+      font: inherit;
+      padding: 3px 6px;
+      border-radius: 6px;
+      width: 100%;
+      outline: none;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .live-input:hover { background: var(--bg-inset); }
+    .live-input:focus {
+      background: var(--bg-card);
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.15);
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px;
+      height: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      padding: 12px;
+      overflow-y: auto;
+      gap: 4px;
+    }
+
+    .sb-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .traffic-lights { display: flex; gap: 6px; padding-left: 4px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; cursor: pointer; }
+    .dot-r { background: #ff5f56; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #27c93f; }
+
+    /* 1. CLICKUP ACTIVE TASK TRAY (STOPWATCH) */
+    .active-tray {
+      background: rgba(0, 113, 227, 0.08);
+      border: 1px solid rgba(0, 113, 227, 0.3);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    .active-tray.idle {
+      background: var(--bg-subtle);
+      border-color: var(--border-color);
+    }
+    .tray-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 9.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--blue);
+    }
+    .active-tray.idle .tray-head { color: var(--text-muted); }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      display: inline-block;
+      margin-right: 4px;
+      animation: pulseAnim 1.2s infinite;
+    }
+    @keyframes pulseAnim {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+    .tray-task-name {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    .tray-task-name:hover { color: var(--blue); text-decoration: underline; }
+    .tray-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 2px;
+    }
+    .tray-clock {
+      font-size: 14px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-main);
+    }
+
+    /* Quick Input Sidebar */
+    .quick-add-input {
+      width: 100%;
+      height: 30px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0 9px;
+      font-size: 11px;
+      color: var(--text-main);
+      outline: none;
+      margin-bottom: 4px;
+    }
+    .quick-add-input:focus { border-color: var(--blue); background: var(--bg-card); }
+
+    .sb-title {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin: 8px 0 3px 6px;
+      letter-spacing: 0.03em;
+    }
+
+    .sb-list { display: flex; flex-direction: column; gap: 2px; }
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+    .sb-item:hover { background: var(--bg-inset); }
+    .sb-item.active {
+      background: rgba(0, 113, 227, 0.12);
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    /* 2. TRELLO DEPT COLOR SWATCH */
+    .dept-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    /* 3. SLACK LIVE AVAILABILITY & CUSTOM STATUS */
+    .team-card {
+      padding: 6px 8px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border: 1px solid transparent;
+    }
+    .team-card:hover { background: var(--bg-inset); }
+    .team-card.active {
+      background: rgba(0, 113, 227, 0.1);
+      border-color: rgba(0, 113, 227, 0.3);
+    }
+    .slack-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      cursor: pointer;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .slack-status-btn {
+      font-size: 10px;
+      color: var(--text-muted);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      padding: 2px 6px;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .slack-status-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+    .workload-bar { width: 100%; height: 3px; background: var(--bg-inset); border-radius: 3px; overflow: hidden; }
+    .workload-fill { height: 100%; border-radius: 3px; }
+
+    /* Quick Alerts */
+    .alert-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .alert-btn {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 5px 2px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .alert-btn.active { background: rgba(244, 63, 94, 0.14); border-color: var(--red); }
+    .alert-btn strong { display: block; font-size: 11.5px; font-weight: 800; }
+    .alert-btn span { font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+
+    /* MAIN AREA */
+    .main-area {
+      flex: 1;
+      height: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .navbar {
+      height: 52px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .nav-tabs {
+      display: flex;
+      background: var(--bg-inset);
+      padding: 3px;
+      border-radius: 9px;
+      gap: 2px;
+    }
+    .nav-tab {
+      border: none;
+      background: transparent;
+      padding: 5px 12px;
+      border-radius: 7px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .nav-tab.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .btn {
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn:hover { border-color: var(--blue); }
+    .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .btn-timer {
+      padding: 2px 7px;
+      border-radius: 5px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+    }
+    .btn-timer:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-timer.running {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .filter-bar {
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 9px;
+      padding: 7px 12px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--purple);
+    }
+
+    /* KANBAN BOARD */
+    .kanban-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+    @media (max-width: 1024px) { .kanban-grid { grid-template-columns: repeat(2, 1fr); } }
+    .kanban-col {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 420px;
+    }
+    .kanban-col.drag-over { border: 1.5px dashed var(--blue); background: rgba(0, 113, 227, 0.04); }
+
+    .col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 4px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .status-pill { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+    .st-backlog { background: rgba(134, 134, 139, 0.15); color: var(--text-muted); }
+    .st-progress { background: rgba(0, 113, 227, 0.12); color: var(--blue); }
+    .st-review { background: rgba(249, 115, 22, 0.14); color: var(--orange); }
+    .st-done { background: rgba(16, 185, 129, 0.14); color: var(--green); }
+
+    .k-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: grab;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .k-card:hover { border-color: var(--border-strong); }
+    .k-card.blocked { border-color: rgba(244, 63, 94, 0.5); background: rgba(244, 63, 94, 0.02); }
+    .k-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-color);
+      padding-top: 6px;
+      gap: 6px;
+    }
+
+    /* PROJECTS VIEW */
+    .card-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .brand-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .brand-select-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+    }
+    .task-row {
+      display: flex;
+      align-items: center;
+      padding: 7px 14px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+      gap: 8px;
+    }
+    .task-row:hover { background: var(--bg-hover); }
+
+    .time-badge {
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .time-badge.on-track { background: rgba(16, 185, 129, 0.12); color: var(--green); }
+    .time-badge.urgent { background: rgba(249, 115, 22, 0.15); color: var(--orange); }
+    .time-badge.overdue { background: rgba(244, 63, 94, 0.15); color: var(--red); }
+    .time-badge.completed { background: var(--bg-inset); color: var(--text-muted); }
+
+    /* DRAWER & MODALS */
+    .side-drawer {
+      position: fixed; top: 10px; right: 10px; bottom: 10px; width: 380px;
+      background: var(--bg-card); border: 1px solid var(--border-strong);
+      border-radius: 16px; box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+      z-index: 9500; display: flex; flex-direction: column;
+      transform: translateX(410px); transition: transform 0.22s ease;
+    }
+    .side-drawer.open { transform: translateX(0); }
+
+    .modal-wrap {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(6px); z-index: 10000;
+      display: none; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-wrap.active { display: flex; }
+    .modal-card {
+      width: 100%; max-width: 420px; background: var(--bg-card);
+      border: 1px solid var(--border-strong); border-radius: 14px;
+      overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+
+    .toast-bar {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-80px);
+      background: #18181b; color: #fff; padding: 6px 14px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+      transition: transform 0.22s ease; z-index: 10050;
+    }
+    .toast-bar.active { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- Toast -->
+  <div id="toast" class="toast-bar">
+    <span style="width:6px; height:6px; border-radius:50%; background:var(--green);"></span>
+    <span id="toast-text">Ready</span>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-top-bar">
+      <div class="traffic-lights">
+        <span class="dot dot-r" onclick="resetDefaultData()" title="Reset Default Data"></span>
+        <span class="dot dot-y" onclick="clearAllFilters()" title="Clear Filters"></span>
+        <span class="dot dot-g" onclick="toggleTheme()" title="Toggle Theme"></span>
+      </div>
+      <button class="btn" style="padding:2px 7px; font-size:9.5px;" onclick="toggleTheme()" id="theme-btn">Dark Mode</button>
+    </div>
+
+    <!-- FITUR 1: CLICKUP ACTIVE TASK TRAY (LIVE TIME TRACKER) -->
+    <div id="sb-active-tray" class="active-tray idle"></div>
+
+    <!-- Quick Task Input -->
+    <input type="text" class="quick-add-input" placeholder="+ Quick task (Tekan Enter)..." onkeydown="handleQuickTask(event)">
+
+    <!-- Navigation -->
+    <div class="sb-list">
+      <button class="sb-item" id="nav-overview" onclick="switchTab('overview')">Overview</button>
+      <button class="sb-item" id="nav-projects" onclick="switchTab('projects')">Projects</button>
+      <button class="sb-item active" id="nav-kanban" onclick="switchTab('kanban')">
+        <span style="flex:1;">Kanban Board</span>
+        <span id="sb-total-count" style="font-size:10px; color:var(--text-muted); font-weight:700;">5</span>
+      </button>
+      <button class="sb-item" id="nav-home" onclick="switchTab('home')">Funnels &amp; ROAS</button>
+      <button class="sb-item" id="nav-timeline" onclick="switchTab('timeline')">Timeline Gantt</button>
+    </div>
+
+    <!-- Quick Alerts -->
+    <div class="sb-title">Operational Alerts</div>
+    <div class="alert-grid">
+      <div class="alert-btn" id="al-blocked" onclick="setAlertFilter('blocked')">
+        <strong id="cnt-blocked" style="color:var(--red);">0</strong><span>Blocked</span>
+      </div>
+      <div class="alert-btn" id="al-fatigue" onclick="setAlertFilter('fatigue')">
+        <strong id="cnt-fatigue" style="color:var(--orange);">0</strong><span>Fatigue</span>
+      </div>
+      <div class="alert-btn" id="al-urgent" onclick="setAlertFilter('urgent')">
+        <strong id="cnt-urgent" style="color:var(--blue);">0</strong><span>Urgent</span>
+      </div>
+    </div>
+
+    <!-- FITUR 2: TRELLO DEPARTMENT COLOR LABEL FILTER -->
+    <div class="sb-title">Department Labels (Trello)</div>
+    <div class="sb-list" id="sb-dept-list"></div>
+
+    <!-- Brand Switcher -->
+    <div class="sb-title">Brands</div>
+    <div class="sb-list" id="sb-brand-list"></div>
+
+    <!-- FITUR 3: SLACK LIVE TEAM AVAILABILITY & CUSTOM STATUS -->
+    <div class="sb-title">Team Availability (Slack)</div>
+    <div class="sb-list" id="sb-team-list"></div>
+
+    <div style="margin-top:auto; padding-top:8px; display:flex; flex-direction:column; gap:5px;">
+      <button class="btn" style="width:100%; justify-content:center; color:var(--green);" onclick="copyStandupReport()">Copy WA Standup</button>
+      <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="openTaskModal()">+ New Deliverable</button>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main class="main-area">
+    <header class="navbar">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="nav-tabs">
+          <button class="nav-tab" id="tab-overview" onclick="switchTab('overview')">Overview</button>
+          <button class="nav-tab" id="tab-projects" onclick="switchTab('projects')">Projects</button>
+          <button class="nav-tab active" id="tab-kanban" onclick="switchTab('kanban')">Kanban</button>
+          <button class="nav-tab" id="tab-home" onclick="switchTab('home')">Funnels</button>
+          <button class="nav-tab" id="tab-timeline" onclick="switchTab('timeline')">Timeline</button>
+        </div>
+        <input type="text" id="search-input" class="quick-add-input" style="width:190px; margin:0;" placeholder="Search deliverable..." oninput="handleSearch(this.value)">
+      </div>
+
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button class="btn" onclick="openProjectModal()" style="color:var(--blue);">+ Brand / Project</button>
+        <button class="btn" onclick="exportCSV()">Export CSV</button>
+        <button class="btn" style="color:var(--red);" onclick="resetDefaultData()">Reset</button>
+      </div>
+    </header>
+
+    <div class="content-area">
+      <!-- Filter Active Banner -->
+      <div id="filter-banner" class="filter-bar">
+        <span id="filter-text">Filter Active</span>
+        <span style="cursor:pointer; text-decoration:underline;" onclick="clearAllFilters()">Reset Filter ✕</span>
+      </div>
+
+      <!-- VIEW: OVERVIEW -->
+      <div id="view-overview" style="display:none; flex-direction:column; gap:14px;">
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
+          <div class="card-box" style="padding:14px; cursor:pointer;" onclick="switchTab('home')">
+            <div style="font-size:10.5px; color:var(--text-muted); font-weight:600;">Total Omset</div>
+            <div style="font-size:20px; font-weight:800; margin-top:4px;" id="ov-omset">Rp 120.5M</div>
+          </div>
+          <div class="card-box" style="padding:14px; cursor:pointer;" onclick="switchTab('home')">
+            <div style="font-size:10.5px; color:var(--text-muted); font-weight:600;">Total Ad Spend</div>
+            <div style="font-size:20px; font-weight:800; margin-top:4px; color:var(--blue);" id="ov-spend">Rp 44.8M</div>
+          </div>
+          <div class="card-box" style="padding:14px; cursor:pointer;" onclick="switchTab('home')">
+            <div style="font-size:10.5px; color:var(--text-muted); font-weight:600;">Blended ROAS</div>
+            <div style="font-size:20px; font-weight:800; margin-top:4px; color:var(--green);" id="ov-roas">2.69x</div>
+          </div>
+          <div class="card-box" style="padding:14px; cursor:pointer;" onclick="switchTab('kanban')">
+            <div style="font-size:10.5px; color:var(--text-muted); font-weight:600;">Sprint Progress</div>
+            <div style="font-size:20px; font-weight:800; margin-top:4px;" id="ov-done">2 / 5 Done</div>
+          </div>
+        </div>
+        <div class="card-box" style="padding:16px;">
+          <div style="font-size:13px; font-weight:700; margin-bottom:10px;">Active Deliverables</div>
+          <div id="ov-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+      </div>
+
+      <!-- VIEW: PROJECTS -->
+      <div id="view-projects" style="display:none; flex-direction:column; gap:14px;"></div>
+
+      <!-- VIEW: KANBAN -->
+      <div id="view-kanban" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11.5px; color:var(--text-muted);">
+            Klik tombol <b>▶ 00:00</b> pada kartu untuk menyalakan <b>Live Timer</b> di Sidebar &bull; Tarik kartu untuk pindah kolom
+          </span>
+          <button class="btn" id="swimlane-btn" onclick="toggleSwimlanes()">Swimlanes: OFF</button>
+        </div>
+        <div id="kanban-stage"></div>
+      </div>
+
+      <!-- VIEW: FUNNELS -->
+      <div id="view-home" style="display:none; flex-direction:column; gap:14px;"></div>
+
+      <!-- VIEW: TIMELINE -->
+      <div id="view-timeline" style="display:none; flex-direction:column; gap:12px;">
+        <div id="timeline-stage" style="display:flex; flex-direction:column; gap:14px;"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- SIDE-PEEK DRAWER -->
+  <aside id="side-drawer" class="side-drawer">
+    <div style="padding:12px 16px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+      <span id="drawer-tag" style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Task Inspector</span>
+      <button class="btn" style="padding:2px 8px;" onclick="closeSidePeek()">✕</button>
+    </div>
+    <div id="drawer-body" style="padding:16px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:12px;"></div>
+  </aside>
+
+  <!-- MODAL 1: ADD TASK -->
+  <div id="task-modal" class="modal-wrap" onclick="if(event.target.id==='task-modal') closeTaskModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div style="padding:14px 18px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+        <strong style="font-size:14px;">New Deliverable</strong>
+        <button class="btn" onclick="closeTaskModal()">✕</button>
+      </div>
+      <div style="padding:16px 18px; display:flex; flex-direction:column; gap:10px;">
+        <div>
+          <label style="font-size:10px; font-weight:700; color:var(--text-muted);">TARGET PROJECT</label>
+          <select id="m-task-proj" class="quick-add-input" style="height:32px; margin-top:3px;"></select>
+        </div>
+        <div>
+          <label style="font-size:10px; font-weight:700; color:var(--text-muted);">DELIVERABLE NAME</label>
+          <input type="text" id="m-task-name" class="quick-add-input" style="height:32px; margin-top:3px;" placeholder="e.g. Hook Video Testing 9:16">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div>
+            <label style="font-size:10px; font-weight:700; color:var(--text-muted);">DEPARTMENT</label>
+            <select id="m-task-dept" class="quick-add-input" style="height:32px; margin-top:3px;">
+              <option value="creative">Creative &amp; Copy</option>
+              <option value="performance">Performance Ads</option>
+              <option value="video">Video &amp; UGC</option>
+              <option value="tech">Tech &amp; Dev</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px; font-weight:700; color:var(--text-muted);">ASSIGNEE (PIC)</label>
+            <select id="m-task-pic" class="quick-add-input" style="height:32px; margin-top:3px;">
+              <option value="Razaan Al-Ghifari">Razaan Al-Ghifari</option>
+              <option value="Arif Kurniawan">Arif Kurniawan</option>
+              <option value="Jireh Pratama">Jireh Pratama</option>
+              <option value="Andrew Smith">Andrew Smith</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:10px; font-weight:700; color:var(--text-muted);">DURATION ("2 jam", "3 hari")</label>
+          <input type="text" id="m-task-dur" class="quick-add-input" style="height:32px; margin-top:3px;" value="3 hari">
+        </div>
+      </div>
+      <div style="padding:12px 18px; border-top:1px solid var(--border-color); display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn" onclick="closeTaskModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveNewTaskModal()">Save Deliverable</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: ADD BRAND / PROJECT -->
+  <div id="proj-modal" class="modal-wrap" onclick="if(event.target.id==='proj-modal') closeProjectModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div style="padding:14px 18px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+        <strong style="font-size:14px;">New Brand &amp; Project</strong>
+        <button class="btn" onclick="closeProjectModal()">✕</button>
+      </div>
+      <div style="padding:16px 18px; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div>
+            <label style="font-size:10px; font-weight:700; color:var(--text-muted);">BRAND NAME</label>
+            <input type="text" id="m-proj-brand" class="quick-add-input" style="height:32px; margin-top:3px;" placeholder="e.g. GlowSkin">
+          </div>
+          <div>
+            <label style="font-size:10px; font-weight:700; color:var(--text-muted);">PROJECT NAME</label>
+            <input type="text" id="m-proj-name" class="quick-add-input" style="height:32px; margin-top:3px;" placeholder="e.g. Q4 WA Scale">
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div>
+            <label style="font-size:10px; font-weight:700; color:var(--text-muted);">BASELINE OMSET</label>
+            <input type="text" id="m-proj-omset" class="quick-add-input" style="height:32px; margin-top:3px;" value="65M">
+          </div>
+          <div>
+            <label style="font-size:10px; font-weight:700; color:var(--text-muted);">BRAND COLOR</label>
+            <input type="color" id="m-proj-color" class="quick-add-input" style="height:32px; margin-top:3px; padding:2px;" value="#8b5cf6">
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 18px; border-top:1px solid var(--border-color); display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn" onclick="closeProjectModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveNewProjectModal()">Create Project</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'agency_hub_clean_v20';
+
+    const DEPARTMENTS = {
+      creative: { label: "Creative & Copy", short: "COPY", color: "#db2777" },
+      performance: { label: "Performance Ads", short: "ADS", color: "#0071e3" },
+      video: { label: "Video & UGC", short: "UGC", color: "#10b981" },
+      tech: { label: "Tech & Dev", short: "TECH", color: "#f97316" }
+    };
+
+    const TEAM_PICS = ["Razaan Al-Ghifari", "Arif Kurniawan", "Jireh Pratama", "Andrew Smith"];
+
+    const SLACK_PRESENCE = [
+      { label: "Available", color: "#10b981" },
+      { label: "Deep Work", color: "#8b5cf6" },
+      { label: "In Meeting", color: "#f97316" },
+      { label: "Offline", color: "#f43f5e" }
+    ];
+
+    const KANBAN_COLS = [
+      { id: "backlog", title: "Backlog / Brief", cls: "st-backlog" },
+      { id: "in_progress", title: "In Progress", cls: "st-progress" },
+      { id: "review", title: "Review & QA", cls: "st-review" },
+      { id: "done", title: "Done", cls: "st-done" }
+    ];
+
+    function getDefaultState() {
+      const now = Date.now();
+      return {
+        activeTab: 'kanban',
+        picFilter: 'ALL',
+        brandFilter: 'ALL',
+        deptFilter: 'ALL',
+        alertFilter: null,
+        searchQuery: '',
+        swimlanes: false,
+        isDark: false,
+        activeTimer: null,
+        activePeek: null,
+        brands: ["Pink Flamingo", "Sibersih", "GlowSkin Clinic"],
+        teamStatuses: {
+          "Razaan Al-Ghifari": { stateIdx: 0, text: "Scaling CTWA Ads" },
+          "Arif Kurniawan": { stateIdx: 1, text: "Slicing LP < 1.5s" },
+          "Jireh Pratama": { stateIdx: 0, text: "Editing 9:16 Hooks" },
+          "Andrew Smith": { stateIdx: 2, text: "Client Sync Call" }
+        },
+        projects: [
+          {
+            id: "p1",
+            brandName: "Pink Flamingo",
+            projectName: "Q3 WA Commerce & Broad CAPI Scale",
+            description: "Optimasi funnel WhatsApp Commerce & testing hook UGC 9:16.",
+            brandHex: "#ec4899",
+            revenueNum: 79550000,
+            beRoas: 2.5,
+            stages: [
+              { name: "Awareness", val: 5000, spend: 8500000, color: "#0e3a66" },
+              { name: "Interest", val: 1000, spend: 4200000, color: "#0284c7" },
+              { name: "Consideration", val: 980, spend: 3800000, color: "#0d9488" },
+              { name: "Conversion", val: 240, spend: 15000000, color: "#16a34a" },
+              { name: "Loyalty", val: 65, spend: 500000, color: "#84cc16" }
+            ],
+            actions: [
+              { id: "a1", text: "Pink Flamingo Copywriting & Hook", notes: "Testing 3 variasi hook problem-aware.", duration: "2 jam", deadlineISO: new Date(now + 2 * 3600000).toISOString(), pic: "Razaan Al-Ghifari", department: "creative", done: true, status: "done", blocked: false, blockerReason: "", adFreq: 1.8, trackedSeconds: 1820, subtasks: [{ t: "Audit Ads Library", done: true }, { t: "Draft 3 copywriting", done: true }] },
+              { id: "a2", text: "Meta Broad CAPI Setup", notes: "Integrasi server-side event deduplication.", duration: "3 hari", deadlineISO: new Date(now + 72 * 3600000).toISOString(), pic: "Razaan Al-Ghifari", department: "performance", done: true, status: "done", blocked: false, blockerReason: "", adFreq: 2.1, trackedSeconds: 3400, subtasks: [{ t: "Setup Pixel & CAPI", done: true }] },
+              { id: "a3", text: "UGC Video Creative Direction", notes: "Frekuensi iklan lama 2.9x, wajib refresh.", duration: "4 hari", deadlineISO: new Date(now + 96 * 3600000).toISOString(), pic: "Jireh Pratama", department: "video", done: false, status: "review", blocked: false, blockerReason: "", adFreq: 2.9, trackedSeconds: 950, subtasks: [{ t: "Kirim sampel", done: true }, { t: "Review raw footage", done: false }] }
+            ]
+          },
+          {
+            id: "p2",
+            brandName: "Sibersih",
+            projectName: "Tangsel Residential Booking Expansion",
+            description: "Ekspansi akuisisi cleaning service area Tangerang Selatan & otomasi CS.",
+            brandHex: "#0284c7",
+            revenueNum: 41000000,
+            beRoas: 2.8,
+            stages: [
+              { name: "Awareness", val: 8500, spend: 6000000, color: "#0e3a66" },
+              { name: "Interest", val: 1200, spend: 3200000, color: "#0284c7" },
+              { name: "Consideration", val: 400, spend: 2100000, color: "#0d9488" },
+              { name: "Conversion", val: 90, spend: 1200000, color: "#16a34a" },
+              { name: "Loyalty", val: 18, spend: 300000, color: "#84cc16" }
+            ],
+            actions: [
+              { id: "a4", text: "Landing Page Slicing < 1.5s", notes: "Kompresi WebP & pasang floating WA.", duration: "5 jam", deadlineISO: new Date(now + 5 * 3600000).toISOString(), pic: "Arif Kurniawan", department: "tech", done: false, status: "in_progress", blocked: true, blockerReason: "Menunggu akses cPanel IT", adFreq: 1.4, trackedSeconds: 1210, subtasks: [{ t: "Slicing hero", done: true }, { t: "Pasang script CTWA", done: false }] },
+              { id: "a5", text: "Hook Script Revisi 9:16", notes: "Menunggu konfirmasi materi promo.", duration: "5 hari", deadlineISO: new Date(now + 120 * 3600000).toISOString(), pic: "Jireh Pratama", department: "creative", done: false, status: "backlog", blocked: false, blockerReason: "", adFreq: 2.2, trackedSeconds: 0, subtasks: [{ t: "Revisi klaim diskon", done: false }] }
+            ]
+          }
+        ]
+      };
+    }
+
+    let STATE = getDefaultState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.projects)) {
+            STATE = { ...getDefaultState(), ...parsed };
+          }
+        }
+      } catch (e) {
+        STATE = getDefaultState();
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+      } catch (e) {}
+    }
+
+    function esc(str) {
+      return String(str ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function formatTimer(sec) {
+      const s = Math.max(0, Math.floor(sec || 0));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const rem = s % 60;
+      const pad = n => String(n).padStart(2, '0');
+      return h > 0 ? `${pad(h)}:${pad(m)}:${pad(rem)}` : `${pad(m)}:${pad(rem)}`;
+    }
+
+    function formatRp(num) {
+      if (!num) return 'Rp 0';
+      if (num >= 1000000) return 'Rp ' + (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return 'Rp ' + (num / 1000).toFixed(0) + 'K';
+      return 'Rp ' + Math.round(num);
+    }
+
+    function parseRp(str) {
+      let c = String(str || '').toLowerCase().replace(/rp|\s/g, '').replace(',', '.');
+      if (c.endsWith('m')) return (parseFloat(c) || 0) * 1000000;
+      if (c.endsWith('k')) return (parseFloat(c) || 0) * 1000;
+      return parseFloat(c.replace(/\./g, '')) || 0;
+    }
+
+    function parseDuration(str) {
+      const raw = String(str || '1d').trim().toLowerCase();
+      const m = raw.match(/([0-9]+([.,][0-9]+)?)/);
+      const v = m ? parseFloat(m[1].replace(',', '.')) : 1;
+      if (/(menit|min|m\b)/.test(raw)) return { ms: v * 60000, text: raw };
+      if (/(jam|hour|hr|h\b|j\b)/.test(raw)) return { ms: v * 3600000, text: raw };
+      return { ms: v * 86400000, text: raw };
+    }
+
+    function calcRemaining(iso, isDone) {
+      if (isDone) return { text: "Done ✓", cls: "completed", urgent: false };
+      const diff = new Date(iso).getTime() - Date.now();
+      if (diff <= 0) return { text: "Overdue", cls: "overdue", urgent: true };
+      const tot = Math.floor(diff / 1000);
+      const d = Math.floor(tot / 86400);
+      const h = Math.floor((tot % 86400) / 3600);
+      const m = Math.floor((tot % 3600) / 60);
+      const s = tot % 60;
+      const pad = n => String(n).padStart(2, '0');
+      const txt = d > 0 ? `${d}d ${pad(h)}h ${pad(m)}m` : `${pad(h)}h ${pad(m)}m ${pad(s)}s`;
+      const urg = (diff / 3600000) < 24;
+      return { text: txt, cls: urg ? "urgent" : "on-track", urgent: urg };
+    }
+
+    let toastTimeout = null;
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      const txt = document.getElementById('toast-text');
+      if (!el || !txt) return;
+      clearTimeout(toastTimeout);
+      txt.innerText = msg;
+      el.classList.add('active');
+      toastTimeout = setTimeout(() => el.classList.remove('active'), 2200);
+    }
+
+    // ----------------------------------------------------
+    // LIVE 1-SECOND TICKER (COUNTDOWN & CLICKUP TRAY TIMER)
+    // ----------------------------------------------------
+    setInterval(() => {
+      document.querySelectorAll('[data-deadline]').forEach(el => {
+        const iso = el.getAttribute('data-deadline');
+        const done = el.getAttribute('data-done') === 'true';
+        const r = calcRemaining(iso, done);
+        el.innerText = r.text;
+        el.className = `time-badge ${r.cls}`;
+      });
+
+      if (STATE.activeTimer) {
+        const { pIdx, aIdx, startedAt } = STATE.activeTimer;
+        const act = STATE.projects[pIdx]?.actions[aIdx];
+        if (!act) {
+          stopActiveTimer(false);
+          return;
+        }
+        const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+        const total = (act.trackedSeconds || 0) + elapsed;
+        const formatted = formatTimer(total);
+
+        const clockEl = document.getElementById('tray-live-clock');
+        if (clockEl) clockEl.innerText = formatted;
+
+        document.querySelectorAll(`[data-timer-id="${act.id}"]`).forEach(btn => {
+          btn.innerText = `■ ${formatted}`;
+        });
+      }
+    }, 1000);
+
+    // ----------------------------------------------------
+    // 1. CLICKUP ACTIVE TASK TRAY FUNCTIONS
+    // ----------------------------------------------------
+    function toggleTaskTimer(pIdx, aIdx) {
+      const act = STATE.projects[pIdx]?.actions[aIdx];
+      if (!act) return;
+
+      if (STATE.activeTimer && STATE.activeTimer.pIdx === pIdx && STATE.activeTimer.aIdx === aIdx) {
+        stopActiveTimer(true);
+        return;
+      }
+
+      if (STATE.activeTimer) {
+        stopActiveTimer(false);
+      }
+
+      if (act.status === 'backlog') {
+        act.status = 'in_progress';
+        act.done = false;
+      }
+
+      STATE.activeTimer = { pIdx, aIdx, startedAt: Date.now() };
+      saveState();
+      renderAll();
+      showToast(`Timer berjalan: ${act.text.substring(0, 18)}...`);
+    }
+
+    function stopActiveTimer(notify = true) {
+      if (!STATE.activeTimer) return;
+      const { pIdx, aIdx, startedAt } = STATE.activeTimer;
+      const act = STATE.projects[pIdx]?.actions[aIdx];
+      const elapsed = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+      if (act) {
+        act.trackedSeconds = (act.trackedSeconds || 0) + elapsed;
+      }
+      STATE.activeTimer = null;
+      saveState();
+      renderAll();
+      if (STATE.activePeek) renderDrawer();
+      if (notify && act) showToast(`Timer disimpan (+${formatTimer(elapsed)})`);
+    }
+
+    // ----------------------------------------------------
+    // 2. TRELLO DEPARTMENT FILTER FUNCTION
+    // ----------------------------------------------------
+    function toggleDeptFilter(deptKey) {
+      STATE.deptFilter = (STATE.deptFilter === deptKey) ? 'ALL' : deptKey;
+      renderAll();
+    }
+
+    // ----------------------------------------------------
+    // 3. SLACK LIVE AVAILABILITY & CUSTOM STATUS FUNCTIONS
+    // ----------------------------------------------------
+    function cycleSlackDot(e, pic) {
+      e.stopPropagation();
+      const cur = STATE.teamStatuses[pic] || { stateIdx: 0, text: "Available" };
+      cur.stateIdx = (cur.stateIdx + 1) % SLACK_PRESENCE.length;
+      STATE.teamStatuses[pic] = cur;
+      saveState();
+      renderSidebar();
+      showToast(`${pic.split(' ')[0]}: ${SLACK_PRESENCE[cur.stateIdx].label}`);
+    }
+
+    function editSlackStatusText(e, pic) {
+      e.stopPropagation();
+      const cur = STATE.teamStatuses[pic] || { stateIdx: 0, text: "Available" };
+      const val = prompt(`Update status Slack untuk ${pic}:`, cur.text);
+      if (val !== null) {
+        cur.text = val.trim() || SLACK_PRESENCE[cur.stateIdx].label;
+        STATE.teamStatuses[pic] = cur;
+        saveState();
+        renderSidebar();
+        showToast(`Status ${pic.split(' ')[0]} diperbarui!`);
+      }
+    }
+
+    // ----------------------------------------------------
+    // SIDEBAR RENDERER
+    // ----------------------------------------------------
+    function renderSidebar() {
+      // 1. Active Task Tray
+      const tray = document.getElementById('sb-active-tray');
+      if (tray) {
+        if (!STATE.activeTimer) {
+          tray.className = 'active-tray idle';
+          tray.innerHTML = `
+            <div class="tray-head"><span>⏱ Active Task Tray</span><span>Idle</span></div>
+            <div style="font-size:10px; color:var(--text-muted);">Klik tombol <b>▶ 00:00</b> pada kartu tugas untuk mulai melacak waktu.</div>
+          `;
+        } else {
+          const { pIdx, aIdx, startedAt } = STATE.activeTimer;
+          const p = STATE.projects[pIdx];
+          const act = p?.actions[aIdx];
+          const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+          const total = (act?.trackedSeconds || 0) + elapsed;
+          tray.className = 'active-tray';
+          tray.innerHTML = `
+            <div class="tray-head">
+              <span><span class="pulse-dot"></span>Working On</span>
+              <span>${esc(p?.brandName)}</span>
+            </div>
+            <div class="tray-task-name" onclick="openSidePeek(${pIdx}, ${aIdx})">${esc(act?.text)}</div>
+            <div class="tray-foot">
+              <span class="tray-clock" id="tray-live-clock">${formatTimer(total)}</span>
+              <button class="btn" style="padding:2px 8px; font-size:9.5px; background:var(--red); color:#fff; border-color:var(--red);" onclick="stopActiveTimer(true)">■ Stop</button>
+            </div>
+          `;
+        }
+      }
+
+      // 2. Alert Counts
+      let cBlock = 0, cFatigue = 0, cUrg = 0, cTotal = 0;
+      STATE.projects.forEach(p => {
+        p.actions.forEach(a => {
+          cTotal++;
+          if (!a.done) {
+            const rem = calcRemaining(a.deadlineISO, a.done);
+            if (a.blocked) cBlock++;
+            if ((a.adFreq || 1) > 2.5) cFatigue++;
+            if (rem.urgent) cUrg++;
+          }
+        });
+      });
+      document.getElementById('sb-total-count').innerText = cTotal;
+      document.getElementById('cnt-blocked').innerText = cBlock;
+      document.getElementById('cnt-fatigue').innerText = cFatigue;
+      document.getElementById('cnt-urgent').innerText = cUrg;
+      document.getElementById('al-blocked').classList.toggle('active', STATE.alertFilter === 'blocked');
+      document.getElementById('al-fatigue').classList.toggle('active', STATE.alertFilter === 'fatigue');
+      document.getElementById('al-urgent').classList.toggle('active', STATE.alertFilter === 'urgent');
+
+      // 3. Trello Department Color Labels
+      const deptEl = document.getElementById('sb-dept-list');
+      if (deptEl) {
+        deptEl.innerHTML = Object.keys(DEPARTMENTS).map(dk => {
+          const d = DEPARTMENTS[dk];
+          let count = 0;
+          STATE.projects.forEach(p => p.actions.forEach(a => { if (!a.done && a.department === dk) count++; }));
+          const active = STATE.deptFilter === dk ? 'active' : '';
+          return `
+            <button class="sb-item ${active}" onclick="toggleDeptFilter('${dk}')">
+              <span class="dept-swatch" style="background:${d.color};"></span>
+              <span style="flex:1;">${d.label}</span>
+              <span style="font-size:10px; font-weight:700; color:var(--text-muted);">${count}</span>
+            </button>
+          `;
+        }).join('');
+      }
+
+      // 4. Brands List
+      const brandEl = document.getElementById('sb-brand-list');
+      if (brandEl) {
+        brandEl.innerHTML = STATE.projects.map(p => {
+          const active = STATE.brandFilter === p.brandName ? 'active' : '';
+          return `
+            <button class="sb-item ${active}" onclick="toggleBrandFilter('${esc(p.brandName)}')">
+              <span style="width:8px; height:8px; border-radius:50%; background:${p.brandHex};"></span>
+              <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(p.brandName)}</span>
+              <span style="font-size:10px; color:var(--text-muted);">${p.actions.length}</span>
+            </button>
+          `;
+        }).join('');
+      }
+
+      // 5. Slack Team Availability & Custom Status
+      const teamEl = document.getElementById('sb-team-list');
+      if (teamEl) {
+        teamEl.innerHTML = TEAM_PICS.map(pic => {
+          let activeTasks = 0;
+          STATE.projects.forEach(p => p.actions.forEach(a => { if (!a.done && a.pic === pic) activeTasks++; }));
+          const pct = Math.min(100, Math.round((activeTasks / 4) * 100));
+          const barCol = activeTasks >= 4 ? 'var(--red)' : activeTasks >= 3 ? 'var(--orange)' : 'var(--green)';
+          const stObj = STATE.teamStatuses[pic] || { stateIdx: 0, text: "Available" };
+          const pres = SLACK_PRESENCE[stObj.stateIdx % SLACK_PRESENCE.length];
+          const isFiltered = STATE.picFilter === pic ? 'active' : '';
+
+          return `
+            <div class="team-card ${isFiltered}">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                <div style="display:flex; align-items:center; gap:6px; min-width:0; flex:1; cursor:pointer;" onclick="togglePicFilter('${pic}')">
+                  <span class="slack-dot" style="background:${pres.color};" onclick="cycleSlackDot(event, '${pic}')" title="Klik titik untuk ganti status: ${pres.label}"></span>
+                  <span style="font-size:11.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pic}</span>
+                </div>
+                <span style="font-size:10px; font-weight:700; color:${barCol};">${activeTasks}/4</span>
+              </div>
+              <button class="slack-status-btn" onclick="editSlackStatusText(event, '${pic}')" title="Klik untuk ubah pesan status Slack">
+                💬 ${esc(stObj.text)}
+              </button>
+              <div class="workload-bar"><div class="workload-fill" style="width:${pct}%; background:${barCol};"></div></div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 6. Active Filter Banner
+      const banner = document.getElementById('filter-banner');
+      const bannerTxt = document.getElementById('filter-text');
+      const parts = [];
+      if (STATE.alertFilter) parts.push(`Alert: ${STATE.alertFilter.toUpperCase()}`);
+      if (STATE.deptFilter !== 'ALL') parts.push(`Dept: ${DEPARTMENTS[STATE.deptFilter]?.label}`);
+      if (STATE.brandFilter !== 'ALL') parts.push(`Brand: ${STATE.brandFilter}`);
+      if (STATE.picFilter !== 'ALL') parts.push(`PIC: ${STATE.picFilter}`);
+      if (STATE.searchQuery) parts.push(`Search: "${STATE.searchQuery}"`);
+
+      if (parts.length > 0) {
+        banner.style.display = 'flex';
+        bannerTxt.innerText = 'Filter Aktif: ' + parts.join(' • ');
+      } else {
+        banner.style.display = 'none';
+      }
+    }
+
+    // ----------------------------------------------------
+    // FILTER HELPERS
+    // ----------------------------------------------------
+    function matchTask(act, brandName) {
+      if (STATE.brandFilter !== 'ALL' && brandName !== STATE.brandFilter) return false;
+      if (STATE.deptFilter !== 'ALL' && act.department !== STATE.deptFilter) return false;
+      if (STATE.picFilter !== 'ALL' && act.pic !== STATE.picFilter) return false;
+      if (STATE.searchQuery) {
+        const q = STATE.searchQuery;
+        const hay = `${act.text} ${act.notes} ${act.pic}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      const rem = calcRemaining(act.deadlineISO, act.done);
+      if (STATE.alertFilter === 'blocked' && (!act.blocked || act.done)) return false;
+      if (STATE.alertFilter === 'fatigue' && ((act.adFreq || 1) <= 2.5 || act.done)) return false;
+      if (STATE.alertFilter === 'urgent' && (!rem.urgent || act.done)) return false;
+      return true;
+    }
+
+    function toggleBrandFilter(b) { STATE.brandFilter = STATE.brandFilter === b ? 'ALL' : b; renderAll(); }
+    function togglePicFilter(p) { STATE.picFilter = STATE.picFilter === p ? 'ALL' : p; renderAll(); }
+    function setAlertFilter(a) { STATE.alertFilter = STATE.alertFilter === a ? null : a; renderAll(); }
+    function handleSearch(v) { STATE.searchQuery = v.toLowerCase().trim(); renderAll(); }
+
+    function clearAllFilters() {
+      STATE.brandFilter = 'ALL';
+      STATE.deptFilter = 'ALL';
+      STATE.picFilter = 'ALL';
+      STATE.alertFilter = null;
+      STATE.searchQuery = '';
+      document.getElementById('search-input').value = '';
+      renderAll();
+    }
+
+    // ----------------------------------------------------
+    // KANBAN RENDERER (CLEAN UI & DIRECT DRAG)
+    // ----------------------------------------------------
+    function renderKanbanCard(t) {
+      const rem = calcRemaining(t.deadlineISO, t.done);
+      const dept = DEPARTMENTS[t.department] || DEPARTMENTS.creative;
+      const isRunning = STATE.activeTimer && STATE.activeTimer.pIdx === t.pIdx && STATE.activeTimer.aIdx === t.aIdx;
+      const subs = t.subtasks || [];
+      const doneSubs = subs.filter(s => s.done).length;
+
+      return `
+        <div class="k-card ${t.blocked ? 'blocked' : ''}"
+             draggable="true"
+             ondragstart="handleKanbanDragStart(event, ${t.pIdx}, '${t.id}')">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:5px;">
+              <span class="dept-swatch" style="background:${dept.color};" title="${dept.label}"></span>
+              <span style="font-size:9.5px; font-weight:800; color:var(--blue); text-transform:uppercase;">${esc(t.brandName)}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              ${t.blocked ? `<span style="background:rgba(244,63,94,0.15); color:var(--red); font-size:8.5px; font-weight:800; padding:2px 5px; border-radius:4px; cursor:pointer;" onclick="toggleBlocker(${t.pIdx}, ${t.aIdx})">BLOCKED</span>` : ''}
+              <span class="time-badge ${rem.cls}" data-deadline="${t.deadlineISO}" data-done="${t.done}">${rem.text}</span>
+              <button class="btn" style="padding:1px 5px; font-size:9px;" onclick="openSidePeek(${t.pIdx}, ${t.aIdx})" title="Inspect">⇥</button>
+            </div>
+          </div>
+
+          <input type="text" class="live-input" style="font-size:12px; font-weight:700;" value="${esc(t.text)}" oninput="updateTaskField(${t.pIdx}, ${t.aIdx}, 'text', this.value)">
+          <input type="text" class="live-input" style="font-size:10.5px; color:var(--text-muted);" value="${esc(t.notes)}" placeholder="Tambah catatan..." oninput="updateTaskField(${t.pIdx}, ${t.aIdx}, 'notes', this.value)">
+
+          <div class="k-foot">
+            <select class="quick-add-input" style="height:24px; width:105px; margin:0; padding:0 4px; font-size:10px; font-weight:600;" onchange="updateTaskPic(${t.pIdx}, ${t.aIdx}, this.value)">
+              ${TEAM_PICS.map(tp => `<option value="${tp}" ${t.pic === tp ? 'selected' : ''}>${tp.split(' ')[0]}</option>`).join('')}
+            </select>
+
+            <div style="display:flex; align-items:center; gap:5px; margin-left:auto;">
+              <button class="btn-timer ${isRunning ? 'running' : ''}" data-timer-id="${t.id}" onclick="toggleTaskTimer(${t.pIdx}, ${t.aIdx})" title="Start/Stop Live Timer">
+                ${isRunning ? '■ Stop' : `▶ ${formatTimer(t.trackedSeconds || 0)}`}
+              </button>
+              <span style="font-size:10px; font-weight:600; color:var(--text-muted); cursor:pointer;" onclick="openSidePeek(${t.pIdx}, ${t.aIdx})">✓ ${doneSubs}/${subs.length}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleKanbanDragStart(e, pIdx, actId) {
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+        document.activeElement.blur();
+      }
+      e.dataTransfer.setData('text/plain', JSON.stringify({ pIdx, actId }));
+    }
+
+    function handleKanbanDrop(e, targetStatus) {
+      e.preventDefault();
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        const act = STATE.projects[data.pIdx]?.actions.find(a => a.id === data.actId);
+        if (act) {
+          act.status = targetStatus;
+          act.done = (targetStatus === 'done');
+          if (act.done) act.blocked = false;
+          saveState();
+          renderAll();
+          showToast(`Dipindahkan ke ${targetStatus.replace('_', ' ').toUpperCase()}`);
+        }
+      } catch (err) {}
+    }
+
+    function renderKanban() {
+      const stage = document.getElementById('kanban-stage');
+      if (!stage) return;
+
+      const allTasks = [];
+      STATE.projects.forEach((p, pIdx) => {
+        p.actions.forEach((a, aIdx) => {
+          if (matchTask(a, p.brandName)) {
+            allTasks.push({ ...a, brandName: p.brandName, projectName: p.projectName, pIdx, aIdx });
+          }
+        });
+      });
+
+      stage.innerHTML = `
+        <div class="kanban-grid">
+          ${KANBAN_COLS.map(col => {
+            const list = allTasks.filter(t => (t.status || (t.done ? 'done' : 'in_progress')) === col.id);
+            return `
+              <div class="kanban-col"
+                   ondragover="event.preventDefault(); this.classList.add('drag-over')"
+                   ondragleave="this.classList.remove('drag-over')"
+                   ondrop="this.classList.remove('drag-over'); handleKanbanDrop(event, '${col.id}')">
+                <div class="col-header">
+                  <span class="status-pill ${col.cls}">${col.title}</span>
+                  <span style="color:var(--text-muted);">${list.length}</span>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px; flex:1;">
+                  ${list.map(t => renderKanbanCard(t)).join('')}
+                </div>
+                <button class="btn" style="width:100%; justify-content:center; border-style:dashed; color:var(--text-muted);" onclick="openTaskModal(0, '${col.id}')">+ Add Task</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // ----------------------------------------------------
+    // PROJECTS RENDERER (BRAND DROPDOWN + PROJECT NAME)
+    // ----------------------------------------------------
+    function renderProjects() {
+      const box = document.getElementById('view-projects');
+      if (!box) return;
+
+      const allBrands = Array.from(new Set([...STATE.brands, ...STATE.projects.map(p => p.brandName)]));
+
+      box.innerHTML = STATE.projects.map((p, pIdx) => {
+        if (STATE.brandFilter !== 'ALL' && p.brandName !== STATE.brandFilter) return '';
+        const tasks = p.actions.filter(a => matchTask(a, p.brandName));
+
+        return `
+          <div class="card-box">
+            <div class="brand-header-bar">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="brand-select-pill">
+                  <input type="color" value="${p.brandHex}" onchange="updateBrandColor(${pIdx}, this.value)" style="width:12px; height:12px; border:none; background:transparent; cursor:pointer;">
+                  <select style="border:none; background:transparent; font-size:11.5px; font-weight:800; color:var(--text-main); outline:none; cursor:pointer;" onchange="changeProjectBrand(${pIdx}, this.value)">
+                    ${allBrands.map(b => `<option value="${esc(b)}" ${b === p.brandName ? 'selected' : ''}>${esc(b)}</option>`).join('')}
+                    <option value="__NEW__">+ Tambah Brand Baru...</option>
+                  </select>
+                </div>
+                <span style="font-size:11px; color:var(--text-muted);">Project Campaign</span>
+              </div>
+              <button class="btn" style="color:var(--blue);" onclick="openTaskModal(${pIdx})">+ Deliverable</button>
+            </div>
+
+            <div style="padding:12px 16px; border-bottom:1px solid var(--border-color);">
+              <input type="text" class="live-input" style="font-size:16px; font-weight:800;" value="${esc(p.projectName)}" oninput="STATE.projects[${pIdx}].projectName=this.value; saveState();">
+              <input type="text" class="live-input" style="font-size:11.5px; color:var(--text-muted);" value="${esc(p.description)}" oninput="STATE.projects[${pIdx}].description=this.value; saveState();">
+            </div>
+
+            <div>
+              ${tasks.map(act => {
+                const aIdx = p.actions.findIndex(x => x.id === act.id);
+                const rem = calcRemaining(act.deadlineISO, act.done);
+                const dept = DEPARTMENTS[act.department] || DEPARTMENTS.creative;
+                const isRunning = STATE.activeTimer && STATE.activeTimer.pIdx === pIdx && STATE.activeTimer.aIdx === aIdx;
+
+                return `
+                  <div class="task-row">
+                    <input type="checkbox" ${act.done ? 'checked' : ''} onchange="toggleDone(${pIdx}, ${aIdx})" style="cursor:pointer;">
+                    <span class="dept-swatch" style="background:${dept.color};" title="${dept.label}"></span>
+                    <div style="flex:2;">
+                      <input type="text" class="live-input" style="font-weight:600; ${act.done ? 'text-decoration:line-through; opacity:0.5;' : ''}" value="${esc(act.text)}" oninput="updateTaskField(${pIdx}, ${aIdx}, 'text', this.value)">
+                    </div>
+                    <div style="flex:1.5;">
+                      <input type="text" class="live-input" style="color:var(--text-muted); font-size:11px;" value="${esc(act.notes)}" placeholder="Catatan..." oninput="updateTaskField(${pIdx}, ${aIdx}, 'notes', this.value)">
+                    </div>
+                    <button class="btn-timer ${isRunning ? 'running' : ''}" data-timer-id="${act.id}" onclick="toggleTaskTimer(${pIdx}, ${aIdx})">
+                      ${isRunning ? '■ Stop' : `▶ ${formatTimer(act.trackedSeconds || 0)}`}
+                    </button>
+                    <input type="text" class="live-input" style="width:70px; text-align:center; font-size:11px; font-weight:600;" value="${esc(act.duration)}" onchange="updateDuration(${pIdx}, ${aIdx}, this.value)">
+                    <span class="time-badge ${rem.cls}" data-deadline="${act.deadlineISO}" data-done="${act.done}">${rem.text}</span>
+                    <select class="quick-add-input" style="width:130px; height:26px; margin:0; padding:0 4px;" onchange="updateTaskPic(${pIdx}, ${aIdx}, this.value)">
+                      ${TEAM_PICS.map(tp => `<option value="${tp}" ${act.pic === tp ? 'selected' : ''}>${tp}</option>`).join('')}
+                    </select>
+                    <button class="btn" style="padding:2px 6px;" onclick="openSidePeek(${pIdx}, ${aIdx})">⇥</button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ----------------------------------------------------
+    // OVERVIEW, FUNNELS & TIMELINE RENDERERS
+    // ----------------------------------------------------
+    function renderOverview() {
+      let omset = 0, spend = 0, done = 0, total = 0;
+      const list = [];
+
+      STATE.projects.forEach((p, pIdx) => {
+        if (STATE.brandFilter !== 'ALL' && p.brandName !== STATE.brandFilter) return;
+        omset += p.revenueNum || 0;
+        (p.stages || []).forEach(s => spend += s.spend || 0);
+        p.actions.forEach((a, aIdx) => {
+          if (matchTask(a, p.brandName)) {
+            total++;
+            if (a.done) done++;
+            list.push({ ...a, brandName: p.brandName, pIdx, aIdx });
+          }
+        });
+      });
+
+      const roas = spend > 0 ? (omset / spend).toFixed(2) : "0.00";
+      document.getElementById('ov-omset').innerText = formatRp(omset);
+      document.getElementById('ov-spend').innerText = formatRp(spend);
+      document.getElementById('ov-roas').innerText = `${roas}x`;
+      document.getElementById('ov-done').innerText = `${done} / ${total} Done`;
+
+      const ovList = document.getElementById('ov-list');
+      if (ovList) {
+        ovList.innerHTML = list.slice(0, 6).map(t => {
+          const rem = calcRemaining(t.deadlineISO, t.done);
+          const isRunning = STATE.activeTimer && STATE.activeTimer.pIdx === t.pIdx && STATE.activeTimer.aIdx === t.aIdx;
+          return `
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:var(--bg-subtle); border-radius:8px; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px; flex:1; cursor:pointer;" onclick="openSidePeek(${t.pIdx}, ${t.aIdx})">
+                <span style="font-size:10px; font-weight:800; color:var(--blue);">${esc(t.brandName)}</span>
+                <strong style="font-size:12px;">${esc(t.text)}</strong>
+              </div>
+              <button class="btn-timer ${isRunning ? 'running' : ''}" data-timer-id="${t.id}" onclick="toggleTaskTimer(${t.pIdx}, ${t.aIdx})">
+                ${isRunning ? '■ Stop' : `▶ ${formatTimer(t.trackedSeconds || 0)}`}
+              </button>
+              <span class="time-badge ${rem.cls}" data-deadline="${t.deadlineISO}" data-done="${t.done}">${rem.text}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderFunnels() {
+      const box = document.getElementById('view-home');
+      if (!box) return;
+      box.innerHTML = STATE.projects.map((p, pIdx) => {
+        if (STATE.brandFilter !== 'ALL' && p.brandName !== STATE.brandFilter) return '';
+        const spend = (p.stages || []).reduce((acc, s) => acc + (s.spend || 0), 0);
+        const roas = spend > 0 ? (p.revenueNum / spend).toFixed(2) : "0.00";
+        return `
+          <div class="card-box" style="padding:16px; display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <span style="font-size:10px; font-weight:800; color:var(--blue); text-transform:uppercase;">${esc(p.brandName)}</span>
+                <h3 style="font-size:15px; font-weight:800;">${esc(p.projectName)}</h3>
+              </div>
+              <div style="display:flex; gap:16px; font-size:12px;">
+                <span>Omset: <input type="text" class="live-input" style="width:85px; font-weight:800;" value="${formatRp(p.revenueNum)}" onchange="STATE.projects[${pIdx}].revenueNum=parseRp(this.value); saveState(); renderAll();"></span>
+                <span>Total Spend: <b>${formatRp(spend)}</b></span>
+                <span>ROAS: <b style="color:var(--green);">${roas}x</b></span>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              ${(p.stages || []).map((st, sIdx) => `
+                <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--bg-subtle); border-radius:8px;">
+                  <span style="width:4px; height:24px; border-radius:2px; background:${st.color};"></span>
+                  <strong style="width:110px; font-size:12px;">${esc(st.name)}</strong>
+                  <span style="font-size:11px; color:var(--text-muted); flex:1;">Traffic / Leads</span>
+                  <div style="text-align:right;">
+                    <span style="font-size:9px; color:var(--text-muted); display:block;">SPEND</span>
+                    <input type="text" class="live-input" style="width:90px; text-align:right; font-weight:700; font-size:11.5px;" value="${formatRp(st.spend)}" onchange="STATE.projects[${pIdx}].stages[${sIdx}].spend=parseRp(this.value); saveState(); renderAll();">
+                  </div>
+                  <div style="text-align:right;">
+                    <span style="font-size:9px; color:var(--text-muted); display:block;">VOLUME</span>
+                    <input type="number" class="live-input" style="width:80px; text-align:right; font-weight:800; font-size:12px;" value="${st.val}" onchange="STATE.projects[${pIdx}].stages[${sIdx}].val=parseInt(this.value)||0; saveState(); renderAll();">
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTimeline() {
+      const box = document.getElementById('timeline-stage');
+      if (!box) return;
+      box.innerHTML = STATE.projects.map((p, pIdx) => {
+        if (STATE.brandFilter !== 'ALL' && p.brandName !== STATE.brandFilter) return '';
+        const tasks = p.actions.filter(a => matchTask(a, p.brandName));
+        return `
+          <div class="card-box" style="padding:14px;">
+            <div style="font-size:13px; font-weight:800; margin-bottom:10px;">${esc(p.brandName)} — ${esc(p.projectName)}</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              ${tasks.map((t, i) => {
+                const aIdx = p.actions.findIndex(x => x.id === t.id);
+                const dept = DEPARTMENTS[t.department] || DEPARTMENTS.creative;
+                return `
+                  <div style="display:flex; align-items:center; gap:10px; padding:6px 10px; background:var(--bg-subtle); border-radius:8px;">
+                    <span style="width:190px; font-size:11.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" onclick="openSidePeek(${pIdx}, ${aIdx})">${esc(t.text)}</span>
+                    <div style="flex:1; height:22px; background:var(--bg-inset); border-radius:6px; position:relative; overflow:hidden;">
+                      <div style="position:absolute; left:${(i * 15) % 60}%; width:32%; top:2px; bottom:2px; background:${dept.color}; color:#fff; border-radius:4px; font-size:9.5px; font-weight:700; display:flex; align-items:center; padding:0 8px;">
+                        ${dept.short} • ${esc(t.duration)}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ----------------------------------------------------
+    // SIDE-PEEK INSPECTOR DRAWER
+    // ----------------------------------------------------
+    function openSidePeek(pIdx, aIdx) {
+      STATE.activePeek = { pIdx, aIdx };
+      renderDrawer();
+      document.getElementById('side-drawer').classList.add('open');
+    }
+
+    function closeSidePeek() {
+      STATE.activePeek = null;
+      document.getElementById('side-drawer').classList.remove('open');
+    }
+
+    function renderDrawer() {
+      if (!STATE.activePeek) return;
+      const { pIdx, aIdx } = STATE.activePeek;
+      const p = STATE.projects[pIdx];
+      const act = p?.actions[aIdx];
+      if (!act) { closeSidePeek(); return; }
+
+      const isRunning = STATE.activeTimer && STATE.activeTimer.pIdx === pIdx && STATE.activeTimer.aIdx === aIdx;
+      document.getElementById('drawer-tag').innerText = `${p.brandName} • Inspector`;
+
+      document.getElementById('drawer-body').innerHTML = `
+        <input type="text" class="live-input" style="font-size:15px; font-weight:800;" value="${esc(act.text)}" oninput="updateTaskField(${pIdx}, ${aIdx}, 'text', this.value)">
+
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:var(--bg-subtle); border-radius:8px;">
+          <span style="font-size:11px; font-weight:700;">Live Time Tracker</span>
+          <button class="btn-timer ${isRunning ? 'running' : ''}" data-timer-id="${act.id}" onclick="toggleTaskTimer(${pIdx}, ${aIdx})">
+            ${isRunning ? '■ Stop Timer' : `▶ Start (${formatTimer(act.trackedSeconds || 0)})`}
+          </button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:100px 1fr; gap:8px; align-items:center; font-size:11.5px;">
+          <span style="color:var(--text-muted); font-weight:600;">Department</span>
+          <select class="quick-add-input" style="margin:0;" onchange="STATE.projects[${pIdx}].actions[${aIdx}].department=this.value; saveState(); renderAll(); renderDrawer();">
+            ${Object.keys(DEPARTMENTS).map(dk => `<option value="${dk}" ${act.department === dk ? 'selected' : ''}>${DEPARTMENTS[dk].label}</option>`).join('')}
+          </select>
+
+          <span style="color:var(--text-muted); font-weight:600;">Assignee</span>
+          <select class="quick-add-input" style="margin:0;" onchange="updateTaskPic(${pIdx}, ${aIdx}, this.value)">
+            ${TEAM_PICS.map(tp => `<option value="${tp}" ${act.pic === tp ? 'selected' : ''}>${tp}</option>`).join('')}
+          </select>
+
+          <span style="color:var(--text-muted); font-weight:600;">Ad Frequency</span>
+          <input type="number" step="0.1" class="quick-add-input" style="margin:0;" value="${act.adFreq || 1.5}" onchange="STATE.projects[${pIdx}].actions[${aIdx}].adFreq=parseFloat(this.value)||1; saveState(); renderAll();">
+
+          <span style="color:var(--text-muted); font-weight:600;">Blocker</span>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="checkbox" ${act.blocked ? 'checked' : ''} onchange="toggleBlocker(${pIdx}, ${aIdx})">
+            <span style="font-weight:700; color:${act.blocked ? 'var(--red)' : 'var(--text-muted)'};">${act.blocked ? 'BLOCKED' : 'Normal'}</span>
+          </label>
+        </div>
+
+        <div>
+          <div style="font-size:10.5px; font-weight:800; color:var(--text-muted); margin-bottom:6px;">CHECKLIST SUB-TASKS</div>
+          <div style="display:flex; flex-direction:column; gap:5px;">
+            ${(act.subtasks || []).map((st, sIdx) => `
+              <div style="display:flex; align-items:center; gap:6px; padding:5px 8px; background:var(--bg-subtle); border-radius:6px;">
+                <input type="checkbox" ${st.done ? 'checked' : ''} onchange="toggleSub(${pIdx}, ${aIdx}, ${sIdx})">
+                <input type="text" class="live-input" style="font-size:11.5px; ${st.done ? 'text-decoration:line-through; opacity:0.5;' : ''}" value="${esc(st.t)}" oninput="STATE.projects[${pIdx}].actions[${aIdx}].subtasks[${sIdx}].t=this.value; saveState();">
+              </div>
+            `).join('')}
+          </div>
+          <div style="display:flex; gap:5px; margin-top:6px;">
+            <input type="text" id="new-sub-in" class="quick-add-input" style="margin:0;" placeholder="Tambah sub-task..." onkeydown="if(event.key==='Enter') addSub(${pIdx}, ${aIdx})">
+            <button class="btn" onclick="addSub(${pIdx}, ${aIdx})">+</button>
+          </div>
+        </div>
+
+        <button class="btn" style="color:var(--red); justify-content:center; margin-top:auto;" onclick="deleteTask(${pIdx}, ${aIdx}); closeSidePeek();">Delete Deliverable</button>
+      `;
+    }
+
+    // ----------------------------------------------------
+    // MUTATORS & MODAL HANDLERS
+    // ----------------------------------------------------
+    function updateTaskField(pIdx, aIdx, field, val) {
+      STATE.projects[pIdx].actions[aIdx][field] = val;
+      saveState();
+      if (STATE.activeTimer && STATE.activeTimer.pIdx === pIdx && STATE.activeTimer.aIdx === aIdx) {
+        renderSidebar();
+      }
+    }
+
+    function updateTaskPic(pIdx, aIdx, val) {
+      STATE.projects[pIdx].actions[aIdx].pic = val;
+      saveState();
+      renderAll();
+    }
+
+    function updateDuration(pIdx, aIdx, val) {
+      const parsed = parseDuration(val);
+      const act = STATE.projects[pIdx].actions[aIdx];
+      act.duration = parsed.text;
+      act.deadlineISO = new Date(Date.now() + parsed.ms).toISOString();
+      saveState();
+      renderAll();
+      showToast(`Durasi diupdate: ${parsed.text}`);
+    }
+
+    function toggleDone(pIdx, aIdx) {
+      const act = STATE.projects[pIdx].actions[aIdx];
+      act.done = !act.done;
+      act.status = act.done ? 'done' : 'in_progress';
+      saveState();
+      renderAll();
+    }
+
+    function toggleBlocker(pIdx, aIdx) {
+      const act = STATE.projects[pIdx].actions[aIdx];
+      act.blocked = !act.blocked;
+      saveState();
+      renderAll();
+      if (STATE.activePeek) renderDrawer();
+    }
+
+    function toggleSub(pIdx, aIdx, sIdx) {
+      const act = STATE.projects[pIdx].actions[aIdx];
+      act.subtasks[sIdx].done = !act.subtasks[sIdx].done;
+      if (act.subtasks.length > 0 && act.subtasks.every(s => s.done)) {
+        act.done = true;
+        act.status = 'done';
+        showToast("Sub-tasks 100% selesai -> Pindah ke Done!");
+      }
+      saveState();
+      renderAll();
+      renderDrawer();
+    }
+
+    function addSub(pIdx, aIdx) {
+      const inp = document.getElementById('new-sub-in');
+      const val = inp?.value.trim();
+      if (!val) return;
+      STATE.projects[pIdx].actions[aIdx].subtasks.push({ t: val, done: false });
+      saveState();
+      renderAll();
+      renderDrawer();
+    }
+
+    function deleteTask(pIdx, aIdx) {
+      if (STATE.activeTimer && STATE.activeTimer.pIdx === pIdx && STATE.activeTimer.aIdx === aIdx) {
+        stopActiveTimer(false);
+      }
+      STATE.projects[pIdx].actions.splice(aIdx, 1);
+      saveState();
+      renderAll();
+      showToast("Deliverable dihapus");
+    }
+
+    function changeProjectBrand(pIdx, val) {
+      if (val === '__NEW__') {
+        const nb = prompt("Masukkan nama Brand baru:");
+        if (!nb || !nb.trim()) { renderProjects(); return; }
+        const clean = nb.trim();
+        STATE.brands.push(clean);
+        STATE.projects[pIdx].brandName = clean;
+      } else {
+        STATE.projects[pIdx].brandName = val;
+      }
+      saveState();
+      renderAll();
+    }
+
+    function updateBrandColor(pIdx, hex) {
+      STATE.projects[pIdx].brandHex = hex;
+      saveState();
+      renderAll();
+    }
+
+    function handleQuickTask(e) {
+      if (e.key !== 'Enter') return;
+      const val = e.target.value.trim();
+      if (!val) return;
+      const targetProj = STATE.projects[0];
+      targetProj.actions.unshift({
+        id: "a" + Date.now(),
+        text: val,
+        notes: "",
+        duration: "2 hari",
+        deadlineISO: new Date(Date.now() + 48 * 3600000).toISOString(),
+        pic: STATE.picFilter !== 'ALL' ? STATE.picFilter : "Razaan Al-Ghifari",
+        department: STATE.deptFilter !== 'ALL' ? STATE.deptFilter : "creative",
+        done: false,
+        status: "in_progress",
+        blocked: false,
+        adFreq: 1.0,
+        trackedSeconds: 0,
+        subtasks: [{ t: "Siapkan deliverable", done: false }]
+      });
+      e.target.value = '';
+      saveState();
+      renderAll();
+      showToast(`Task ditambahkan: ${val}`);
+    }
+
+    function openTaskModal(projIdx = 0, status = 'in_progress') {
+      window._modalStatus = status;
+      const sel = document.getElementById('m-task-proj');
+      sel.innerHTML = STATE.projects.map((p, i) => `<option value="${i}" ${i === projIdx ? 'selected' : ''}>${esc(p.brandName)} — ${esc(p.projectName)}</option>`).join('');
+      document.getElementById('m-task-name').value = '';
+      document.getElementById('task-modal').classList.add('active');
+    }
+
+    function closeTaskModal() { document.getElementById('task-modal').classList.remove('active'); }
+
+    function saveNewTaskModal() {
+      const pIdx = parseInt(document.getElementById('m-task-proj').value) || 0;
+      const name = document.getElementById('m-task-name').value.trim();
+      const dept = document.getElementById('m-task-dept').value;
+      const pic = document.getElementById('m-task-pic').value;
+      const dur = parseDuration(document.getElementById('m-task-dur').value);
+      if (!name) { showToast("Masukkan nama tugas!"); return; }
+
+      STATE.projects[pIdx].actions.push({
+        id: "a" + Date.now(),
+        text: name,
+        notes: "",
+        duration: dur.text,
+        deadlineISO: new Date(Date.now() + dur.ms).toISOString(),
+        pic,
+        department: dept,
+        done: window._modalStatus === 'done',
+        status: window._modalStatus || 'in_progress',
+        blocked: false,
+        adFreq: 1.2,
+        trackedSeconds: 0,
+        subtasks: [{ t: "Eksekusi utama", done: false }]
+      });
+      closeTaskModal();
+      saveState();
+      renderAll();
+      showToast("Deliverable ditambahkan!");
+    }
+
+    function openProjectModal() { document.getElementById('proj-modal').classList.add('active'); }
+    function closeProjectModal() { document.getElementById('proj-modal').classList.remove('active'); }
+
+    function saveNewProjectModal() {
+      const bName = document.getElementById('m-proj-brand').value.trim();
+      const pName = document.getElementById('m-proj-name').value.trim() || `${bName} Campaign`;
+      const omset = parseRp(document.getElementById('m-proj-omset').value || '50M');
+      const color = document.getElementById('m-proj-color').value;
+      if (!bName) { showToast("Masukkan nama Brand!"); return; }
+
+      if (!STATE.brands.includes(bName)) STATE.brands.push(bName);
+      STATE.projects.push({
+        id: "p" + Date.now(),
+        brandName: bName,
+        projectName: pName,
+        description: `Kampanye akuisisi & scaling untuk ${bName}.`,
+        brandHex: color,
+        revenueNum: omset,
+        beRoas: 2.5,
+        stages: [
+          { name: "Awareness", val: 5000, spend: 4000000, color: "#0e3a66" },
+          { name: "Interest", val: 1200, spend: 2500000, color: "#0284c7" },
+          { name: "Consideration", val: 500, spend: 2000000, color: "#0d9488" },
+          { name: "Conversion", val: 140, spend: 3000000, color: "#16a34a" },
+          { name: "Loyalty", val: 40, spend: 500000, color: "#84cc16" }
+        ],
+        actions: [
+          { id: "a" + Date.now(), text: `${bName} Kickoff Setup`, notes: "Setup awal kampanye.", duration: "3 hari", deadlineISO: new Date(Date.now() + 72 * 3600000).toISOString(), pic: "Razaan Al-Ghifari", department: "performance", done: false, status: "in_progress", blocked: false, adFreq: 1.0, trackedSeconds: 0, subtasks: [{ t: "Setup Pixel", done: false }] }
+        ]
+      });
+      closeProjectModal();
+      saveState();
+      renderAll();
+      showToast(`Project ${pName} dibuat!`);
+    }
+
+    function copyStandupReport() {
+      let active = 0, done = 0;
+      const blockers = [];
+      STATE.projects.forEach(p => p.actions.forEach(a => {
+        if (a.done) done++;
+        else {
+          active++;
+          if (a.blocked) blockers.push(`- [${p.brandName}] ${a.text} (${a.pic})`);
+        }
+      }));
+      const txt = `*DAILY STANDUP REPORT*\nActive: ${active} | Done: ${done}\nBlockers:\n${blockers.length ? blockers.join('\n') : '- Aman'}`;
+      navigator.clipboard.writeText(txt).then(() => showToast("Standup disalin ke Clipboard!"));
+    }
+
+    function exportCSV() {
+      let csv = "Brand,Project,Deliverable,Department,PIC,TrackedTime,Status\n";
+      STATE.projects.forEach(p => p.actions.forEach(a => {
+        csv += `"${p.brandName}","${p.projectName}","${a.text}","${a.department}","${a.pic}","${formatTimer(a.trackedSeconds)}","${a.status}"\n`;
+      }));
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+      link.download = 'Agency_Report.csv';
+      link.click();
+    }
+
+    function toggleSwimlanes() {
+      STATE.swimlanes = !STATE.swimlanes;
+      document.getElementById('swimlane-btn').innerText = `Swimlanes: ${STATE.swimlanes ? 'ON' : 'OFF'}`;
+      renderKanban();
+    }
+
+    function toggleTheme() {
+      STATE.isDark = !STATE.isDark;
+      document.documentElement.classList.toggle('dark', STATE.isDark);
+      document.getElementById('theme-btn').innerText = STATE.isDark ? 'Light Mode' : 'Dark Mode';
+      saveState();
+    }
+
+    function resetDefaultData() {
+      localStorage.removeItem(STORAGE_KEY);
+      STATE = getDefaultState();
+      saveState();
+      renderAll();
+      showToast("Data berhasil di-reset!");
+    }
+
+    function switchTab(tab) {
+      STATE.activeTab = tab;
+      ['overview', 'projects', 'kanban', 'home', 'timeline'].forEach(t => {
+        document.getElementById(`view-${t}`).style.display = (t === tab) ? 'flex' : 'none';
+        document.getElementById(`tab-${t}`)?.classList.toggle('active', t === tab);
+        document.getElementById(`nav-${t}`)?.classList.toggle('active', t === tab);
+      });
+      renderAll();
+    }
+
+    function renderAll() {
+      renderSidebar();
+      renderOverview();
+      renderProjects();
+      renderKanban();
+      renderFunnels();
+      renderTimeline();
+    }
+
+    loadState();
+    document.documentElement.classList.toggle('dark', STATE.isDark);
+    switchTab(STATE.activeTab || 'kanban');
+  </script>
+</body>
+</html>
